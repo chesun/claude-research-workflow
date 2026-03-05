@@ -340,6 +340,7 @@ Phase 2: Strategy
 
 Phase 3: Execution
   /analyze              → Scripts + Output (Data-engineer + Coder + coder-critic)
+  /analyze --dual r,py  → Same in two languages + convergence check
   /write                → Paper Sections (Writer + humanizer pass)
 
 Phase 4: Peer Review
@@ -385,6 +386,7 @@ Phase 5: Submission
 <section id="analyze-dataset" class="level3">
 <h3 class="anchored" data-anchor-id="analyze-dataset"><code>/analyze [dataset]</code></h3>
 <p>Dispatches the <strong>Data-engineer</strong> (cleaning + visualization), <strong>Coder</strong> (analysis implementation), and <strong>coder-critic</strong> (reviewer). End-to-end analysis: data cleaning, main specification, robustness checks, publication-ready tables and figures. Supports R, Stata, Python, and Julia.</p>
+<p>Use <code>--dual r,python</code> to run the same analysis in two languages simultaneously. Both implementations follow the same strategy memo; results are compared within tolerance. Divergences are flagged. See the <a href="./reference.html">Command Reference</a> for details.</p>
 </section>
 <section id="write-section" class="level3">
 <h3 class="anchored" data-anchor-id="write-section"><code>/write [section]</code></h3>
@@ -444,6 +446,10 @@ Phase 5: Submission
 <td>coder-critic standalone (code quality only)</td>
 </tr>
 <tr class="even">
+<td><code>/review --replicate python</code></td>
+<td>Re-implement existing R code in Python, compare outputs</td>
+</tr>
+<tr class="odd">
 <td><code>/review --all</code></td>
 <td>All critics in parallel + weighted aggregate score</td>
 </tr>

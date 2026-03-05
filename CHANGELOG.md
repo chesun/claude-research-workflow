@@ -4,6 +4,18 @@ All notable changes to the Clo-Author are documented here.
 
 ---
 
+## [2.0.1] — 2026-03-05
+
+### Cross-Language Replication
+
+- **`/analyze --dual r,python`** — run the same analysis in two languages in parallel, compare results within tolerance
+- **`/review --replicate python`** — re-implement existing code in a different language, compare outputs
+- Both use `domain-profile.md` Quality Tolerance Thresholds for pass/fail
+- Coder agent updated with cross-language replication mode and common divergence sources
+- Inspired by Scott Cunningham's approach to cross-language validation
+
+---
+
 ## [2.0.0] — 2026-03-05
 
 **The Great Restructure.** 16-agent worker-critic system, journal-calibrated referees, consolidated rules, 6-page guide with command reference dictionary.
@@ -111,6 +123,7 @@ All notable changes to the Clo-Author are documented here.
 
 ---
 
+[2.0.1]: https://github.com/hsantanna88/clo-author/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/hsantanna88/clo-author/compare/v1.0.1...v2.0.0
 [1.0.1]: https://github.com/hsantanna88/clo-author/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/hsantanna88/clo-author/compare/v0.1.0...v1.0.0

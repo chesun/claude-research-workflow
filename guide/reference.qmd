@@ -10,9 +10,9 @@ subtitle: "Every Command, Flag, and Subcommand"
 | `/new-project [topic]` | --- | Full orchestrated pipeline: idea to paper |
 | `/discover` | `--lit`, `--data`, `--ideate` | Discovery phase: interview, literature, data |
 | `/strategize` | `--pap` | Identification strategy or pre-analysis plan |
-| `/analyze [dataset]` | --- | End-to-end data analysis |
+| `/analyze [dataset]` | `--dual [langs]` | End-to-end data analysis (single or parallel language) |
 | `/write [section]` | `--humanize` | Draft paper sections or strip AI patterns |
-| `/review [file]` | `--peer [journal]`, `--methods`, `--proofread`, `--code`, `--all` | Quality reviews (routes by target + flags) |
+| `/review [file]` | `--peer [journal]`, `--methods`, `--proofread`, `--code`, `--replicate [lang]`, `--all` | Quality reviews (routes by target + flags) |
 | `/revise [report]` | --- | R&R cycle: classify + route referee comments |
 | `/talk` | `create`, `audit`, `compile` | Beamer presentations |
 | `/submit` | `--target`, `--package`, `--audit`, `--final` | Submission pipeline |
@@ -73,13 +73,21 @@ Launches the full orchestrated pipeline. Claude conducts a research interview, b
 
 ```
 /analyze [dataset path or goal]
+/analyze --dual r,python        Parallel analysis in two languages
+/analyze --dual r,stata         Same, with Stata as second language
 ```
 
 End-to-end analysis: data cleaning → main specification → robustness → publication tables and figures. Reads the strategy memo (if it exists) and implements it faithfully.
 
-**Agents:** Data-engineer (cleaning) + Coder (analysis) → coder-critic (review)
+| Mode | Agents | Output |
+|------|--------|--------|
+| *(default)* | Data-engineer + Coder → coder-critic | Scripts, tables, figures in one language |
+| `--dual [langs]` | Data-engineer + 2 Coders in parallel → 2 coder-critics + comparison | Same outputs in both languages + convergence report |
+
 **Languages:** R, Stata, Python, Julia
-**Saves to:** `scripts/`, `Tables/`, `Figures/`
+**Saves to:** `scripts/`, `Tables/`, `Figures/`, `Output/cross_language_comparison.md`
+
+**Cross-language replication:** When `--dual` is used, both implementations run the same specification independently. Results are compared against tolerances in `domain-profile.md`. Divergences are flagged. Inspired by Scott Cunningham's approach: if two independent implementations agree, neither has a bug.
 
 ---
 
@@ -114,6 +122,7 @@ Every draft gets an automatic humanizer pass before finalizing.
 /review --methods [file]        Causal audit only
 /review --proofread [file]      Manuscript polish only
 /review --code [file]           Code quality only
+/review --replicate python      Re-implement in another language, compare
 /review --all                   All critics in parallel + weighted score
 ```
 
@@ -126,6 +135,7 @@ Every draft gets an automatic humanizer pass before finalizing.
 | `--methods` | strategist-critic | 4-phase causal design review |
 | `--proofread` | writer-critic | Notation, hedging, LaTeX, claims vs evidence |
 | `--code` | coder-critic | Code quality (no strategy comparison) |
+| `--replicate [lang]` | Coder (replication) + coder-critic | Re-implement in target language, compare outputs |
 | `--all` | All critics in parallel | Weighted aggregate score |
 
 **Journal calibration:** When a journal name is provided with `--peer`, both referees read `.claude/rules/journal-profiles.md` and adapt their priorities, bar, and checklist to that journal. 15 journals are pre-populated; unknown journals still get adapted review using the journal name + your domain profile. You can add custom profiles.

@@ -181,6 +181,7 @@ ul.task-list li input[type="checkbox"] {
   <ul class="collapse">
   <li><a href="#creating-talks-from-papers" id="toc-creating-talks-from-papers" class="nav-link" data-scroll-target="#creating-talks-from-papers">Creating Talks from Papers</a></li>
   <li><a href="#replication-first-coding" id="toc-replication-first-coding" class="nav-link" data-scroll-target="#replication-first-coding">Replication-First Coding</a></li>
+  <li><a href="#cross-language-replication" id="toc-cross-language-replication" class="nav-link" data-scroll-target="#cross-language-replication">Cross-Language Replication</a></li>
   <li><a href="#branch-isolation-with-git-worktrees" id="toc-branch-isolation-with-git-worktrees" class="nav-link" data-scroll-target="#branch-isolation-with-git-worktrees">Branch Isolation with Git Worktrees</a></li>
   </ul></li>
   <li><a href="#sec-constitutional" id="toc-sec-constitutional" class="nav-link" data-scroll-target="#sec-constitutional">Constitutional Governance (Optional)</a></li>
@@ -804,6 +805,16 @@ flowchart TD
 Phase 2: Translate (e.g., Stata → R) → match original spec EXACTLY
 Phase 3: Verify match → tolerance &lt; 0.01 for estimates, &lt; 0.05 for SEs
 Phase 4: Only then extend with new estimators and specifications</code></pre>
+</section>
+<section id="cross-language-replication" class="level2">
+<h2 class="anchored" data-anchor-id="cross-language-replication">Cross-Language Replication</h2>
+<p>Run the same analysis in two languages simultaneously to catch implementation bugs:</p>
+<ul>
+<li><code>/analyze --dual r,python</code> dispatches two Coder agents in parallel with the same strategy memo</li>
+<li><code>/review --replicate python</code> re-implements existing R code in Python and compares outputs</li>
+<li>Tolerances come from <code>domain-profile.md</code> — divergence beyond tolerance is flagged as a bug</li>
+</ul>
+<p>Inspired by Scott Cunningham’s approach: if two independent implementations produce the same estimates, neither has a bug. If they diverge, you’ve caught something before it reaches the paper.</p>
 </section>
 <section id="branch-isolation-with-git-worktrees" class="level2">
 <h2 class="anchored" data-anchor-id="branch-isolation-with-git-worktrees">Branch Isolation with Git Worktrees</h2>

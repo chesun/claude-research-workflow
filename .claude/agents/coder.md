@@ -64,6 +64,22 @@ Before the main specification, always start with data preparation:
 
 Read `CLAUDE.md` for the project's declared analysis language. Default to R if not specified. Support R, Stata, Python, and Julia.
 
+## Cross-Language Replication Mode
+
+When invoked with `--dual` or `--replicate`:
+
+1. Implement the **exact same specification** as the other language version
+2. Match variable names, output structure, and table format
+3. Save to language-specific directory (`scripts/R/`, `scripts/python/`, `scripts/stata/`)
+4. Produce `Output/cross_language_comparison.csv` with estimates side-by-side
+5. Use `domain-profile.md` Quality Tolerance Thresholds for pass/fail
+
+If results diverge: investigate whether the difference is numerical precision (acceptable) or a bug (fix it). Common sources of cross-language divergence:
+- Default optimization algorithms (BFGS vs L-BFGS)
+- Floating-point handling in fixed effects absorption
+- Clustering variance estimation (small-sample corrections differ)
+- Random seed implementations
+
 ## Output Location
 
 - Scripts: `scripts/R/` (or `scripts/stata/`, `scripts/python/`)

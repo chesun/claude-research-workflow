@@ -207,8 +207,8 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 <tr class="even">
 <td><code>/analyze [dataset]</code></td>
-<td>—</td>
-<td>End-to-end data analysis</td>
+<td><code>--dual [langs]</code></td>
+<td>End-to-end data analysis (single or parallel language)</td>
 </tr>
 <tr class="odd">
 <td><code>/write [section]</code></td>
@@ -217,7 +217,7 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 <tr class="even">
 <td><code>/review [file]</code></td>
-<td><code>--peer [journal]</code>, <code>--methods</code>, <code>--proofread</code>, <code>--code</code>, <code>--all</code></td>
+<td><code>--peer [journal]</code>, <code>--methods</code>, <code>--proofread</code>, <code>--code</code>, <code>--replicate [lang]</code>, <code>--all</code></td>
 <td>Quality reviews (routes by target + flags)</td>
 </tr>
 <tr class="odd">
@@ -331,9 +331,38 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="analyze" class="level1">
 <h1><code>/analyze</code></h1>
-<pre><code>/analyze [dataset path or goal]</code></pre>
+<pre><code>/analyze [dataset path or goal]
+/analyze --dual r,python        Parallel analysis in two languages
+/analyze --dual r,stata         Same, with Stata as second language</code></pre>
 <p>End-to-end analysis: data cleaning → main specification → robustness → publication tables and figures. Reads the strategy memo (if it exists) and implements it faithfully.</p>
-<p><strong>Agents:</strong> Data-engineer (cleaning) + Coder (analysis) → coder-critic (review) <strong>Languages:</strong> R, Stata, Python, Julia <strong>Saves to:</strong> <code>scripts/</code>, <code>Tables/</code>, <code>Figures/</code></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 27%">
+<col style="width: 36%">
+<col style="width: 36%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Mode</th>
+<th>Agents</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><em>(default)</em></td>
+<td>Data-engineer + Coder → coder-critic</td>
+<td>Scripts, tables, figures in one language</td>
+</tr>
+<tr class="even">
+<td><code>--dual [langs]</code></td>
+<td>Data-engineer + 2 Coders in parallel → 2 coder-critics + comparison</td>
+<td>Same outputs in both languages + convergence report</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Languages:</strong> R, Stata, Python, Julia <strong>Saves to:</strong> <code>scripts/</code>, <code>Tables/</code>, <code>Figures/</code>, <code>Output/cross_language_comparison.md</code></p>
+<p><strong>Cross-language replication:</strong> When <code>--dual</code> is used, both implementations run the same specification independently. Results are compared against tolerances in <code>domain-profile.md</code>. Divergences are flagged. Inspired by Scott Cunningham’s approach: if two independent implementations agree, neither has a bug.</p>
 <hr>
 </section>
 <section id="write" class="level1">
@@ -383,6 +412,7 @@ ul.task-list li input[type="checkbox"] {
 /review --methods [file]        Causal audit only
 /review --proofread [file]      Manuscript polish only
 /review --code [file]           Code quality only
+/review --replicate python      Re-implement in another language, compare
 /review --all                   All critics in parallel + weighted score</code></pre>
 <table class="caption-top table">
 <colgroup>
@@ -434,6 +464,11 @@ ul.task-list li input[type="checkbox"] {
 <td>Code quality (no strategy comparison)</td>
 </tr>
 <tr class="even">
+<td><code>--replicate [lang]</code></td>
+<td>Coder (replication) + coder-critic</td>
+<td>Re-implement in target language, compare outputs</td>
+</tr>
+<tr class="odd">
 <td><code>--all</code></td>
 <td>All critics in parallel</td>
 <td>Weighted aggregate score</td>

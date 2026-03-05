@@ -33,6 +33,7 @@ Phase 2: Strategy
 
 Phase 3: Execution
   /analyze              → Scripts + Output (Data-engineer + Coder + coder-critic)
+  /analyze --dual r,py  → Same in two languages + convergence check
   /write                → Paper Sections (Writer + humanizer pass)
 
 Phase 4: Peer Review
@@ -80,6 +81,8 @@ Dispatches the **Strategist** in PAP mode. Drafts in AEA/OSF/EGAP format with ou
 
 Dispatches the **Data-engineer** (cleaning + visualization), **Coder** (analysis implementation), and **coder-critic** (reviewer). End-to-end analysis: data cleaning, main specification, robustness checks, publication-ready tables and figures. Supports R, Stata, Python, and Julia.
 
+Use `--dual r,python` to run the same analysis in two languages simultaneously. Both implementations follow the same strategy memo; results are compared within tolerance. Divergences are flagged. See the [Command Reference](reference.qmd) for details.
+
 ### `/write [section]`
 
 Dispatches the **Writer** agent. Drafts paper sections with proper economics structure:
@@ -106,6 +109,7 @@ Smart routing based on file type and flags:
 | `/review --methods Paper/main.tex` | strategist-critic standalone |
 | `/review --proofread Paper/main.tex` | writer-critic standalone |
 | `/review --code scripts/R/` | coder-critic standalone (code quality only) |
+| `/review --replicate python` | Re-implement existing R code in Python, compare outputs |
 | `/review --all` | All critics in parallel + weighted aggregate score |
 
 ### `/review --peer [journal]`

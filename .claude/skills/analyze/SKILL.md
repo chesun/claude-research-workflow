@@ -2,7 +2,7 @@
 name: analyze
 description: End-to-end data analysis dispatching Coder and Data-engineer for implementation, coder-critic for review. Supports R, Stata, Python, Julia. Replaces /data-analysis.
 disable-model-invocation: true
-argument-hint: "[dataset path or analysis goal description]"
+argument-hint: "[dataset path or goal] Options: --dual [lang1,lang2]"
 allowed-tools: ["Read", "Grep", "Glob", "Write", "Edit", "Bash", "Task"]
 ---
 
@@ -58,8 +58,28 @@ If coder-critic finds Critical/Major issues:
 
 ---
 
+## Dual-Language Mode (`--dual r,python`)
+
+When `--dual [lang1,lang2]` is provided (e.g., `--dual r,python`, `--dual r,stata`):
+
+1. **Data-engineer** runs once — language-agnostic cleaning, saves to `Data/cleaned/`
+2. **Two Coder agents** dispatched in parallel — same strategy memo, different languages
+3. **coder-critic** reviews each implementation independently (max 3 rounds each)
+4. **Comparison step** — verify numerical alignment per `domain-profile.md` tolerances:
+   - Point estimates must match within declared tolerance
+   - Standard errors must match within declared tolerance
+   - Flag any divergences with exact values from both languages
+5. Save comparison report to `Output/cross_language_comparison.md`
+
+If results diverge beyond tolerance, both Coder agents are re-dispatched to investigate. The comparison report includes a side-by-side table of all estimates.
+
+Inspired by Scott Cunningham's approach: if two independent implementations agree, neither has a bug.
+
+---
+
 ## Principles
 - **Strategy alignment.** If strategy memo exists, code MUST implement it faithfully.
 - **Worker-critic pairing.** Coder creates, coder-critic critiques. Never skip review.
 - **saveRDS everything.** Every computed object gets saved for downstream use.
 - **Publication-ready output.** Tables and figures directly includable in the paper.
+- **Cross-language convergence.** When `--dual` is used, divergence is a bug until proven otherwise.

@@ -327,6 +327,16 @@ Phase 3: Verify match → tolerance < 0.01 for estimates, < 0.05 for SEs
 Phase 4: Only then extend with new estimators and specifications
 ```
 
+## Cross-Language Replication
+
+Run the same analysis in two languages simultaneously to catch implementation bugs:
+
+- `/analyze --dual r,python` dispatches two Coder agents in parallel with the same strategy memo
+- `/review --replicate python` re-implements existing R code in Python and compares outputs
+- Tolerances come from `domain-profile.md` --- divergence beyond tolerance is flagged as a bug
+
+Inspired by Scott Cunningham's approach: if two independent implementations produce the same estimates, neither has a bug. If they diverge, you've caught something before it reaches the paper.
+
 ## Branch Isolation with Git Worktrees
 
 Git worktrees create a separate working directory linked to the same repository. Useful for major translations, risky refactors, or multi-day projects.

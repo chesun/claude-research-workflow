@@ -2,7 +2,7 @@
 name: review
 description: All quality reviews — routes to appropriate critics based on target file type and flags. Replaces /paper-excellence, /proofread, /econometrics-check, /review-r, /review-paper.
 disable-model-invocation: true
-argument-hint: "[file path or --flag] Options: --peer [journal], --methods, --proofread, --code, --all"
+argument-hint: "[file path or --flag] Options: --peer [journal], --methods, --proofread, --code, --replicate [lang], --all"
 allowed-tools: ["Read", "Grep", "Glob", "Write", "Bash", "Task"]
 ---
 
@@ -27,6 +27,7 @@ Unified review command that routes to the appropriate critic agents based on the
 - `--methods` → **Causal audit** (strategist-critic standalone, 4-phase review)
 - `--proofread` → **Manuscript polish** (writer-critic standalone, 6 categories)
 - `--code [file]` → **Code review** (coder-critic standalone, categories 4-12)
+- `--replicate [language]` → **Cross-language replication** (Coder re-implements in target language + coder-critic + comparison)
 - `--all` or no file → **Paper excellence** (all critics in parallel + weighted score)
 
 ---
@@ -63,6 +64,17 @@ Dispatch **strategist-critic** standalone:
 Dispatch **writer-critic** standalone:
 - 6 categories: structure, claims-evidence, ID fidelity, writing, grammar, compilation
 - Save report to `quality_reports/[file]_proofread_report.md`
+
+### Cross-Language Replication (`--replicate [language]`)
+Re-implement existing code in a different language and compare outputs:
+1. Auto-detect source language from file extension (`.R`, `.py`, `.do`, `.jl`)
+2. Dispatch **Coder** in replication mode — re-implement in target language
+3. **coder-critic** reviews both implementations
+4. Compare numerical outputs per `domain-profile.md` Quality Tolerance Thresholds
+5. Save replicated script to `scripts/[target-language]/`
+6. Save report to `quality_reports/[file]_replication_report.md`
+
+Divergences are flagged with exact values. The report includes a side-by-side table.
 
 ---
 
