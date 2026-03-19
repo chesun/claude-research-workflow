@@ -195,12 +195,14 @@ All agent/skill references updated to `.claude/references/` paths (11 files fixe
 - [x] All agent/skill references point to `.claude/references/`
 - [ ] Run `/deep-audit` on template — DEFERRED (needs full project context to be meaningful)
 
-### Phase 3: Deploy to TX Project ← NEXT
-- [ ] Copy adapted `.claude/` and references to TX repo
-- [ ] Write TX-specific CLAUDE.md (project details only)
-- [ ] Test `/review --peer` on TX paper
-- [ ] Test `/strategize` on TX identification strategy
-- [ ] Test `/analyze` code review on exported .do files (blocked on FERPA for full test)
+### Phase 3: Deploy to TX Project ✅ COMPLETE
+- [x] Cleaned old pre-pivot `.claude/` from TX repo
+- [x] Copied fresh template (21 skills, 18 agents, 13 rules, 8 references, 7 hooks, 7 templates)
+- [x] Wrote lean TX-specific CLAUDE.md (project details only — 95 lines)
+- [x] Committed to TX repo: 7c84c68
+- [ ] Test `/review --peer` on TX paper — ready to test
+- [ ] Test `/strategize` on TX identification strategy — ready to test
+- [ ] Test `/analyze` code review on exported .do files — blocked on FERPA
 - [ ] Iterate based on output quality
 
 ### Phase 4: Beamer/Slides Adaptation (Later — Not Urgent)
@@ -235,8 +237,8 @@ All agent/skill references updated to `.claude/references/` paths (11 files fixe
 - [ ] Run `/deep-audit` on template before deploying to projects
 
 ### Must-Do (TX Project — after template is complete)
-- [ ] Copy template `.claude/` to TX repo
-- [ ] Write TX-specific CLAUDE.md
+- [x] Copy template `.claude/` to TX repo
+- [x] Write TX-specific CLAUDE.md
 - [ ] Export .do files from TERC (BLOCKED on FERPA)
 - [ ] Share swift raid Claude Chat memory/output (partially done — chat memory in consolidated plan)
 

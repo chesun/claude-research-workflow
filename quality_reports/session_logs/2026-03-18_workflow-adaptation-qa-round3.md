@@ -132,7 +132,13 @@ Christina flagged: too many always-on rules (1,500 lines), too TX-specific, rebu
 - [x] All references verified pointing to .claude/references/
 - Committed: daf8057
 
-### Phase 3: Deploy to TX — NEXT
+### Phase 3: Deploy to TX ✅ COMPLETE
+- [x] Cleaned old pre-pivot .claude/ from TX repo
+- [x] Copied fresh template (21 skills, 18 agents, 13 rules, 8 refs, 7 hooks)
+- [x] Wrote lean TX CLAUDE.md (project details only, 95 lines)
+- [x] Committed: 7c84c68 (156 files)
+
+### Testing — NEXT
 - [ ] Copy adapted `.claude/` to TX repo
 - [ ] Write TX-specific CLAUDE.md (project details only)
 - [ ] Test `/review --peer` on TX paper
