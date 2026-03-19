@@ -64,15 +64,30 @@ See: `quality_reports/plans/2026-03-18_consolidated-decisions-and-applied-micro-
 
 **Christina approved: "Begin now."**
 
-### Phase 0: Setup
-- [ ] Step 1: Create `applied-micro` branch from `main`
-- [ ] Step 2: Set up Overleaf git sync for TX paper
-- [ ] Step 3: Create local directory structure for TX
-- [ ] Step 4: Export .do files from TERC (BLOCKED — FERPA)
-- [ ] Step 5: Copy `.claude/` infrastructure into TX repo
-- [ ] Step 6: Write TX-specific `CLAUDE.md`
+### Phase 0: Setup ✅ COMPLETE
+- [x] Step 1: Create `applied-micro` branch from `main` (commit 80d5daa)
+- [x] Step 2: Overleaf git sync — Christina created `tx_peer_effects_paper` repo, cloned locally
+- [x] Step 3: Renamed `tx_immigrant_spillovers` → `tx_peer_effects_local` (local + GitHub via `gh repo rename`)
+- [ ] Step 4: Export .do files from TERC — BLOCKED on FERPA
+- [x] Step 5: Copied shared `.claude/` infrastructure (11 skills, 3 agents, 11 rules, 7 hooks, 4 templates). Added tikz-reviewer + extract-tikz + devils-advocate per Christina's request.
+- [x] Step 6: Wrote TX-specific `CLAUDE.md` with all 3 papers, identification strategies, data infrastructure, Stata conventions
+
+**Agent gap analysis:** Discovered shared worker-critic agents (librarian, coder, writer, data-engineer pairs) don't exist yet — were planned but never built. Christina approved: build shared agents in Phase 1, defer applied-micro-only agents to Phase 3.
+
+**Devils-advocate upgrade:** Approved rename to `/challenge` with modes: `--paper` (shared), `--fresh` (shared), `--identification` (applied-micro), `--slides` (behavioral). Build in Phase 1.
+
+### PIVOT: Start from Hugo's clo-author instead of Pedro's template
+Christina flagged: too many always-on rules (1,500 lines), too TX-specific, rebuilding things Hugo already has. New approach: Hugo's clo-author as base + Pedro's infrastructure on top. See `2026-03-18_applied-micro-plan-v2-hugo-base.md`.
+
+### Phase 0 (revised): Merge Hugo + Pedro infra — NEXT
+- [ ] Merge Hugo's clo-author into applied-micro branch
+- [ ] Layer Pedro's hooks, commit, deep-audit, context-status, learn
+- [ ] Add TikZ + challenge skill
+
+### Phase 1: Adapt for applied micro
+- [ ] Stata conventions, air-gapped rule, reference files, agent adaptations
 
 ### Later
-- [ ] Phase 1: Core rules
-- [ ] Phase 2: Urgent skills for TX
-- [ ] Revise behavioral plan_v2 → v3 (lower priority)
+- [ ] Phase 2: Test with TX
+- [ ] Phase 3: Additional skills
+- [ ] Behavioral plan_v2 → v3

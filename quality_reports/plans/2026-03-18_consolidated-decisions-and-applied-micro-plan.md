@@ -327,24 +327,43 @@ Branch 3 (swift): cleaned → pre/post raid → synthetic control + DiD
 
 ### Implementation Roadmap — Applied Micro (TX-First)
 
-#### Phase 0: Setup (Day 1) ← START HERE
+#### Phase 0: Setup (Day 1) ✅ COMPLETE
 
-- [ ] Create `applied-micro` branch from `main`
-- [ ] Set up Overleaf git sync for TX paper (create GitHub repo from existing Overleaf project)
-- [ ] Create local directory structure for TX (`tx_peer_effects_paper/`, `tx_peer_effects_local/`)
-- [ ] Export .do files from TERC to `tx_peer_effects_local/`
-- [ ] Copy `.claude/` infrastructure from `applied-micro` branch into TX local repo
-- [ ] Write TX-specific `CLAUDE.md`
+- [x] Create `applied-micro` branch from `main`
+- [x] Set up Overleaf git sync for TX paper (`tx_peer_effects_paper` repo, linked to Overleaf)
+- [x] Create local directory structure (`tx_peer_effects_local/`, renamed from `tx_immigrant_spillovers`)
+- [ ] Export .do files from TERC to `tx_peer_effects_local/` — **BLOCKED on FERPA**
+- [x] Copy `.claude/` infrastructure into TX repo (11 skills, 3 agents, 11 rules, 7 hooks, 4 templates)
+- [x] Write TX-specific `CLAUDE.md`
 
-#### Phase 1: Core Rules (Day 2)
+#### Phase 1: Core Rules + Shared Agents (Day 2)
 
+**Rules:**
 - [ ] Create `identification-strategy.md` rule
 - [ ] Create `domain-profile-applied-micro.md` (peer effects, education, immigration lit)
 - [ ] Create `air-gapped-workflow.md` rule
 - [ ] Create `replication-standards.md` rule
 - [ ] Create `multi-paper-project.md` rule
-- [ ] Adapt `stata-code-conventions.md` for applied micro (add reghdfe, ivreghdfe patterns)
+- [ ] Create `stata-code-conventions.md` (reghdfe, ivreghdfe, estout patterns)
 - [ ] Create `journal-profiles-applied-micro.md`
+
+**Shared Agents (build on `main`, flow to both branches):**
+- [ ] Create librarian agent (literature search)
+- [ ] Create librarian-critic agent (coverage evaluation, missing refs)
+- [ ] Create data-engineer agent (raw → cleaned data, merge pipelines)
+- [ ] Create coder agent (Stata primary, Python secondary)
+- [ ] Create coder-critic agent (code quality, reproducibility)
+- [ ] Create writer agent (paper drafting, anti-hedging)
+- [ ] Create writer-critic agent (clarity, structure, journal compliance)
+- [ ] Adapt verifier agent (from slides to papers + Stata)
+- [ ] Adapt proofreader agent (from slides to papers)
+
+**Devils-Advocate → `/challenge` Upgrade:**
+- [ ] Rename `/devils-advocate` to `/challenge`
+- [ ] Add `--paper` mode (shared): contribution framing, identification threats, referee objections
+- [ ] Add `--fresh` mode (shared): cold read, no prior context
+- [ ] Add `--identification` mode (applied-micro): exclusion restriction, parallel trends, instrument validity
+- [ ] Move current slide-pedagogy content to `--slides` mode (behavioral branch only)
 
 #### Phase 2: Urgent Skills for TX (Day 3-4)
 
@@ -356,15 +375,26 @@ Branch 3 (swift): cleaned → pre/post raid → synthetic control + DiD
 - [ ] Adapt `/write` for applied micro conventions
 - [ ] Adapt `/compile-latex` for paper compilation (pdflatex)
 
-#### Phase 3: Identification Toolkit (Day 5-6)
+#### Phase 3: Applied-Micro Agents + Identification Toolkit (Day 5-6)
 
-- [ ] Create `/identify` skill with all strategy modes
-- [ ] Create `/balance` skill
-- [ ] Create `/event-study` skill
+**Applied-micro-only agents:**
 - [ ] Create identification-critic agent
 - [ ] Create applied-micro-referee agent
 - [ ] Create robustness-designer agent
 - [ ] Create replication-auditor agent
+
+**Identification skills:**
+- [ ] Create `/identify` skill with all strategy modes (did, iv, rdd, synth-control, fe-variation, shift-share)
+- [ ] Create `/balance` skill
+- [ ] Create `/event-study` skill
+
+#### Phase 4: Beamer/Slides Adaptation (Later — Not Urgent)
+
+- [ ] Adapt Pedro's slide agents for applied micro presentations (seminar talks, job talks)
+- [ ] Copy remaining Beamer skills: `/compile-latex` slide mode, `/proofread`, `/visual-audit`, `/slide-excellence`
+- [ ] Copy slide-related agents: slide-auditor, pedagogy-reviewer, domain-reviewer (adapt for econ talks)
+- [ ] Copy Beamer rules: no-pause-beamer, proofreading-protocol, beamer-quarto-sync (if needed)
+- [ ] Retain all TikZ infrastructure (already copied: tikz-reviewer, tikz-visual-quality, extract-tikz)
 
 #### Phase 4: Test with TX (Day 7+)
 
