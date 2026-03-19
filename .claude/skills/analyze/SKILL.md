@@ -16,7 +16,7 @@ Run end-to-end data analysis by dispatching the **Coder** (analysis), **Data-eng
 ## Workflow
 
 ### Step 1: Context Gathering
-1. Read domain-profile.md for field conventions
+1. Read .claude/references/domain-profile.md for field conventions
 2. Read strategy memo in `quality_reports/` if it exists
 3. Check CLAUDE.md for language preference (R/Stata/Python/Julia)
 4. Scan existing scripts in `scripts/` for project patterns
@@ -64,7 +64,7 @@ When `--dual [lang1,lang2]` is provided (e.g., `--dual r,python`, `--dual r,stat
 1. **Data-engineer** runs once — language-agnostic cleaning, saves to `Data/cleaned/`
 2. **Two Coder agents** dispatched in parallel — same strategy memo, different languages
 3. **coder-critic** reviews each implementation independently (max 3 rounds each)
-4. **Comparison step** — verify numerical alignment per `domain-profile.md` tolerances:
+4. **Comparison step** — verify numerical alignment per `.claude/references/domain-profile.md` tolerances:
    - Point estimates must match within declared tolerance
    - Standard errors must match within declared tolerance
    - Flag any divergences with exact values from both languages

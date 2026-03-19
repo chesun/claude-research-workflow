@@ -22,7 +22,7 @@ Unified review command that routes to the appropriate critic agents based on the
 
 ### Explicit flags (override auto-detect)
 - `--peer` → **Full peer review** (domain-referee + methods-referee, independent blind reports + editorial synthesis)
-- `--peer [journal]` → **Journal-calibrated peer review** (same, but referees emulate that journal's review culture via journal-profiles.md)
+- `--peer [journal]` → **Journal-calibrated peer review** (same, but referees emulate that journal's review culture via .claude/references/journal-profiles.md)
 - `--methods` → **Causal audit** (strategist-critic standalone, 4-phase review)
 - `--proofread` → **Manuscript polish** (writer-critic standalone, 6 categories)
 - `--code [file]` → **Code review** (coder-critic standalone, categories 4-12)
@@ -45,7 +45,7 @@ Simulates journal peer review:
 1. Dispatch **domain-referee** — subject expertise review (5 dimensions, weighted)
 2. Dispatch **methods-referee** — econometric methods review (5 dimensions, weighted)
 3. Both reviews are independent and blind
-4. If a journal name is provided, pass it to both referees — they read `journal-profiles.md` and calibrate to that journal's review culture
+4. If a journal name is provided, pass it to both referees — they read `.claude/references/journal-profiles.md` and calibrate to that journal's review culture
 5. Orchestrator synthesizes editorial decision: Accept / Minor / Major / Reject
 6. Save reports to `quality_reports/`
 
@@ -69,7 +69,7 @@ Re-implement existing code in a different language and compare outputs:
 1. Auto-detect source language from file extension (`.R`, `.py`, `.do`, `.jl`)
 2. Dispatch **Coder** in replication mode — re-implement in target language
 3. **coder-critic** reviews both implementations
-4. Compare numerical outputs per `domain-profile.md` Quality Tolerance Thresholds
+4. Compare numerical outputs per `.claude/references/domain-profile.md` Quality Tolerance Thresholds
 5. Save replicated script to `scripts/[target-language]/`
 6. Save report to `quality_reports/[file]_replication_report.md`
 

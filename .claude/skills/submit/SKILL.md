@@ -20,7 +20,7 @@ Get ranked journal recommendations.
 
 **Agent:** Orchestrator (journal selection function)
 
-Considers: contribution fit, methodology fit, audience fit, recent publications, desk rejection risk. Consults domain-profile.md for journal tiers.
+Considers: contribution fit, methodology fit, audience fit, recent publications, desk rejection risk. Consults .claude/references/domain-profile.md for journal tiers.
 
 Output: Ranked list of 3 target journals with rationale.
 Save to `quality_reports/journal_recommendations_[date].md`

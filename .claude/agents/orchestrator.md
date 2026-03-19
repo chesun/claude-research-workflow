@@ -95,7 +95,7 @@ When selecting target journals, consider:
 - Audience fit (who needs to read this?)
 - Recent publications (has this journal published similar work recently?)
 - Desk rejection risk
-- Consult `domain-profile.md` for journal tiers
+- Consult `.claude/references/domain-profile.md` for journal tiers
 
 Produce a **ranked list of 3 target journals** with rationale.
 

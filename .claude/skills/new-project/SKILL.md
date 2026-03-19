@@ -49,7 +49,7 @@ Phase 5: Submission (depends on Phase 4, score >= 95)
 1. **If `interactive` or no research spec exists:**
    Run `/discover interview` to produce:
    - Research specification (`quality_reports/research_spec_*.md`)
-   - Domain profile (`.claude/rules/domain-profile.md`) — if still template
+   - Domain profile (`.claude/references/domain-profile.md`) — if still template
 
 2. **Run `/discover lit`** with the research topic:
    - Librarian collects literature

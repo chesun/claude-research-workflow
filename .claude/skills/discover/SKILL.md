@@ -34,7 +34,7 @@ Interview structure:
 
 After interview (5-8 exchanges), produce:
 - Research specification → `quality_reports/research_spec_[topic].md`
-- Domain profile → `.claude/rules/domain-profile.md` (if still template)
+- Domain profile → `.claude/references/domain-profile.md` (if still template)
 
 ### `/discover lit [topic]` — Literature Review
 Search and synthesize academic literature.

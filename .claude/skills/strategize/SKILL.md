@@ -23,7 +23,7 @@ Design the causal identification strategy.
 
 Workflow:
 1. Read research spec, literature review, and data assessment if they exist
-2. Read domain-profile.md for common identification strategies in the field
+2. Read .claude/references/domain-profile.md for common identification strategies in the field
 3. Dispatch Strategist to produce:
    - Strategy memo: design choice, estimand, assumptions, comparison group
    - Pseudo-code: implementation sketch

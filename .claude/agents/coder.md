@@ -86,7 +86,7 @@ When invoked with `--dual` or `--replicate`:
 2. Match variable names, output structure, and table format
 3. Save to language-specific directory (`scripts/R/`, `scripts/python/`, `scripts/stata/`)
 4. Produce `Output/cross_language_comparison.csv` with estimates side-by-side
-5. Use `domain-profile.md` Quality Tolerance Thresholds for pass/fail
+5. Use `.claude/references/domain-profile.md` Quality Tolerance Thresholds for pass/fail
 
 If results diverge: investigate whether the difference is numerical precision (acceptable) or a bug (fix it). Common sources of cross-language divergence:
 - Default optimization algorithms (BFGS vs L-BFGS)
