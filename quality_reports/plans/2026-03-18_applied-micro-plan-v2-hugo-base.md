@@ -201,7 +201,9 @@ All agent/skill references updated to `.claude/references/` paths (11 files fixe
 - [x] Wrote lean TX-specific CLAUDE.md (project details only — 95 lines)
 - [x] Committed to TX repo: 7c84c68
 - [ ] Test `/review --peer` on TX paper — ready to test
+- [ ] Test `/review --proofread` on TX paper — ready to test
 - [ ] Test `/strategize` on TX identification strategy — ready to test
+- [ ] Test `/challenge` on TX paper — ready to test
 - [ ] Test `/analyze` code review on exported .do files — blocked on FERPA
 - [ ] Iterate based on output quality
 
