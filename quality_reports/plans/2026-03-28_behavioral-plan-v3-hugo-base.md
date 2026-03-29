@@ -110,7 +110,7 @@ This is what makes the behavioral workflow **different** from the applied micro 
 | Skill | What It Does | Why Applied Micro Doesn't Need This |
 |-------|-------------|--------------------------------------|
 | `/theory develop [topic]` | Formal model: assumptions → setup → equilibrium → comparative statics → testable predictions. **Follows:** Varian (1997) KISS workflow (simplest example → pattern → model → generalize → simplify again); Thomson (1999) notation conventions (mnemonic symbols, logical sequencing, boundary examples); Board & Meyer-ter-Vehn (2018) architecture (one paper one model, main result by page 15). Theorist agent reads `theory-writing-learnings.md` | Applied micro rarely builds formal theory from scratch |
-| `/theory review [file]` | Review proofs, check derivations, verify predictions follow from model (`--proofs`, `--assumptions`, `--predictions`). **Uses:** theorist-critic 17-item checklist + Knuth/Halmos proof quality rules (direct proofs preferred, proof steps synchronized with reader, structured proofs). Reads `theory-writing-learnings.md` Section 8 + Section 14 | Applied micro uses existing theory |
+| `/theory review [file]` | Review proofs, check derivations, verify predictions follow from model (`--proofs`, `--assumptions`, `--predictions`). **Uses:** theorist-critic 16-item checklist + Knuth/Halmos proof quality rules (direct proofs preferred, proof steps synchronized with reader, structured proofs). Reads `theory-writing-learnings.md` Section 8 + Section 14 | Applied micro uses existing theory |
 | `/design experiment [topic]` | Full inference-first design checklist (14 steps, see Section 5) (`--lab`, `--online`). **Incorporates:** Niederle (2025) alternative-hypothesis controls, Snowberg & Yariv (2025) parameter selection, Healy & Leo (2025) belief elicitation, Chapman & Fisher (2025) preference elicitation, Brocas et al. (2025) process measurement, List et al. (2011) power analysis, Moffatt test selection, Coffman & Dreber (2025) replication standards. Survey experiment sub-steps: manipulation checks, differential attrition, covariate adjustment (Huber & Graham 2025) | Applied micro uses `/strategize` for observational identification |
 | `/qualtrics [mode]` | Create importable QSF, validate exported QSF, improve survey, generate custom JS/CSS (`create`, `validate`, `improve`, `export-js`) | Applied micro doesn't run surveys |
 | `/otree [mode]` | Generate oTree app from design doc, review code, explain concepts (`create`, `review`, `explain`) | Applied micro doesn't run lab experiments |
@@ -122,8 +122,8 @@ This is what makes the behavioral workflow **different** from the applied micro 
 
 | Agent | Role | Why Applied Micro Doesn't Need This |
 |-------|------|--------------------------------------|
-| **theorist** | Formal model development: game theory (Nash, SPE, PBE), decision theory (EU, prospect theory, Kőszegi-Rabin), dynamic programming (Bellman, Markov), behavioral (present bias, loss aversion, probability weighting), structural estimation setup (MLE, MSM, indirect inference). **Follows:** Thomson (1999) rules (simplest version first, mnemonic notation, boundary examples for definitions, logical sequencing); Varian (1997) KISS workflow (simplest example → pattern → model → generalize); Board & Meyer-ter-Vehn (2018) architecture (one paper one model, main result by page 15, theorems as English-language takeaways). **Reads:** `quality_reports/paper_learnings/theory-writing-learnings.md` Sections 1-10 | Applied micro uses existing theory |
-| **theorist-critic** | Proof verification, assumption stress-testing, boundary conditions, uniqueness checks, notation consistency. **Uses 17-item checklist** from theory-writing-learnings.md Section 8: informal descriptions match formal statements, each hypothesis independently needed, "clearly"/"obviously" claims verified, notation introduced before use, math-to-English ratio in [52%, 63.5%] for proofs, quantifiers unambiguous, all conditions gathered before conclusion, logical sequencing, no single-use notation, assumptions specified per proof step, consistent terminology, functions vs values not confused, variants explored, boundary examples provided, examples satisfying all assumptions exist (non-vacuous), parallel format, proof divided into labeled units. **Reads:** `quality_reports/paper_learnings/theory-writing-learnings.md` Section 8 | No new proofs to verify |
+| **theorist** | Formal model development: game theory (Nash, SPE, PBE), decision theory (EU, prospect theory, Kőszegi-Rabin), dynamic programming (Bellman, Markov), behavioral (present bias, loss aversion, probability weighting), structural estimation setup (MLE, MSM, indirect inference). **Follows:** Thomson (1999) rules (simplest version first, mnemonic notation, boundary examples for definitions, logical sequencing); Varian (1997) KISS workflow (simplest example → pattern → model → generalize); Board & Meyer-ter-Vehn (2018) architecture (one paper one model, main result by page 15, theorems as English-language takeaways). **Figure standards** (Thomson Section 5): use pictures to lighten papers and illustrate proof steps; label completely (allocations, prices, endowments); Venn diagrams for logical relations between assumptions. **Reads:** `quality_reports/paper_learnings/theory-writing-learnings.md` Sections 1-10 | Applied micro uses existing theory |
+| **theorist-critic** | Proof verification, assumption stress-testing, boundary conditions, uniqueness checks, notation consistency. **Uses 16-item checklist** from theory-writing-learnings.md Section 8: informal descriptions match formal statements, each hypothesis independently needed, "clearly"/"obviously" claims verified, notation introduced before use, math-to-English ratio in [52%, 63.5%] for proofs, quantifiers unambiguous, all conditions gathered before conclusion, logical sequencing, no single-use notation, assumptions specified per proof step, consistent terminology, functions vs values not confused, variants explored, boundary examples provided, examples satisfying all assumptions exist (non-vacuous), parallel format, proof divided into labeled units. **Additional checks:** fewer footnotes than pages (Board & Meyer-ter-Vehn); figures used to illustrate proof steps and logical relations (Thomson Section 5). **Reads:** `quality_reports/paper_learnings/theory-writing-learnings.md` Section 8 | No new proofs to verify |
 | **designer** | Inference-first design specialist: produces 14-step checklist, interface/elicitation expertise, incentive compatibility analysis, power analysis, budget/timing estimates. Knows: BDM, MPL, strategy method, direct elicitation, belief elicitation (Schotter & Trevino), allocation tasks. **Also knows:** Snowberg & Yariv (2025) parameter selection framework (4 objectives); Healy & Leo (2025) belief elicitation decision tree (6 recommendations + IC hierarchy); Chapman & Fisher (2025) preference elicitation comparison (6 methods + MPL pitfalls + DOSE adaptive); List et al. (2011) optimal sample allocation (unequal variance, costs, clusters); Brocas et al. (2025) process measurement (always collect RT). **Reads:** `quality_reports/paper_learnings/experimental-design-learnings.md` and `handbook-experimental-methodology-learnings.md` | Applied micro doesn't design experiments |
 | **designer-critic** | Adversarial design review: demand effects, confounds, comprehension, interface effects, floor/ceiling, incentive issues, external validity, multiple testing, ethics/IRB. **Enriched checks from learnings:** MPL pitfalls (centering bias, multiple switching 16%, reference point effects); IC assumption hierarchy violation (is the method's IC assumption justified per Healy & Leo?); measurement error budget (30-50% of variance — ORIV recommended?); parameter pitfalls (flat incentives, corner solutions, misperception sensitivity per Snowberg & Yariv); focal value response risk for bounded measures (60-70%); design-hacking check (parameters selected via unreported pilots?); clustering adequacy (OLS without clustering → size 0.46 per Moffatt). **Reads:** `quality_reports/paper_learnings/handbook-experimental-methodology-learnings.md` and `experimental-design-learnings.md` | Applied micro uses strategist-critic for identification threats |
 | **qualtrics-specialist** | QSF generation, custom JS/CSS/HTML, survey flow, embedded data, piped text, display logic, quotas, randomizers, web services, end-of-survey redirects | Not applicable |
@@ -315,6 +315,10 @@ This is the core intellectual contribution of the behavioral workflow. It revers
      (2) Multiple elicitations + ORIV correction or averaging
      (3) Exclude noisy data (comprehension quizzes, pre-registered criteria)
      (4) Econometric corrections (MLE/Bayesian with noise parameters)
+   - COVARIATE WARNING: When noisy elicitation is used as a control
+     variable, false positive rates approach 100% in large samples
+     (Chapman & Fisher 2025). Never treat noisily-elicited variables
+     as reliable covariates without ORIV correction.
    - Screen layout mockup
 
 7. PROCESS MEASUREMENT (NEW — Brocas et al. 2025)
@@ -372,6 +376,9 @@ This is the core intellectual contribution of the behavioral workflow. It revers
     - Matching protocol consistent with theory (strangers vs. partners)
     - Randomization of subjects to treatments
     - Privacy: private payment, anonymous data
+    - Effect persistence: treatment effects decay to 1/3-1/2 within
+      1-4 weeks (Huber & Graham). Design panel follow-ups if long-term
+      effects are of interest.
 
 11. POWER ANALYSIS
     - Effect size assumption (justify from theory, pilots, or literature)
@@ -443,6 +450,10 @@ This is the core intellectual contribution of the behavioral workflow. It revers
       BOTH cleaning AND analysis, extensive comments, "computational empathy"
       (Vilhuber) — write as if a stranger needs to understand
     - Multiple testing correction method specified
+    - Alternative path — Registered Reports (Coffman & Dreber):
+      Submit paper with intro, design, hypotheses (no results); journal
+      peer-reviews before data collection; if accepted, publishes regardless
+      of results. Leads to more null results (Scheel et al. 2021).
 ```
 
 ---
@@ -632,6 +643,12 @@ Shared modes (`--paper`, `--fresh`) plus behavioral-specific modes (`--design`, 
 - "You have 10 theorems. If I forced you to cut to 3, which survive? Those are your paper." (Board & Meyer-ter-Vehn)
 - "Your model takes 4 pages to state. Varian says the best notation is no notation. Can you start with a 2-agent, 2-good example?"
 
+**Rubinstein's 4 Dilemmas (NEW — from Rubinstein 2006):**
+- "Where does your model produce absurd results? All models do somewhere — have you probed the boundary conditions?"
+- "You're evaluating your model by empirical fit. Rubinstein argues models clarify mechanisms, not predict. What mechanism does yours isolate?"
+- "Could you have found this regularity just by looking at the data with no model? When is the model doing real work?"
+- "Your formal presentation may obscure moral complexity. What does your model have to say about this practical question — honestly?"
+
 ---
 
 ## 11. Christina's Project Details (Preserved from v2.1)
@@ -693,9 +710,9 @@ project-repo/
 ├── CLAUDE.md                    # Project configuration (project-specific only)
 ├── CLAUDE.local.md              # Machine-specific overrides (gitignored)
 ├── MEMORY.md                    # Cross-session learning
-├── Bibliography_base.bib        # Centralized bibliography
+├── bibliography_base.bib        # Centralized bibliography
 │
-├── Paper/                       # Main manuscript (SOURCE OF TRUTH)
+├── paper/                       # Main manuscript (SOURCE OF TRUTH)
 │   ├── main.tex
 │   └── sections/                # Modular section files
 │
