@@ -65,27 +65,39 @@ Search and synthesize academic literature.
 **Agents:** Librarian (collector) → librarian-critic (reviewer)
 **Output:** Annotated bibliography + BibTeX entries + frontier map
 
+**⚠️ MANDATORY AGENT DISPATCH: You MUST use the Agent tool (subagent_type="librarian") to dispatch the librarian agent for the search phase, and then use the Agent tool (subagent_type="librarian-critic") to dispatch the librarian-critic for review. Do NOT do the literature search yourself inline — the agents have specialized prompts and calibration. Skipping agent dispatch violates the worker-critic separation principle.**
+
 Workflow:
 1. Read `.claude/references/domain-profile-behavioral.md` for field journals and seminal references
 2. Check `master_supporting_docs/` for uploaded papers
 3. Read `bibliography_base.bib` for papers already in the project
-4. Dispatch Librarian to search:
-   - Top-5 journals (AER, Econometrica, QJE, JPE, REStud)
-   - Behavioral/experimental field journals (AEJ:Micro, JEBO, Games and Economic Behavior, JEEA, Experimental Economics, JRU, JDM, Management Science)
-   - Psychology crossover journals (Psychological Science, Cognition, JEP:General, PNAS) — evaluate with skepticism about inference standards
-   - NBER/SSRN working papers
+4. **DISPATCH: Use the Agent tool with subagent_type="librarian"** to search. Include in the agent prompt:
+   - The research topic/question
+   - The relevant context from steps 1-3
+   - Instructions to search in this order:
+     - **First: Search Christina's Mendeley library** using `mcp__mendeley__mendeley_search_library` with relevant keywords. This contains papers Christina has already collected and read — these are the most relevant starting points. Search with multiple keyword combinations to ensure coverage.
+     - **Second: Search the Mendeley catalog** using `mcp__mendeley__mendeley_search_catalog` for papers not in the personal library.
+     - **Third: Search the web** using `mcp__claude_ai_Consensus__search` (Semantic Scholar) and `WebSearch` for recent working papers, NBER, SSRN.
+     - **Fourth: Check seminal references** — Read `.claude/references/seminal-papers-by-subfield.md` for canonical papers that must be cited.
+   - Target venues:
+     - Top-5 journals (AER, Econometrica, QJE, JPE, REStud)
+     - Behavioral/experimental field journals (AEJ:Micro, JEBO, Games and Economic Behavior, JEEA, Experimental Economics, JRU, JDM, Management Science)
+     - Psychology crossover journals (Psychological Science, Cognition, JEP:General, PNAS) — evaluate with skepticism about inference standards
+     - NBER/SSRN working papers
    - **Always check:** Is there existing experimental evidence on this question? (Before proposing a novel study)
    - **Citation chains** — forward and backward citation tracking from key papers
-   - Read `.claude/references/seminal-papers-by-subfield.md` for canonical references
-5. Assign **proximity scores** to each paper:
-   - **1** — Directly competes (same question, similar method)
-   - **2** — Closely related (same question, different method or setting)
-   - **3** — Related (overlapping topic, different angle)
-   - **4** — Background (provides theory, method, or context)
-   - **5** — Tangentially related (useful framing only)
-6. Dispatch librarian-critic to check coverage, gaps, recency, scope
-7. If gaps found, re-dispatch Librarian for targeted search (max 1 round)
-8. Save to `quality_reports/lit_review_[topic].md`
+   - Instructions to assign **proximity scores** (1-5) to each paper:
+     - **1** — Directly competes (same question, similar method)
+     - **2** — Closely related (same question, different method or setting)
+     - **3** — Related (overlapping topic, different angle)
+     - **4** — Background (provides theory, method, or context)
+     - **5** — Tangentially related (useful framing only)
+   - Instructions to save results to `quality_reports/lit_review_[topic].md`
+5. **DISPATCH: Use the Agent tool with subagent_type="librarian-critic"** to review the librarian's output. Include in the agent prompt:
+   - Path to the lit review file the librarian produced
+   - Instructions to check: coverage gaps, recency, scope calibration, journal quality, missing seminal papers
+6. If librarian-critic identifies gaps, re-dispatch librarian for targeted search (max 1 round)
+7. Present the final lit review to the user with the critic's assessment
 
 **Unverified citations:** If you cannot verify a citation, mark the BibTeX entry with `% UNVERIFIED`. Do NOT fabricate or guess citation details. Note when working papers have been published — cite the published version.
 
@@ -107,33 +119,32 @@ Find and assess datasets for the research question.
 **Agents:** Explorer (finder) → explorer-critic (assessor)
 **Output:** Ranked data sources with feasibility grades
 
+**⚠️ MANDATORY AGENT DISPATCH: You MUST use the Agent tool (subagent_type="explorer") for the search phase, then use the Agent tool (subagent_type="explorer-critic") for the critique. Do NOT search for data yourself inline.**
+
 Workflow:
 1. Read research spec and strategy memo if they exist
 2. Read `.claude/references/domain-profile-behavioral.md` for common data sources in the field
 3. Understand what variables are needed: treatment, outcome, controls, time period, geography
-4. Dispatch Explorer to search across source categories:
-   - Own experimental data (oTree exports, Qualtrics exports, Prolific demographics)
-   - Existing experimental datasets (replication packages from published experiments)
-   - Public microdata (CPS, ACS, NHIS — for field experiment or complementary analysis)
-   - Survey data (RAND HRS, PSID, Add Health, NLSY)
-   - Platform-specific: Prolific (demographics, attention metrics), MTurk, university lab pools
-5. For each dataset found, report:
-   - Name, provider, access level (public/restricted)
-   - Key variables available
-   - Coverage (time period, geography, sample size)
-   - **Feasibility grade:**
-     - **A** — Ready to use (public download, documented, standard format)
-     - **B** — Accessible with effort (application required, moderate cost, needs cleaning)
-     - **C** — Restricted but obtainable (FSRDC, data use agreement, IRB approval)
-     - **D** — Very difficult (proprietary, requires partnership, rare access)
-   - Strengths and limitations
-6. Dispatch explorer-critic to critique each proposed dataset using the **5-point assessment:**
-   1. **Measurement validity** — Does the variable actually measure what we need?
-   2. **Sample selection** — Who is in the data? Who is missing?
-   3. **External validity** — Can we generalize from this sample?
-   4. **Identification compatibility** — Does this data support the proposed design?
-   5. **Known issues** — Documented problems with this dataset in the literature
-7. Save exploration to `quality_reports/data_exploration_[topic].md`
+4. **DISPATCH: Use the Agent tool with subagent_type="explorer"** to search. Include in the agent prompt:
+   - The research question and variable requirements from steps 1-3
+   - Instructions to search across source categories:
+     - Own experimental data (oTree exports, Qualtrics exports, Prolific demographics)
+     - Existing experimental datasets (replication packages from published experiments)
+     - Public microdata (CPS, ACS, NHIS — for field experiment or complementary analysis)
+     - Survey data (RAND HRS, PSID, Add Health, NLSY)
+     - Platform-specific: Prolific (demographics, attention metrics), MTurk, university lab pools
+   - Instructions to report for each dataset: name, provider, access level, key variables, coverage, feasibility grade (A/B/C/D), strengths and limitations
+   - Instructions to save to `quality_reports/data_exploration_[topic].md`
+5. **DISPATCH: Use the Agent tool with subagent_type="explorer-critic"** to critique. Include in the agent prompt:
+   - Path to the data exploration file the explorer produced
+   - Instructions to apply the **5-point assessment** to each dataset:
+     1. **Measurement validity** — Does the variable actually measure what we need?
+     2. **Sample selection** — Who is in the data? Who is missing?
+     3. **External validity** — Can we generalize from this sample?
+     4. **Identification compatibility** — Does this data support the proposed design?
+     5. **Known issues** — Documented problems with this dataset in the literature
+6. Present results with the critic's assessment to the user
+7. Save final exploration to `quality_reports/data_exploration_[topic].md`
 
 **Rejected datasets:** Include a rejection table:
 

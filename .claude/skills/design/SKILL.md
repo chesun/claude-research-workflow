@@ -26,13 +26,18 @@ Produce a complete inference-first design using the 14-step checklist.
 **Agents:** Designer → designer-critic
 **Output:** Design document + filled checklist
 
+**⚠️ MANDATORY AGENT DISPATCH: You MUST use the Agent tool (subagent_type="designer") for the design phase, then use the Agent tool (subagent_type="designer-critic") for the review. Do NOT design the experiment yourself inline — the agents have specialized prompts with the 14-step checklist and 13 design principles internalized.**
+
 **Workflow:**
 
 1. Read research spec, literature review, and theory predictions if they exist
 2. Read `.claude/references/inference-first-checklist.md` for the 14-step structure
 3. Read `.claude/references/domain-profile-behavioral.md` for field conventions
 4. If `--lab` or `--online` flag present, tailor platform-specific sections
-5. Dispatch **Designer** to produce the 14-step design:
+5. **DISPATCH: Use the Agent tool with subagent_type="designer"** to produce the 14-step design. Include in the agent prompt:
+   - The research question, hypotheses, and any existing literature review or theory predictions
+   - The path to the inference-first checklist and domain profile
+   - Instructions to produce all 14 steps:
    - Steps 1-2: Research question and hypotheses (theoretical predictions OR empirical hypotheses — both accepted)
    - Steps 3-5: Statistical tests, data structure, and treatment arms (co-designed iteratively)
    - Step 6: Interface and elicitation choices with IC justification
@@ -44,7 +49,8 @@ Produce a complete inference-first design using the 14-step checklist.
    - Step 12: Budget and attrition planning
    - Step 13: Parameter selection (Snowberg & Yariv framework)
    - Step 14: Pre-registration draft outline (full PAP via `/preregister`)
-6. Dispatch **designer-critic** to review through adversarial audit:
+   - Instructions to save to `quality_reports/designs/`
+6. **DISPATCH: Use the Agent tool with subagent_type="designer-critic"** to review. Include in the agent prompt the path to the design document and instructions for adversarial audit:
    - Phase 1: Completeness (all 14 steps addressed)
    - Phase 2: Design validity (13 principles from experiment-design-principles.md)
    - Phase 3: Inference validity (test selection, clustering, power)
