@@ -903,7 +903,7 @@ project-repo/                    # Git repo
 - [x] Adapt `content-standards.md` with experimental reporting standards + Stata table/figure conventions (2026-03-29)
 - [x] Adapt `working-paper-format.md` for pdflatex (2026-03-29)
 - [x] Tables/figures conventions — folded into `content-standards.md` and `stata-code-conventions.md` (no separate files needed) (2026-03-29)
-- [x] Create `.claude/references/`: domain-profile-behavioral, inference-first-checklist, replication-standards, seminal-papers-by-subfield (starter — needs Christina review) (2026-03-29)
+- [x] Create `.claude/references/`: domain-profile-behavioral, inference-first-checklist, replication-standards, seminal-papers-by-subfield (expanded to 232 entries 2026-03-29) (2026-03-29)
 - [x] Create templates: experiment-design-checklist.md, pre-registration-template.md, subject-instructions-template.tex (2026-03-29)
 
 ### Phase 2: Agents
@@ -968,8 +968,8 @@ Implements Section 9b additions. 6 files updated (2026-03-29):
 - [x] **Merge Hugo's clo-author into behavioral branch** — done 2026-03-28 (clean start from Hugo's main + Pedro layered on top)
 - [x] **Create `/challenge` skill** — done 2026-03-29
 - [x] **Update CLAUDE.md** for behavioral workflow — done 2026-03-29
-- [ ] **Gather seminal papers per subfield** — Claude searches, Christina reviews and augments (11 categories)
-- [ ] **Confirm subfield categories** — Christina's edited list has 11; confirm no changes
+- [x] **Gather seminal papers per subfield** — done 2026-03-29. Mendeley deep search + web sources. 37 → 232 entries, 12 sections (added Gender & Competition). Christina reviewed and corrected.
+- [x] **Confirm subfield categories** — done 2026-03-29. Christina expanded to 12 categories (added Gender & Competition, renamed section 1 to "Risk, Ambiguity, & Non-Standard Preferences", added Social Norms sub-category)
 - [ ] **Export a QSF from existing Qualtrics survey** — needed for `/qualtrics` skill development
 
 ### Should-Do (Improves Quality)
