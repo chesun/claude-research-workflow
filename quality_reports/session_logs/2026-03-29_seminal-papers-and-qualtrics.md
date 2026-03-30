@@ -62,5 +62,30 @@ Analyzing two JMP experiment QSF files:
 - 232 entries is sufficient — add organically going forward
 - Single-file QSF with all treatments in one randomizer is the standard
 
+## Qualtrics Skill & Agent Enrichment (2026-03-29)
+
+**Task:** Improve `/qualtrics` skill and `qualtrics-specialist` agent based on JMP QSF analysis.
+
+**Commits:**
+- `9c49f8c` — enriched skill (117→177 lines) and agent (104→320 lines) with 14 named patterns
+- `30030d3` — added `.claude/references/qualtrics-patterns.md` quick reference + auto-learning instructions
+
+**Changes:**
+- Skill: all 4 modes enriched with concrete patterns, 10 principles, pattern-learning section
+- Agent: 8 new design pattern sections (survey flow, MPL, quiz error counting, attention checks, state persistence, L&M, input validation, asset hosting), reference docs, pattern-learning section
+- Reference doc: portable quick reference for agent consumption
+- Patterns doc: expanded to 14 named patterns + 19 reusable bullet points (added MPL implementation from earlier JMP version QSF, input validation patterns)
+
+**Key additions from 3rd QSF (MPL version):**
+- MPL uses Matrix/Bipolar question type with JS autofill on switch + single-switch enforcement
+- Custom Next button replaces built-in for validation before advancing
+- Switch row stored in embedded data per L&M iteration
+- Bonus calculation JS reads embedded data across all rounds, randomly selects paying round
+
+**Architecture decisions:**
+- Two-tier doc system: quick reference (`.claude/references/`) + detailed patterns (`quality_reports/paper_learnings/`)
+- Auto-learning: skill and agent check patterns docs after each task, append novel techniques
+- Single-file with one randomizer is the standard (two-file is a workaround)
+
 ## Open Questions
-- [ ] Should `/qualtrics` skill generate QSFs at this complexity level, or mainly validate/debug?
+- None currently blocking
