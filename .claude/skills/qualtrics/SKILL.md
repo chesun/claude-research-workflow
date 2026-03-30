@@ -15,7 +15,9 @@ Create, validate, or improve Qualtrics surveys by dispatching the **qualtrics-sp
 
 **Input:** `$ARGUMENTS` — mode keyword followed by a design document path or QSF file path.
 
-**Reference implementation:** See `quality_reports/paper_learnings/jmp-qualtrics-patterns.md` for 18 battle-tested patterns from Christina's JMP experiment.
+**Reference docs:**
+- Quick reference: `.claude/references/qualtrics-patterns.md`
+- Detailed patterns with code: `quality_reports/paper_learnings/jmp-qualtrics-patterns.md`
 
 ---
 
@@ -175,3 +177,12 @@ Save to `experiments/qualtrics/custom/`
 - **Hide storage questions with CSS.** Hidden TE questions used for JS state persistence should be hidden via `display: none` in Look & Feel custom CSS, not Qualtrics question visibility settings.
 - **Test on mobile.** If running online, the survey must work on phone screens.
 - **Platform redirect.** Always configure end-of-survey redirect for the recruiting platform. Disable back button and progress bar.
+
+## Pattern Learning
+
+After completing any `/qualtrics validate`, `/qualtrics improve`, or `/qualtrics export-js` task, check the patterns docs for new patterns worth documenting:
+
+1. Read `quality_reports/paper_learnings/jmp-qualtrics-patterns.md`
+2. If you encountered a novel Qualtrics technique not already listed (new JS pattern, new question type usage, new validation approach, new flow structure), **append it** as a new numbered pattern
+3. If the new pattern is significant enough to be a quick-reference item, also update `.claude/references/qualtrics-patterns.md`
+4. This ensures the knowledge base grows with each survey Christina builds
