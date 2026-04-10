@@ -52,6 +52,9 @@ CLAUDE.local.md
 # Quarto rendering artifacts
 /.quarto/
 
+# Qualtrics exports (behavioral branch only)
+master_supporting_docs/qualtrics/
+
 # Output artifacts — uncomment lines below based on your preference
 # *.rds
 # output/**/*.rds
