@@ -17,7 +17,7 @@ Structure point-by-point referee responses with classification, agent routing pe
 
 ### Step 1: Parse Inputs
 1. Read referee report(s) from `$ARGUMENTS`
-2. Read the paper (Paper/main.tex or specified path)
+2. Read the paper (paper/main.tex or specified path)
 3. Read revision protocol from rules
 4. Read existing scripts to know what analyses already exist
 
@@ -54,7 +54,7 @@ When DISAGREE: open with acknowledgment, provide evidence, offer partial concess
 ### Step 7: Save Outputs
 1. Tracker: `quality_reports/referee_response_tracker.md`
 2. Response letter: `quality_reports/referee_response_[journal]_[date].tex`
-3. Revised sections: `Paper/sections/` (for CLARIFICATION/REWRITE items)
+3. Revised sections: `paper/sections/` (for CLARIFICATION/REWRITE items)
 
 ---
 

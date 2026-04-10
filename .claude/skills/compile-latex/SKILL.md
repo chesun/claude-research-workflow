@@ -14,8 +14,8 @@ Compile a LaTeX document with full citation resolution.
 1. **Read CLAUDE.md** for engine choice and directory structure. Default: pdflatex for papers.
 
 2. **Detect mode** from arguments or file location:
-   - `--paper` or file in `Paper/`: compile as paper
-   - `--talk` or file in `Talks/`: compile as talk
+   - `--paper` or file in `paper/`: compile as paper
+   - `--talk` or file in `talks/`: compile as talk
    - No flag: infer from file path
 
 3. **Compile with 3-pass sequence:**

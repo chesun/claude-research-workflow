@@ -34,7 +34,7 @@ Dispatch **Coder** agent:
 - Stage 0: Data loading (from cleaned data or raw)
 - Stage 1: Main specification (from strategy memo)
 - Stage 2: Robustness checks
-- Stage 3: Publication-ready output (tables to Tables/, figures to Figures/)
+- Stage 3: Publication-ready output (tables to tables/, figures to figures/)
 - Save scripts to scripts/R/ (or appropriate language directory)
 
 ### Step 4: Code Review
@@ -51,7 +51,7 @@ If coder-critic finds Critical/Major issues:
 ### Step 6: Present Results
 1. Results summary with key estimates and SEs
 2. Scripts created with paths
-3. Output files in Tables/ and Figures/
+3. Output files in tables/ and figures/
 4. Code review score
 5. TODO items
 
@@ -61,14 +61,14 @@ If coder-critic finds Critical/Major issues:
 
 When `--dual [lang1,lang2]` is provided (e.g., `--dual r,python`, `--dual r,stata`):
 
-1. **Data-engineer** runs once — language-agnostic cleaning, saves to `Data/cleaned/`
+1. **Data-engineer** runs once — language-agnostic cleaning, saves to `data/cleaned/`
 2. **Two Coder agents** dispatched in parallel — same strategy memo, different languages
 3. **coder-critic** reviews each implementation independently (max 3 rounds each)
 4. **Comparison step** — verify numerical alignment per `.claude/references/domain-profile.md` tolerances:
    - Point estimates must match within declared tolerance
    - Standard errors must match within declared tolerance
    - Flag any divergences with exact values from both languages
-5. Save comparison report to `Output/cross_language_comparison.md`
+5. Save comparison report to `output/cross_language_comparison.md`
 
 If results diverge beyond tolerance, both Coder agents are re-dispatched to investigate. The comparison report includes a side-by-side table of all estimates.
 

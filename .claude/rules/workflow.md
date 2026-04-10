@@ -201,7 +201,7 @@ The Orchestrator activates Discovery → Strategy → Execution → Peer Review 
 
 The user invokes a skill directly:
 
-> `/strategize Paper/main.tex`
+> `/strategize paper/main.tex`
 
 This runs the strategist-critic agent alone, right now, no phase dependencies.
 

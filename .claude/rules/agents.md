@@ -71,7 +71,7 @@ A creator cannot evaluate the quality of its own work. The score always comes fr
 ### Enforcement
 
 The Orchestrator flags violations:
-- If a critic invocation produces a file in `scripts/`, `Paper/`, or `Talks/` → flag
+- If a critic invocation produces a file in `scripts/`, `paper/`, or `talks/` → flag
 - If a creator reports its own score → discard, dispatch critic
 
 ---

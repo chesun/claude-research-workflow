@@ -51,8 +51,8 @@ stata-mp -b do scripts/stata/main.do 2>&1 | tail -20
 
 ### 3. File Integrity
 - Every `\input{}`, `\include{}` reference resolves to an existing file
-- Every referenced table in `Tables/` exists
-- Every referenced figure in `Figures/` exists
+- Every referenced table in `tables/` exists
+- Every referenced figure in `figures/` exists
 
 ### 4. Output Freshness
 - Timestamps of output files match latest script run

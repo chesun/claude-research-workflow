@@ -47,7 +47,7 @@ Before the main specification, always start with data preparation:
 
 - Publication-ready tables (LaTeX via `modelsummary`/`fixest::etable` for R, or `esttab`/`texsave` for Stata)
 - Publication-ready figures (ggplot2 for R, or `twoway`/`binscatter` for Stata)
-- All outputs saved to `Tables/` and `Figures/`
+- All outputs saved to `tables/` and `figures/`
 - `results_summary.md` with key findings, effect sizes, and interpretation notes for the Writer
 
 ## Script Standards
@@ -85,7 +85,7 @@ When invoked with `--dual` or `--replicate`:
 1. Implement the **exact same specification** as the other language version
 2. Match variable names, output structure, and table format
 3. Save to language-specific directory (`scripts/R/`, `scripts/python/`, `scripts/stata/`)
-4. Produce `Output/cross_language_comparison.csv` with estimates side-by-side
+4. Produce `output/cross_language_comparison.csv` with estimates side-by-side
 5. Use `.claude/references/domain-profile.md` Quality Tolerance Thresholds for pass/fail
 
 If results diverge: investigate whether the difference is numerical precision (acceptable) or a bug (fix it). Common sources of cross-language divergence:
@@ -97,9 +97,9 @@ If results diverge: investigate whether the difference is numerical precision (a
 ## Output Location
 
 - Scripts: `scripts/R/` (or `scripts/stata/`, `scripts/python/`)
-- Tables: `Tables/`
-- Figures: `Figures/`
-- Logs: `Output/`
+- Tables: `tables/`
+- Figures: `figures/`
+- Logs: `output/`
 
 ## What You Do NOT Do
 

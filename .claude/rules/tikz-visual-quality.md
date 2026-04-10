@@ -1,7 +1,7 @@
 ---
 paths:
-  - "Slides/**/*.tex"
-  - "Figures/**/*.tex"
+  - "slides/**/*.tex"
+  - "figures/**/*.tex"
 ---
 
 # TikZ Visual Quality Standards

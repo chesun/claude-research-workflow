@@ -35,7 +35,7 @@ Produces:
 - README with data sources, computational requirements, instructions
 - Data documentation and codebook
 - Organized file structure per AEA standards
-Save to `Replication/`
+Save to `replication/`
 
 ### `/submit audit` — Audit Replication Package
 Verify replication package completeness.

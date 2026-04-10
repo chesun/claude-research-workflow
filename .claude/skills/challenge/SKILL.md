@@ -60,7 +60,7 @@ Cold read — pretend you have never seen this paper. No access to conversation 
 ## Output Format
 
 ```markdown
-# Devil's Advocate: [Paper/Strategy Title]
+# Devil's Advocate: [paper/Strategy Title]
 **Mode:** [paper | identification | fresh]
 **Date:** [YYYY-MM-DD]
 

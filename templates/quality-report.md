@@ -6,7 +6,7 @@
 ## Files Modified
 | File | Type | Quality Score |
 |------|------|---|
-| `path/to/file` | [Code/Slides/Config] | [N]/100 |
+| `path/to/file` | [Code/slides/Config] | [N]/100 |
 
 ## Verification
 - [ ] Compilation/execution succeeds

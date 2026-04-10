@@ -37,23 +37,23 @@
 ├── CLAUDE.MD                    # This file
 ├── .claude/                     # Rules, skills, agents, hooks
 ├── Bibliography_base.bib        # Centralized bibliography
-├── Paper/                       # Main LaTeX manuscript (source of truth)
+├── paper/                       # Main LaTeX manuscript (source of truth)
 │   ├── main.tex                 # Primary paper file
 │   └── sections/                # Section-level .tex files
-├── Talks/                       # Derivative Beamer presentations
+├── talks/                       # Derivative Beamer presentations
 │   ├── job_market_talk.tex      # 45-60 min, full results
 │   ├── seminar_talk.tex         # 30-45 min, standard seminar
 │   ├── short_talk.tex           # 15 min, conference session
 │   └── lightning_talk.tex       # 5 min, spiel/elevator pitch
-├── Data/                        # Project data
+├── data/                        # Project data
 │   ├── raw/                     # Original untouched data (often gitignored)
 │   └── cleaned/                 # Processed datasets ready for analysis
-├── Output/                      # Intermediate results (logs, temp files)
-├── Figures/                     # Final figures (.pdf, .png) referenced in paper
-├── Tables/                      # Final tables (.tex) referenced in paper
-├── Supplementary/               # Online appendix and supplements
-├── Replication/                 # Replication package for deposit
-├── Preambles/header.tex         # LaTeX headers / shared preamble
+├── output/                      # Intermediate results (logs, temp files)
+├── figures/                     # Final figures (.pdf, .png) referenced in paper
+├── tables/                      # Final tables (.tex) referenced in paper
+├── supplementary/               # Online appendix and supplements
+├── replication/                 # Replication package for deposit
+├── preambles/header.tex         # LaTeX headers / shared preamble
 ├── scripts/                     # Analysis code (Stata primary, R/Python secondary)
 ├── quality_reports/             # Plans, session logs, reviews, scores
 ├── explorations/                # Research sandbox (see rules)
@@ -127,7 +127,7 @@ See `quality.md` for weighted aggregation formula.
 
 | Component | File | Status | Description |
 |-----------|------|--------|-------------|
-| Paper | `Paper/main.tex` | [draft/submitted/R&R] | [Brief description] |
+| Paper | `paper/main.tex` | [draft/submitted/R&R] | [Brief description] |
 | Data | `scripts/stata/` | [complete/in-progress] | [Analysis description] |
-| Replication | `Replication/` | [not started/ready] | [Deposit status] |
-| Job Market Talk | `Talks/job_market_talk.tex` | -- | [Status] |
+| Replication | `replication/` | [not started/ready] | [Deposit status] |
+| Job Market Talk | `talks/job_market_talk.tex` | -- | [Status] |

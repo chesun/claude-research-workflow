@@ -179,7 +179,7 @@ Rules use path-scoped loading: **always-on** rules load every session (~100 line
 | Rule | Triggers On | What It Enforces |
 |------|------------|-----------------|
 | `verification-protocol` | `.tex`, `.qmd`, `docs/` | Task completion checklist |
-| `single-source-of-truth` | `Figures/`, `.tex`, `.qmd` | No content duplication; Beamer is authoritative |
+| `single-source-of-truth` | `figures/`, `.tex`, `.qmd` | No content duplication; Beamer is authoritative |
 | `quality-gates` | `.tex`, `.qmd`, `*.R` | 80/90/95 scoring + tolerance thresholds |
 | `r-code-conventions` | `*.R` | R coding standards + math line-length exception |
 | `tikz-visual-quality` | `.tex` | TikZ diagram visual standards |

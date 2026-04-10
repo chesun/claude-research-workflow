@@ -18,7 +18,7 @@ Unified review command that routes to the appropriate critic agents based on the
 ### Auto-detect by file type
 - `.tex` paper file → **Comprehensive review** (writer-critic + strategist-critic + Verifier)
 - `.R`, `.py`, `.do`, `.jl` file → **Code review** (coder-critic standalone, categories 4-12)
-- `.tex` talk file (in Talks/) → **Talk review** (storyteller-critic)
+- `.tex` talk file (in talks/) → **Talk review** (storyteller-critic)
 
 ### Explicit flags (override auto-detect)
 - `--peer` → **Full peer review** (domain-referee + methods-referee, independent blind reports + editorial synthesis)

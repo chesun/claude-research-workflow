@@ -15,15 +15,15 @@ Extract TikZ diagrams from the Beamer source, compile to multi-page PDF, and con
 
 **Before compiling, verify that `extract_tikz.tex` matches the current Beamer source.**
 
-1. Find the Beamer source: `ls Slides/$ARGUMENTS*.tex`
+1. Find the Beamer source: `ls slides/$ARGUMENTS*.tex`
 2. Extract all `\begin{tikzpicture}` blocks from Beamer
-3. Compare with `Figures/$ARGUMENTS/extract_tikz.tex`
+3. Compare with `figures/$ARGUMENTS/extract_tikz.tex`
 4. If ANY difference exists: update extract_tikz.tex from the Beamer source
 5. If extract_tikz.tex doesn't exist: create it from scratch
 
 ### Step 1: Navigate to the lecture's Figures directory
 ```bash
-cd Figures/$ARGUMENTS
+cd figures/$ARGUMENTS
 ```
 
 ### Step 2: Compile the extract_tikz.tex file

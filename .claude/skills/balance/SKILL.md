@@ -60,7 +60,7 @@ datasummary_balance(~treatment, data = df, output = "latex")
 
 ## Output
 
-- `Tables/balance_table.tex` — LaTeX table (booktabs, threeparttable)
+- `tables/balance_table.tex` — LaTeX table (booktabs, threeparttable)
 - Notes include: sample definition, clustering level, significance levels
 - Format follows `.claude/references/content-standards.md` table conventions
 

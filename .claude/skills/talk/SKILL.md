@@ -29,12 +29,12 @@ Formats:
 | lightning | 3-5 | 5 min | Hook, one result, so-what |
 
 Workflow:
-1. Read paper (Paper/main.tex)
+1. Read paper (paper/main.tex)
 2. Dispatch Storyteller to design narrative arc and build slides
 3. Compile with XeLaTeX
 4. Dispatch storyteller-critic to review (5 categories: narrative, visual, fidelity, scope, compilation)
 5. Fix critical issues (max 3 rounds)
-6. Save to Talks/[format]_talk.tex
+6. Save to talks/[format]_talk.tex
 
 ### `/talk audit [file]` — Visual Audit
 Check existing slides for layout issues.

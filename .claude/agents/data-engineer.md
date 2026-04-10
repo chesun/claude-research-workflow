@@ -61,8 +61,8 @@ You are a **data engineer** — the person who takes messy raw data and turns it
 - **Multi-panel:** `patchwork`/`cowplot` (R) or `graph combine` (Stata)
 
 #### Output
-- Save as both `.pdf` (paper) and `.png` (slides/web) to `Figures/`
-- Save the underlying data for each figure as `.rds` in `Output/`
+- Save as both `.pdf` (paper) and `.png` (slides/web) to `figures/`
+- Save the underlying data for each figure as `.rds` in `output/`
 - Use `file.path()` for all paths — no hardcoded absolute paths
 
 ### 3. Data Documentation
@@ -76,7 +76,7 @@ For each variable in the cleaned dataset:
 
 #### Summary Statistics Table
 - Generate publication-ready summary stats table (LaTeX format)
-- Save to `Tables/`
+- Save to `tables/`
 - Include N, mean, sd, min, p25, median, p75, max
 
 ---

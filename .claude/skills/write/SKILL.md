@@ -19,7 +19,7 @@ Draft paper sections or apply humanizer pass by dispatching the **Writer** agent
 Draft a specific section: `intro`, `strategy`, `results`, `conclusion`, `abstract`, or `full`.
 
 **Agent:** Writer
-**Output:** LaTeX section file in Paper/sections/
+**Output:** LaTeX section file in paper/sections/
 
 Workflow:
 1. Read existing paper, research spec, literature review, results summary
@@ -32,7 +32,7 @@ Workflow:
    - Conclusion: restate with effect size, limitations, implications
 5. Writer applies notation protocol and anti-hedging rules
 6. Humanizer pass runs automatically before finalizing
-7. Save to Paper/sections/[section].tex
+7. Save to paper/sections/[section].tex
 
 ### `/write humanize [file]` — Humanizer Pass Only
 Strip AI writing patterns from existing text without rewriting content.

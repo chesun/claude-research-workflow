@@ -65,7 +65,7 @@ aggte(att_gt, type = "dynamic") |> ggdid()
 - Pre-treatment coefficients clearly distinguishable
 - Reference period at -1 (or as specified)
 - Export as both `.pdf` and `.png`
-- Output to `Figures/` and Overleaf directory
+- Output to `figures/` and Overleaf directory
 
 ## Checklist (from identification-checklists.md)
 

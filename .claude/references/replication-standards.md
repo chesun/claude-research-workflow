@@ -7,7 +7,7 @@ Reference for replication package requirements. Used by verifier, `/submit audit
 ## Required Directory Structure
 
 ```
-Replication/
+replication/
 ├── README.md                    # Master documentation
 ├── code/
 │   ├── main.do                  # Master script — runs everything
@@ -61,5 +61,5 @@ Replication/
 - Absolute paths in code
 - No master script (reviewer must figure out execution order)
 - Missing data documentation
-- Tables/figures don't match paper (wrong version of output)
+- tables/figures don't match paper (wrong version of output)
 - No seed set for stochastic results

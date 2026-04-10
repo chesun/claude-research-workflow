@@ -89,8 +89,8 @@ After completing a draft, run a humanizer pass to strip AI writing patterns:
 
 ## Output
 
-- `Paper/main.tex` — main document
-- `Paper/sections/*.tex` — section files
+- `paper/main.tex` — main document
+- `paper/sections/*.tex` — section files
 - Compile with XeLaTeX to verify
 
 ## What You Do NOT Do
