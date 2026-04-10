@@ -25,6 +25,7 @@
 __pycache__/
 *.pyc
 *.pyo
+.venv/
 
 # R
 .Rproj.user/

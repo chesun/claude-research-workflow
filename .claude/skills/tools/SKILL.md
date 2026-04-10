@@ -33,12 +33,12 @@ pdflatex -interaction=nonstopmode [file]
 pdflatex -interaction=nonstopmode [file]
 ```
 
-For talks (each in its own folder under Slides/):
+For talks (each in its own folder under slides/):
 ```bash
-cd [OVERLEAF_PATH]/Slides/[name] && TEXINPUTS=../../Preambles:$TEXINPUTS pdflatex -interaction=nonstopmode [file]
+cd [OVERLEAF_PATH]/slides/[name] && TEXINPUTS=../../preambles:$TEXINPUTS pdflatex -interaction=nonstopmode [file]
 BIBINPUTS=../..:$BIBINPUTS bibtex [file_base]
-TEXINPUTS=../../Preambles:$TEXINPUTS pdflatex -interaction=nonstopmode [file]
-TEXINPUTS=../../Preambles:$TEXINPUTS pdflatex -interaction=nonstopmode [file]
+TEXINPUTS=../../preambles:$TEXINPUTS pdflatex -interaction=nonstopmode [file]
+TEXINPUTS=../../preambles:$TEXINPUTS pdflatex -interaction=nonstopmode [file]
 ```
 
 ### `/tools validate-bib` — Bibliography Validation

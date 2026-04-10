@@ -96,7 +96,7 @@ When working with experimental data, the cleaning pipeline has additional struct
 
 #### Output
 - Save as both `.pdf` (paper) and `.png` (slides/web) to `paper/figures/`
-- Save the underlying data for each figure as `.rds` in `Output/`
+- Save the underlying data for each figure as `.rds` in `output/`
 - Use `file.path()` for all paths — no hardcoded absolute paths
 
 ### 3. Data Documentation

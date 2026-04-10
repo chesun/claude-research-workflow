@@ -36,7 +36,7 @@ Generate a presentation from the paper.
 **Step 1: Parse Arguments**
 
 - **Format** (required): `job-market` | `seminar` | `short` | `lightning`
-- **Paper path** (optional): defaults to Overleaf `Paper/main.tex` (read from CLAUDE.md Overleaf path)
+- **Paper path** (optional): defaults to Overleaf `paper/main.tex` (read from CLAUDE.md Overleaf path)
 - **Engine**: Beamer (default) or Quarto RevealJS (`--quarto`)
 - If no format specified, ask the user.
 
@@ -53,7 +53,7 @@ The Storyteller follows these design principles:
 
 Compile with XeLaTeX (Beamer) or `quarto render` (Quarto).
 
-Save to Overleaf `Slides/[name]/[name].tex` (Beamer) or `paper/quarto/[name].qmd` (Quarto). Each talk gets its own folder under Slides/ with a unique descriptive name (e.g., `march_2026_ucdavis.tex`, `aea_2027_poster.tex`). Ask the user for the name if not provided.
+Save to Overleaf `slides/[name]/[name].tex` (Beamer) or `paper/quarto/[name].qmd` (Quarto). Each talk gets its own folder under slides/ with a unique descriptive name (e.g., `march_2026_ucdavis.tex`, `aea_2027_poster.tex`). Ask the user for the name if not provided.
 
 **Step 3: Dispatch Storyteller-Critic**
 
@@ -103,7 +103,7 @@ Run visual quality checks:
 
 3-pass XeLaTeX compilation for Beamer:
 ```bash
-cd [OVERLEAF_PATH]/Slides/[name] && TEXINPUTS=../../Preambles:$TEXINPUTS pdflatex -interaction=nonstopmode [name].tex
+cd [OVERLEAF_PATH]/slides/[name] && TEXINPUTS=../../preambles:$TEXINPUTS pdflatex -interaction=nonstopmode [name].tex
 ```
 
 For Quarto:

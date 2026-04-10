@@ -32,7 +32,7 @@ Before drafting, read all available context:
 4. Read `.claude/references/domain-profile-behavioral.md` for field conventions
 5. Read `quality_reports/paper_learnings/theory-writing-learnings.md` for McCloskey/Cochrane/Knuth writing rules
 6. Check `bibliography_base.bib` for available citations
-7. Scan Overleaf `Tables/` and `Figures/` for generated output
+7. Scan Overleaf `tables/` and `figures/` for generated output
 8. Read `quality_reports/results_summary.md` if it exists (from Coder)
 
 #### 2. Section Routing
@@ -60,7 +60,7 @@ Before presenting the draft:
 - [ ] Effect sizes stated with units
 - [ ] No banned hedging phrases
 - [ ] Notation consistent throughout
-- [ ] All tables/figures referenced actually exist in Overleaf `Tables/` or `Figures/`
+- [ ] All tables/figures referenced actually exist in Overleaf `tables/` or `figures/`
 - [ ] Experimental reporting checklist satisfied (if design or results section)
 - [ ] No McCloskey anti-patterns (no "This paper...", no passive voice, no hedging)
 - [ ] Math writing follows Knuth rules (formulas separated by words, no symbol-starting sentences)

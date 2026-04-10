@@ -133,7 +133,7 @@ modelsummary(models, output = "latex_tabular",
 
 - Output **bare `tabular` environment** (no `\begin{table}` float)
 - The paper's `main.tex` wraps it with `\begin{table}`, `\caption{}`, and `\input{}`
-- Write to Overleaf `Tables/` directory (path set in `settings.do` or CLAUDE.md)
+- Write to Overleaf `tables/` directory (path set in `settings.do` or CLAUDE.md)
 
 ### File Naming
 

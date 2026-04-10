@@ -69,16 +69,16 @@ The project spans two locations: a **git repo** (code, data, experiments, workfl
 └── master_supporting_docs/      # Reference papers and data docs
 
 [OVERLEAF_PATH]/                 # Overleaf project (via Dropbox)
-├── Paper/                       # Main manuscript (SOURCE OF TRUTH)
+├── paper/                       # Main manuscript (SOURCE OF TRUTH)
 │   └── main.tex
-├── Slides/                      # Each talk is its own folder
+├── slides/                      # Each talk is its own folder
 │   ├── job_market/
 │   ├── seminar/
 │   └── short/
-├── Figures/
-├── Tables/
-├── Supplementary/               # Online appendix
-├── Preambles/                   # Shared LaTeX headers
+├── figures/
+├── tables/
+├── supplementary/               # Online appendix
+├── preambles/                   # Shared LaTeX headers
 └── bibliography_base.bib
 ```
 
@@ -88,16 +88,16 @@ The project spans two locations: a **git repo** (code, data, experiments, workfl
 
 ```bash
 # Paper compilation (3-pass, pdflatex) — run from Overleaf dir
-cd [OVERLEAF_PATH]/Paper && pdflatex -interaction=nonstopmode main.tex
+cd [OVERLEAF_PATH]/paper && pdflatex -interaction=nonstopmode main.tex
 BIBINPUTS=..:$BIBINPUTS bibtex main
 pdflatex -interaction=nonstopmode main.tex
 pdflatex -interaction=nonstopmode main.tex
 
 # Talk compilation (pdflatex with preambles) — each talk has its own folder
-cd [OVERLEAF_PATH]/Slides/job_market && TEXINPUTS=../../Preambles:$TEXINPUTS pdflatex -interaction=nonstopmode talk.tex
+cd [OVERLEAF_PATH]/slides/job_market && TEXINPUTS=../../preambles:$TEXINPUTS pdflatex -interaction=nonstopmode talk.tex
 BIBINPUTS=../..:$BIBINPUTS bibtex talk
-TEXINPUTS=../../Preambles:$TEXINPUTS pdflatex -interaction=nonstopmode talk.tex
-TEXINPUTS=../../Preambles:$TEXINPUTS pdflatex -interaction=nonstopmode talk.tex
+TEXINPUTS=../../preambles:$TEXINPUTS pdflatex -interaction=nonstopmode talk.tex
+TEXINPUTS=../../preambles:$TEXINPUTS pdflatex -interaction=nonstopmode talk.tex
 ```
 
 ---
@@ -155,10 +155,10 @@ Output organization: by-script
 
 | Component | File | Status | Description |
 |-----------|------|--------|-------------|
-| Paper | `[OVERLEAF]/Paper/main.tex` | [draft/submitted/R&R] | [Brief description] |
+| Paper | `[OVERLEAF]/paper/main.tex` | [draft/submitted/R&R] | [Brief description] |
 | Theory | `theory/model.tex` | [not started/draft/complete] | [Model description] |
 | Experiment | `experiments/designs/` | [design/piloting/running/complete] | [Design description] |
 | Data | `scripts/stata/` | [complete/in-progress] | [Analysis description] |
 | Replication | `replication/` | [not started/ready] | [Deposit status] |
 | Pre-registration | -- | [not started/filed] | [Registry and ID] |
-| Job Market Talk | `[OVERLEAF]/Slides/job_market/` | -- | [Status] |
+| Job Market Talk | `[OVERLEAF]/slides/job_market/` | -- | [Status] |

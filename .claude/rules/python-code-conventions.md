@@ -14,11 +14,19 @@
 - Simulation and power analysis (when Stata is awkward)
 - Data visualization with matplotlib/seaborn (when Stata graphs insufficient)
 
+## Virtual Environment (Default)
+
+- **Always use a virtual environment** (`venv` or `conda`) unless the user explicitly says global
+- Create with `python -m venv .venv`
+- Activate before installing or running: `source .venv/bin/activate` (Unix) or `.venv\Scripts\activate` (Windows)
+- If `.venv/` or `environment.yml` already exists in the project, use it
+- **Never install packages globally** (`pip install` without an active venv) without explicit user instruction
+- Add `.venv/` to `.gitignore`
+
 ## Project Setup
 
 - `requirements.txt` or `pyproject.toml` for all dependencies
 - Pin versions for reproducibility
-- Virtual environment assumed (`venv` or `conda`)
 
 ## Code Style
 

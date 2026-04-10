@@ -17,7 +17,7 @@ Structure point-by-point referee responses with classification, agent routing pe
 
 ### Step 1: Parse Inputs
 1. Read referee report(s) from `$ARGUMENTS`
-2. Read the paper (Overleaf `Paper/main.tex` or specified path)
+2. Read the paper (Overleaf `paper/main.tex` or specified path)
 3. Read revision protocol from rules
 4. Read existing scripts in `scripts/stata/` to know what analyses already exist
 5. Read pre-registration to check if referee requests conflict with pre-registered plan

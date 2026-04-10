@@ -36,7 +36,7 @@ Dispatch **Coder** agent:
 - Stage 1b: Non-parametric tests (per Moffatt test selection guide)
 - Stage 2: Robustness checks + multiple hypothesis testing corrections
 - Stage 2b: Structural estimation (if applicable: CRRA via `ml`, heterogeneous agents via `fmm`/`intreg`)
-- Stage 3: Publication-ready output (tables to Overleaf `Tables/`, figures to Overleaf `Figures/`)
+- Stage 3: Publication-ready output (tables to Overleaf `tables/`, figures to Overleaf `figures/`)
 - Produce `results_summary.md` with all estimates, SEs, and key statistics (MANDATORY)
 - Save scripts to `scripts/stata/` (or `scripts/python/` for secondary)
 
@@ -80,7 +80,7 @@ If coder-critic finds Critical or Major issues:
 ### Step 6: Present Results
 1. **Results summary** — key estimates with SEs and interpretation (from `results_summary.md`)
 2. **Scripts created** — paths and descriptions
-3. **Output files** — tables in Overleaf `Tables/`, figures in Overleaf `Figures/`
+3. **Output files** — tables in Overleaf `tables/`, figures in Overleaf `figures/`
 4. **Code review score** — from coder-critic
 5. **TODO items** — missing data, additional specifications needed
 
