@@ -102,6 +102,7 @@ python scripts/quality_score.py Quarto/file.qmd
 | `/review-paper [file]` | Manuscript review |
 | `/respond-to-referees [report] [manuscript]` | R&R cross-reference + response draft |
 | `/data-analysis [dataset]` | End-to-end R analysis |
+| `/audit-reproducibility [paper]` | Enforce replication tolerance thresholds on paper ↔ code |
 | `/learn [skill-name]` | Extract discovery into persistent skill |
 | `/context-status` | Show session health + context usage |
 | `/deep-audit` | Repository-wide consistency audit |
