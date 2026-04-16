@@ -2613,7 +2613,7 @@ window.Quarto = {
 </tr>
 <tr class="even">
 <td>Multi-agent workflows</td>
-<td>13 specialized agents for proofreading, layout, pedagogy, code review</td>
+<td>14 specialized agents for proofreading, layout, pedagogy, code review, fact-checking</td>
 </tr>
 <tr class="odd">
 <td>Quality review</td>
@@ -2639,7 +2639,7 @@ window.Quarto = {
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>This workflow was developed over 6+ sessions building a PhD course on Causal Panel Data. The result: 6 complete lectures (140+ slides each), with Beamer + Quarto versions, interactive Plotly charts, TikZ diagrams, and R replication scripts — all managed by the orchestrator and reviewed by 13 specialized agents across 5 quality dimensions.</p>
+<p>This workflow was developed over 6+ sessions building a PhD course on Causal Panel Data. The result: 6 complete lectures (140+ slides each), with Beamer + Quarto versions, interactive Plotly charts, TikZ diagrams, and R replication scripts — all managed by the orchestrator and reviewed by 14 specialized agents across 5 quality dimensions.</p>
 <p>While this case study centers on slides, every component — agents, orchestrator, quality gates — works identically for research papers, data analysis, and proposals.</p>
 </div>
 </div>
@@ -2750,7 +2750,7 @@ You see: &quot;Analysis complete. 3 tables, 4 figures. Score: 85/100.&quot;</cod
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p><strong>You talk, Claude orchestrates.</strong> The 13 agents, 27 skills, and 23 rules exist so you don’t have to think about them. Describe your goal, approve the plan, and let the system work.</p>
+<p><strong>You talk, Claude orchestrates.</strong> The 14 agents, 28 skills, and 24 rules exist so you don’t have to think about them. Describe your goal, approve the plan, and let the system work.</p>
 </div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -2763,7 +2763,7 @@ You see: &quot;Analysis complete. 3 tables, 4 figures. Score: 85/100.&quot;</cod
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>This guide describes the full system — 13 agents, 27 skills, 23 rules. That is the ceiling, not the floor. <strong>Start with just CLAUDE.md and 2–3 skills</strong> (<code>/compile-latex</code>, <code>/proofread</code>, <code>/commit</code>). Add rules and agents as you discover what you need. The template is designed for progressive adoption: fork it, fill in the placeholders, and start working. Everything else is there when you’re ready.</p>
+<p>This guide describes the full system — 14 agents, 28 skills, 24 rules. That is the ceiling, not the floor. <strong>Start with just CLAUDE.md and 2–3 skills</strong> (<code>/compile-latex</code>, <code>/proofread</code>, <code>/commit</code>). Add rules and agents as you discover what you need. The template is designed for progressive adoption: fork it, fill in the placeholders, and start working. Everything else is there when you’re ready.</p>
 </div>
 </div>
 <hr>
@@ -3378,7 +3378,7 @@ APPROVED   NEEDS WORK
 ├── replication-protocol.md      # paths: [&quot;scripts/**/*.R&quot;] — replicate first
 ├── exploration-folder-protocol.md  # paths: [&quot;explorations/**&quot;] — sandbox rules
 ├── orchestrator-research.md     # paths: [&quot;scripts/**/*.R&quot;, &quot;explorations/**&quot;] — simple loop
-└── ...19 path-scoped rules total</code></pre>
+└── ...20 path-scoped rules total</code></pre>
 <p>The first three always-on rules total ~148 lines of actionable instructions. <code>meta-governance</code> is a reference document for the template’s dual nature (working project vs. public template) and loads passively. Path-scoped rules add rich, domain-specific guidance exactly when Claude needs it.</p>
 <p><strong>Sync vs. translate:</strong> The <code>beamer-quarto-sync</code> rule handles incremental edits — fix a typo in Beamer, same fix goes to Quarto. The <code>/translate-to-quarto</code> skill is for full initial translation of a new lecture. Translate once, sync thereafter.</p>
 <p><strong>Why rules matter:</strong> Without them, Claude will use generic defaults. With them, Claude follows <em>your</em> standards consistently across sessions.</p>
@@ -3504,7 +3504,7 @@ APPROVED   NEEDS WORK
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Claude Code ships with built-in skills beyond this template’s 27: <code>/batch</code> orchestrates parallel refactoring across your codebase (using git worktrees for isolation), <code>/simplify</code> runs 3-agent code review and applies fixes, and <code>/debug</code> helps troubleshoot sessions. These complement the academic skills above.</p>
+<p>Claude Code ships with built-in skills beyond this template’s 28: <code>/batch</code> orchestrates parallel refactoring across your codebase (using git worktrees for isolation), <code>/simplify</code> runs 3-agent code review and applies fixes, and <code>/debug</code> helps troubleshoot sessions. These complement the academic skills above.</p>
 </div>
 </div>
 </section>
@@ -5894,7 +5894,7 @@ Claude: [Runs 7 sequential forked reviews, each blind to the others]
 <li><strong>Verify everything.</strong> The verification rule exists for a reason. Never skip compilation or rendering checks.</li>
 <li><strong>Session logs matter.</strong> Document design decisions, not just what changed. Future-you will thank present-you.</li>
 <li><strong>Devil’s Advocate early.</strong> Challenge slide structure before you’ve built 50 slides on a shaky foundation.</li>
-<li><strong>Progressive disclosure.</strong> Start with CLAUDE.md + 2–3 rules. Add more as your workflow matures. Newcomers should not face 22 rules on day one.</li>
+<li><strong>Progressive disclosure.</strong> Start with CLAUDE.md + 2–3 rules. Add more as your workflow matures. Newcomers should not face 24 rules on day one.</li>
 <li><strong>Use <code>CLAUDE.local.md</code> for personal overrides.</strong> This file is automatically gitignored and loaded alongside <code>CLAUDE.md</code>. Put machine-specific paths, personal preferences, and local tool versions here — they won’t pollute the shared repo.</li>
 </ol>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -5987,6 +5987,11 @@ Claude: [Runs 7 sequential forked reviews, each blind to the others]
 <td>Domain Reviewer</td>
 <td><code>.claude/agents/domain-reviewer.md</code></td>
 <td>Your domain-specific review</td>
+</tr>
+<tr class="odd">
+<td>Claim Verifier</td>
+<td><code>.claude/agents/claim-verifier.md</code></td>
+<td>Chain-of-Verification (fresh-context) fact-checker (v1.7.0)</td>
 </tr>
 </tbody>
 </table>
@@ -6142,6 +6147,11 @@ Claude: [Runs 7 sequential forked reviews, each blind to the others]
 <td><code>.claude/skills/permission-check/</code></td>
 <td>Diagnose permission layers (6-tier stack)</td>
 </tr>
+<tr class="even">
+<td><code>/verify-claims</code></td>
+<td><code>.claude/skills/verify-claims/</code></td>
+<td>Chain-of-Verification fact-check on any draft (v1.7.0)</td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -6293,6 +6303,11 @@ Claude: [Runs 7 sequential forked reviews, each blind to the others]
 <td>Summary–Body Parity</td>
 <td><code>summary-parity.md</code></td>
 <td><code>CHANGELOG.md</code>, <code>README.md</code>, <code>.qmd</code>, skill/rule/agent <code>.md</code></td>
+</tr>
+<tr class="even">
+<td>Post-Flight Verification</td>
+<td><code>post-flight-verification.md</code></td>
+<td>skills that generate factual claims (<code>/lit-review</code>, <code>/research-ideation</code>, <code>/respond-to-referees</code>, <code>/review-paper</code>, <code>/interview-me</code>)</td>
 </tr>
 </tbody>
 </table>

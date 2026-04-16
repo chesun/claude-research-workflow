@@ -76,7 +76,7 @@ You describe a task. For complex or ambiguous requests, Claude first creates a r
 
 ### Specialized Agents
 
-Instead of one general-purpose reviewer, 13 focused agents each check one dimension. A representative sample:
+Instead of one general-purpose reviewer, 14 focused agents each check one dimension. A representative sample:
 
 - **proofreader** — grammar/typos
 - **slide-auditor** — visual layout
@@ -150,7 +150,7 @@ The guide covers Claude Code's latest capabilities:
 ## What's Included
 
 <details>
-<summary><strong>13 agents, 27 skills, 23 rules, 6 hooks</strong> (click to expand)</summary>
+<summary><strong>14 agents, 28 skills, 24 rules, 6 hooks</strong> (click to expand)</summary>
 
 ### Agents (`.claude/agents/`)
 

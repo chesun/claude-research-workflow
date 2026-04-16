@@ -1,8 +1,8 @@
 ---
 name: respond-to-referees
 description: Generate a structured response-to-referees document from a referee report and the revised manuscript. Maps each referee comment to the specific revision, classifies coverage (addressed / partially / deferred / disagreement), and drafts polite but firm responses. Use during the R&R (revise-and-resubmit) stage of paper revision.
-argument-hint: "[referee-report-path] [revised-manuscript-path]"
-allowed-tools: ["Read", "Write", "Edit", "Grep", "Glob", "Bash"]
+argument-hint: "[referee-report-path] [revised-manuscript-path] [--no-verify]"
+allowed-tools: ["Read", "Write", "Edit", "Grep", "Glob", "Bash", "Task"]
 effort: high
 ---
 
@@ -86,6 +86,25 @@ Write the output to `response-to-referees.md` (matching the template filename) o
 2. **Cover paragraph** — one paragraph thanking the editor and referees, summarizing the major changes at a high level.
 3. **Per-referee sections** — for each referee, a numbered list of responses produced in Step 4.
 4. **Concern matrix** — at the end, a single table summarizing every concern, classification, and response location for editor convenience.
+
+### Step 5.5: Post-Flight Verification (MANDATORY, CoVe)
+
+The response document's most hallucination-prone content is the set of "we added X on page Y" claims. Hallucinating these gets a paper desk-rejected on sight. Before declaring the response document final, run the Post-Flight Verification protocol from [`.claude/rules/post-flight-verification.md`](../../rules/post-flight-verification.md).
+
+**Steps:**
+
+1. **Extract revision-location claims** — every "we added / we modified / we revised X (page Y, line Z / Section N)" assertion in the response document.
+2. **Generate verification questions** — "Does the revised manuscript actually contain the revision claimed at page Y, line Z? Does it match the description?"
+3. **Spawn `claim-verifier`** via `Task` with `subagent_type=claim-verifier` and `context=fork`. Hand it: the claims table, the verification questions, the path to the revised manuscript. Do NOT include the response draft.
+4. **Reconcile:** PASS → attach green block. PARTIAL / FAIL → rewrite the affected response entries using the verifier's evidence. A response that says "we added robustness check X on page 34" when X is actually on page 27 (or not at all) is worse than a "Deferred" classification.
+
+Downgrade to the classification the evidence supports:
+
+- Claim verified at location → `Addressed`
+- Claim verified at different location → update the location in the response
+- Claim not verifiable in manuscript → downgrade to `Partially addressed` or `Deferred` with an honest rationale
+
+Opt-out: `--no-verify` flag. Not recommended — the referee will run this check themselves.
 
 ### Step 6: Warning Summary (MANDATORY)
 

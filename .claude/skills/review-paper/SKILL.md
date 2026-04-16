@@ -314,6 +314,14 @@ Unless `--no-cross-artifact` is set, auto-invoke `/audit-reproducibility` on the
 
 Reports: `quality_reports/cross_artifact_[paper]/reproducibility.md`.
 
+**Novelty-probe Post-Flight (new in v1.7.0).** The editor's novelty probe uses `WebSearch` to check whether the paper's contribution has been made before. WebSearch results can be hallucinated — fabricated prior work, misattributed findings, wrong years. Before the editor's desk review incorporates novelty-probe claims into its decision, those claims must pass Post-Flight Verification per [`.claude/rules/post-flight-verification.md`](../../rules/post-flight-verification.md):
+
+1. The editor collects novelty-probe claims (e.g., "Smith 2022 already showed this exact result").
+2. Spawn `claim-verifier` via `Task` with `subagent_type=claim-verifier` and `context=fork`, passing the claims + verification questions + candidate source URLs. Forked fresh context is the CoVe independence trick.
+3. Only verified claims are allowed into the desk-review narrative. Unverified claims are surfaced separately as "editor could not verify — manual check recommended" rather than presented as established prior work.
+
+Opt-out: `--no-novelty-check` already skips the probe entirely. If the probe runs, Post-Flight is mandatory.
+
 **Pre-Flight Report (required before Phase 1).** Before spawning the editor, output a Pre-Flight Report so the user can verify the inputs are read correctly:
 
 ```markdown

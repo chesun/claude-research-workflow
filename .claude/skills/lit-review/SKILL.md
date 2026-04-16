@@ -1,8 +1,8 @@
 ---
 name: lit-review
 description: Structured literature search + synthesis with citation extraction, thematic clustering, and gap identification. Use when user says "find papers on X", "do a lit review", "what's the literature on...", "summarize what we know about...", "where's the gap in this field", "review recent work on Y". Produces a written review with BibTeX-ready citations. Uses WebSearch/WebFetch for recent work.
-argument-hint: "[topic, paper title, or research question]"
-allowed-tools: ["Read", "Grep", "Glob", "Write", "WebSearch", "WebFetch"]
+argument-hint: "[topic, paper title, or research question] [--no-verify]"
+allowed-tools: ["Read", "Grep", "Glob", "Write", "WebSearch", "WebFetch", "Task"]
 ---
 
 # Literature Review
@@ -92,9 +92,31 @@ Conduct a structured literature search and synthesis on the given topic.
 
 ---
 
+## Post-Flight Verification (mandatory, CoVe)
+
+Before returning the draft literature review to the user, run the Post-Flight Verification protocol from [`.claude/rules/post-flight-verification.md`](../../rules/post-flight-verification.md). Literature reviews are **very high** hallucination risk because WebSearch can return plausible-sounding fabricated citations. CoVe catches this architecturally.
+
+### Steps
+
+1. **Extract claims** from the draft. Each cited paper, each paraphrased finding ("Smith 2019 shows X"), each negative-literature assertion ("no prior work studies Y") is a claim.
+2. **Generate verification questions** per claim. Specific ones: "Does Smith (2019, *JEL*) Section 3 actually report the finding that X implies Y? Is the venue correct?"
+3. **Spawn `claim-verifier`** via `Task` with `subagent_type=claim-verifier` and `context=fork`. Pass: the claims table, the verification questions, the source-material pointers (paper URLs, DOIs, `master_supporting_docs/` paths). **Do NOT pass the draft text itself** — the fresh-context independence is what makes CoVe work.
+4. **Reconcile:** if the verifier reports PASS, attach a green Post-Flight block to the output. If PARTIAL, mark the unverifiable claims with uncertainty flags in the BibTeX block. If FAIL, **remove or rewrite the contradicted citations** using the verifier's evidence before returning.
+
+### Skip conditions
+
+- `--no-verify` flag — user opts out for speed.
+- User hands you ≤3 papers they already have read and confirmed; CoVe is overhead for content they've personally verified.
+
+### Output contract
+
+Append a Post-Flight block to the report (collapsed by default). See rule doc for the format.
+
+---
+
 ## Important
 
 - **Be honest about uncertainty.** If you cannot verify a citation, say so.
 - **Prioritize recent work** (last 5-10 years) unless seminal papers are older.
 - **Note working papers vs published papers** — working papers may change.
-- **Do NOT fabricate citations.** If you're unsure about a paper's details, flag it for the user to verify.
+- **Do NOT fabricate citations.** If you're unsure about a paper's details, flag it for the user to verify. Post-Flight Verification catches most fabrications automatically; this rule is the backup.

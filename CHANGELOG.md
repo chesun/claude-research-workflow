@@ -6,23 +6,50 @@ If you have forked this template, see the **Upgrading** section at the bottom fo
 
 ---
 
-## Unreleased
+## v1.7.0 — 2026-04-16
 
-### Added — anti–whack-a-mole rule
+A **discipline-patterns** minor release. Additive infrastructure for anti-drift (summary-parity) and anti-hallucination (Post-Flight Verification / Chain-of-Verification). Full details below; no breaking changes for forks.
 
-- **`.claude/rules/summary-parity.md`** — new path-scoped rule (rule count 22 → 23). Triggers when Claude edits a summary paragraph (CHANGELOG ledes, README taglines, PR `## Summary` blocks, skill/rule/agent frontmatter `description` fields, guide section abstracts, MEMORY.md `[LEARN]` headlines). Enforces a summary-body parity protocol: read the full body before editing the summary; enumerate every substantive claim; re-verify against the body; edit the whole paragraph, not just the flagged phrase. After **two review-bot flags on the same paragraph, rewrite structurally rather than patching word-by-word.** Motivated by 3 consecutive Copilot findings on the v1.6.1 CHANGELOG opening (PRs #88–#90), each surgical fix introducing a new drift elsewhere in the paragraph.
+### Added — Post-Flight Verification (Chain-of-Verification)
 
-### Added — audit learning
+Mirror of v1.6.0's Pre-Flight Reports, at the output side. Where Pre-Flight proves inputs were read before work, Post-Flight proves factual claims hold after drafting — before the skill returns to the user. Adapted from **Dhuliawala et al. 2023, "Chain-of-Verification Reduces Hallucination in Large Language Models" ([arXiv:2309.11495](https://arxiv.org/abs/2309.11495))**. The core CoVe idea — answer verification questions in a context that does NOT contain the original draft — is architecturally enforced here via `context: fork` on the verifier agent.
 
-- **`MEMORY.md`** `[LEARN:audit]` entry capturing the whack-a-mole anti-pattern and pointing to the new rule, so future sessions inherit the lesson.
+- **`.claude/rules/post-flight-verification.md`** — new path-scoped rule. Defines the 4-step CoVe protocol (draft → extract claims → generate verification questions → answer independently in fresh context → reconcile). Scoped to skills that generate factual claims. Fail-closed: if the verifier errors or times out, the draft is surfaced as provisional rather than shipped silently. Opt-out via `--no-verify`.
+- **`.claude/agents/claim-verifier.md`** — new forked agent. Never sees the draft (enforced by `context: fork` at the Task boundary). Receives only: claims, verification questions, source-material pointers. Uses `Read`, `Grep`, `Glob`, `WebFetch`, `WebSearch`, `Bash`. Returns a structured verification report (PASS / PARTIAL / FAIL per claim, with evidence quotes + source locations).
+- **`.claude/skills/verify-claims/`** — new user-facing skill. Runs Post-Flight on any draft the user hands to it (a `.md`, `.qmd`, `.tex`, `.txt` file). Accepts `--source <path-or-url>` to point at source material. Callable directly by users or spawned by other skills via `Task`.
+- **Four skill integrations** — `/lit-review`, `/research-ideation`, `/respond-to-referees`, `/review-paper` (novelty probe in `--peer` mode). Each now runs Post-Flight internally before returning. Skip conditions documented per skill (e.g., `--no-verify`, user pre-verifies).
 
-### Changed — drift-proofing the v1.6.1 CHANGELOG lede
+Rationale: `/lit-review` citations from WebSearch were hallucination-prone (already flagged in SKILL.md); `/research-ideation` negative-literature claims (e.g., "no prior work studies X") and dataset-structure claims are classic hallucination vectors; `/respond-to-referees` "we added X on page Y" claims can be wrong or out-of-date after revision; `/review-paper --peer` editor novelty probe depends on WebSearch.
 
-- Rewrote the v1.6.1 opening paragraph to remove enumerative claims ("no new skills, rules, or hooks") that drift when the body is edited. New form is abstraction-first: "No breaking changes. No new directories were added to `.claude/`; existing infrastructure was revised …" This opens with one unambiguous claim and lets the body speak. Release notes for v1.6.1 on GitHub synced to match.
+### Added — anti–whack-a-mole rule (from earlier in v1.7.0 cycle)
 
-### Changed — guide rule inventory
+- **`.claude/rules/summary-parity.md`** — path-scoped rule preventing surgical word-level fixes on summary paragraphs from introducing new drift elsewhere in the same paragraph. Triggers on CHANGELOG ledes, README taglines, PR `## Summary` blocks, skill/rule/agent frontmatter `description` fields, guide section abstracts, MEMORY.md `[LEARN]` headlines. Core heuristic: two review-bot flags on the same paragraph = rewrite structurally (abstract up), don't patch. Motivated by 3 consecutive Copilot findings on the v1.6.1 CHANGELOG opening (PRs #88–#90), each surgical fix introducing a new drift elsewhere.
 
-- **`guide/workflow-guide.qmd`** "All Rules" table previously listed 16 path-scoped rules but 18 existed on disk (`content-invariants.md` and `cross-artifact-review.md` were missing from the table). Added those two rows plus the new `summary-parity.md`. Path-scoped count callout updated from "16 path-scoped rules total" to "19 path-scoped rules total." Surface-sync count assertions across README / CLAUDE.md / guide / docs (landing + guide HTML) / skill-template updated 22 → 23.
+### Added — audit learnings
+
+- **`MEMORY.md`** new `[LEARN:audit]` entries capturing the whack-a-mole anti-pattern (summary-parity) and the CoVe vs critic-fixer vs cross-artifact distinction (three complementary verification mechanisms at three different architectural levels). Future sessions inherit both lessons on fresh context.
+
+### Added — guide coverage
+
+- `/verify-claims` and the new `claim-verifier` agent added to the guide's "All Skills" / "All Agents" tables. `post-flight-verification.md` and `summary-parity.md` added to "All Rules." Pre-existing gap in the rules table closed as well: `content-invariants.md` and `cross-artifact-review.md` were on disk but missing from the table; now listed. Path-scoped rule callout updated (16 → 20 path-scoped rules total).
+
+### Changed — counts
+
+- Skills 27 → 28 (`/verify-claims`). Agents 13 → 14 (`claim-verifier`). Rules 22 → 24 (`summary-parity.md` + `post-flight-verification.md`). Hooks unchanged at 6. Surface-sync gate propagates the new counts across all 6 monitored surfaces (README, CLAUDE.md, guide `.qmd` + `.html`, `docs/index.html`, `docs/workflow-guide.html`, `templates/skill-template.md`, `/commit` SKILL internal example).
+
+### Changed — drift-proofing the v1.6.1 CHANGELOG lede (applied the new summary-parity rule)
+
+- Rewrote the v1.6.1 opening paragraph abstraction-first ("No breaking changes. No new directories were added to `.claude/`; existing infrastructure was revised …"). First test of the new summary-parity rule on an existing entry. GitHub release notes for v1.6.1 synced to match.
+
+### Governance note
+
+v1.7.0 establishes the **discipline-pattern trilogy**:
+
+1. **v1.6.0 Pre-Flight** (input discipline) — inputs were read before work.
+2. **v1.6.1 summary-parity** (framing discipline) — summaries don't drift from bodies.
+3. **v1.7.0 Post-Flight** (output discipline) — factual claims hold before work ships.
+
+All three share a shape: **fail-closed, structured output block, honest fallbacks**. All three address classes of bugs a human reviewer would catch but the agent loop should catch earlier.
 
 ---
 

@@ -54,7 +54,7 @@ Claude Code runs on your computer with full access to your file system, terminal
 | Access git history | Commits, PRs, branches --- all from the conversation |
 | Persistent memory | CLAUDE.md + MEMORY.md survive across sessions |
 | Orchestrator pattern | Specific skills (`/qa-quarto`, `/review-paper --adversarial`, `/create-lecture`, …) run a 6-step verify-review-fix-score loop internally |
-| Multi-agent workflows | 13 specialized agents for proofreading, layout, pedagogy, code review |
+| Multi-agent workflows | 14 specialized agents for proofreading, layout, pedagogy, code review, fact-checking |
 | Quality review | Advisory scoring inside `/commit` (halt + ask to override); targets: 80 commit, 90 PR, 95 excellence |
 | CLI/headless mode | Run from scripts: `claude -p "compile all lectures"` |
 | Browser bridge | Continue sessions on your phone via `/remote-control` |
@@ -62,7 +62,7 @@ Claude Code runs on your computer with full access to your file system, terminal
 ::: {.callout-tip}
 ## Case Study: Econ 730 at Emory
 
-This workflow was developed over 6+ sessions building a PhD course on Causal Panel Data. The result: 6 complete lectures (140+ slides each), with Beamer + Quarto versions, interactive Plotly charts, TikZ diagrams, and R replication scripts --- all managed by the orchestrator and reviewed by 13 specialized agents across 5 quality dimensions.
+This workflow was developed over 6+ sessions building a PhD course on Causal Panel Data. The result: 6 complete lectures (140+ slides each), with Beamer + Quarto versions, interactive Plotly charts, TikZ diagrams, and R replication scripts --- all managed by the orchestrator and reviewed by 14 specialized agents across 5 quality dimensions.
 
 While this case study centers on slides, every component --- agents, orchestrator, quality gates --- works identically for research papers, data analysis, and proposals.
 :::
@@ -153,13 +153,13 @@ Most of the time, you just describe what you want and Claude handles the rest. E
 ::: {.callout-important}
 ## The Bottom Line
 
-**You talk, Claude orchestrates.** The 13 agents, 27 skills, and 23 rules exist so you don't have to think about them. Describe your goal, approve the plan, and let the system work.
+**You talk, Claude orchestrates.** The 14 agents, 28 skills, and 24 rules exist so you don't have to think about them. Describe your goal, approve the plan, and let the system work.
 :::
 
 ::: {.callout-note}
 ## You Don't Need All of This on Day One
 
-This guide describes the full system --- 13 agents, 27 skills, 23 rules. That is the ceiling, not the floor. **Start with just CLAUDE.md and 2--3 skills** (`/compile-latex`, `/proofread`, `/commit`). Add rules and agents as you discover what you need. The template is designed for progressive adoption: fork it, fill in the placeholders, and start working. Everything else is there when you're ready.
+This guide describes the full system --- 14 agents, 28 skills, 24 rules. That is the ceiling, not the floor. **Start with just CLAUDE.md and 2--3 skills** (`/compile-latex`, `/proofread`, `/commit`). Add rules and agents as you discover what you need. The template is designed for progressive adoption: fork it, fill in the placeholders, and start working. Everything else is there when you're ready.
 :::
 
 ---
@@ -559,7 +559,7 @@ Rules are markdown files in `.claude/rules/` that Claude loads automatically. Th
 ├── replication-protocol.md      # paths: ["scripts/**/*.R"] — replicate first
 ├── exploration-folder-protocol.md  # paths: ["explorations/**"] — sandbox rules
 ├── orchestrator-research.md     # paths: ["scripts/**/*.R", "explorations/**"] — simple loop
-└── ...19 path-scoped rules total
+└── ...20 path-scoped rules total
 ```
 
 The first three always-on rules total ~148 lines of actionable instructions. `meta-governance` is a reference document for the template's dual nature (working project vs. public template) and loads passively. Path-scoped rules add rich, domain-specific guidance exactly when Claude needs it.
@@ -653,7 +653,7 @@ argument-hint: "[filename without .tex extension]"
 ::: {.callout-note}
 ## Built-In Skills
 
-Claude Code ships with built-in skills beyond this template's 27: `/batch` orchestrates parallel refactoring across your codebase (using git worktrees for isolation), `/simplify` runs 3-agent code review and applies fixes, and `/debug` helps troubleshoot sessions. These complement the academic skills above.
+Claude Code ships with built-in skills beyond this template's 28: `/batch` orchestrates parallel refactoring across your codebase (using git worktrees for isolation), `/simplify` runs 3-agent code review and applies fixes, and `/debug` helps troubleshoot sessions. These complement the academic skills above.
 :::
 
 ## Agents --- Specialized Reviewers {#agents---specialized-reviewers}
@@ -2268,7 +2268,7 @@ This is the `/learn` lifecycle in action: discover a repeating workflow → extr
 5. **Verify everything.** The verification rule exists for a reason. Never skip compilation or rendering checks.
 6. **Session logs matter.** Document design decisions, not just what changed. Future-you will thank present-you.
 7. **Devil's Advocate early.** Challenge slide structure before you've built 50 slides on a shaky foundation.
-8. **Progressive disclosure.** Start with CLAUDE.md + 2--3 rules. Add more as your workflow matures. Newcomers should not face 22 rules on day one.
+8. **Progressive disclosure.** Start with CLAUDE.md + 2--3 rules. Add more as your workflow matures. Newcomers should not face 24 rules on day one.
 9. **Use `CLAUDE.local.md` for personal overrides.** This file is automatically gitignored and loaded alongside `CLAUDE.md`. Put machine-specific paths, personal preferences, and local tool versions here --- they won't pollute the shared repo.
 
 ::: {.callout-note collapse="true"}
@@ -2299,6 +2299,7 @@ Claude Code supports **plugins** --- bundled collections of skills, agents, hook
 | Quarto Fixer | `.claude/agents/quarto-fixer.md` | Applies critic's fixes |
 | Verifier | `.claude/agents/verifier.md` | Task completion verification |
 | Domain Reviewer | `.claude/agents/domain-reviewer.md` | Your domain-specific review |
+| Claim Verifier | `.claude/agents/claim-verifier.md` | Chain-of-Verification (fresh-context) fact-checker (v1.7.0) |
 
 ## All Skills
 
@@ -2331,6 +2332,7 @@ Claude Code supports **plugins** --- bundled collections of skills, agents, hook
 | `/deep-audit` | `.claude/skills/deep-audit/` | Repository-wide consistency audit |
 | `/seven-pass-review` | `.claude/skills/seven-pass-review/` | Seven-pass adversarial manuscript review (parallel forked subagents) |
 | `/permission-check` | `.claude/skills/permission-check/` | Diagnose permission layers (6-tier stack) |
+| `/verify-claims` | `.claude/skills/verify-claims/` | Chain-of-Verification fact-check on any draft (v1.7.0) |
 
 ## All Rules
 
@@ -2366,6 +2368,7 @@ Claude Code supports **plugins** --- bundled collections of skills, agents, hook
 | Content Invariants | `content-invariants.md` | `.tex`, `.qmd`, `Preambles/`, `scripts/R/**` |
 | Cross-Artifact Review | `cross-artifact-review.md` | `master_supporting_docs/`, `.tex`, `.qmd` |
 | Summary–Body Parity | `summary-parity.md` | `CHANGELOG.md`, `README.md`, `.qmd`, skill/rule/agent `.md` |
+| Post-Flight Verification | `post-flight-verification.md` | skills that generate factual claims (`/lit-review`, `/research-ideation`, `/respond-to-referees`, `/review-paper`, `/interview-me`) |
 
 ## Hooks
 

@@ -403,4 +403,4 @@ When adapting this template to your domain:
 - **Purpose:** Starter for domain-specific skills
 - **Usage:** Copy to `.claude/skills/[name]/SKILL.md`, customize for your field
 
-For existing skills examples, see `.claude/skills/` directory (27 skills for LaTeX, R, Quarto, and research workflows).
+For existing skills examples, see `.claude/skills/` directory (28 skills for LaTeX, R, Quarto, and research workflows).

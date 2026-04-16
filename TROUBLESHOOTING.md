@@ -139,6 +139,50 @@ Open an issue with the Pre-Flight Report attached. Either the input schema was i
 
 `quality_reports/decisions/YYYY-MM-DD_short-description.md` using [`templates/decision-record.md`](templates/decision-record.md). The directory is gitignored like `plans/` and `specs/` — commit only if you want the record visible to others. (Most forkers keep decisions local.)
 
+## Post-Flight Verification / Chain-of-Verification (v1.7.0)
+
+### `/verify-claims` times out or errors
+
+The forked `claim-verifier` agent is conservative by design: it won't mark a claim as verified unless it has evidence. If it times out or errors mid-run, the skill surfaces a warning block instead of silently shipping the draft (fail-closed, like Pre-Flight). The draft is returned as **provisional** — treat it as unverified. Next steps:
+
+- **Retry** with a narrower source scope. `/verify-claims --source <specific-paper.pdf>` is faster and more reliable than letting the agent guess.
+- **Switch from WebSearch to direct fetch.** If the agent is timing out on web searches, download the PDF to `master_supporting_docs/` and pass it as `--source`.
+- **Downgrade to warning-only** with `--no-fail-closed` if you are actively reading the source yourself and just want a report.
+
+### Verifier says "cannot-verify" on a claim you believe is correct
+
+This is the verifier being honest, not stubborn. It means:
+
+- The source material is inaccessible (paywalled, broken URL, restricted dataset codebook not public).
+- The claim is worded in a way that doesn't map to a specific verifiable question (e.g., "this is a promising direction" is an opinion, not a factual claim).
+- The evidence exists but in a venue the agent can't reach (conference proceedings behind a login wall, working paper not on arXiv).
+
+Resolution: supply a canonical source (DOI / arXiv / repo path), or accept the `cannot-verify` flag in the final output and manually confirm yourself.
+
+### Integration skill (e.g., `/lit-review`) hangs at Post-Flight step
+
+If the invoking skill doesn't return after launching `claim-verifier`, check:
+
+1. `Task` tool is available to the invoking skill (check its `allowed-tools` in `SKILL.md`).
+2. The agent's `allowed-tools` include what it needs (`WebFetch`, `WebSearch`, `Read`).
+3. Network access: WebSearch + WebFetch require internet; on an offline fork they must be disabled or the verifier gated behind a check.
+
+If blocked, bypass with `--no-verify` for the current run. File an issue if the hang persists.
+
+### Opting out of Post-Flight
+
+Every affected skill accepts `--no-verify` to skip the Post-Flight step. Use when:
+
+- You are iterating rapidly and verifying yourself.
+- You have already fact-checked the sources manually.
+- CoVe's extra ~2× token cost is blocking a tight budget.
+
+Do **not** opt out when:
+
+- Producing a deliverable for external readers (literature review for a committee, R&R response for an editor, grant-proposal lit survey).
+- The draft contains >5 citations you haven't personally verified.
+- `/lit-review` just returned results — the most common hallucination vector in the whole template.
+
 ## Still stuck?
 
 - Read the [guide's troubleshooting section](https://psantanna.com/claude-code-my-workflow/workflow-guide.html#troubleshooting) for longer-form recovery scenarios.

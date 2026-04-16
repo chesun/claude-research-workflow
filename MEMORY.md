@@ -106,3 +106,19 @@ When a mistake is corrected, append a `[LEARN:category]` entry below.
 [LEARN:audit] "Claim-vs-reality" is the highest-ROI audit lens for a governance-heavy template repo. More valuable than skill-consistency or doc-drift checks because it surfaces where the template oversells itself — the exact thing forkers will discover and call out.
 
 [LEARN:audit] Whack-a-mole anti-pattern on summary paragraphs: when Copilot/Codex flag a summary paragraph, surgically fixing the flagged phrase almost always introduces a new drift elsewhere in the same paragraph (observed 3× in a row on the v1.6.1 CHANGELOG opening, PRs #88–#90). Rule: two review-bot flags on the same paragraph = rewrite structurally (abstract up, remove enumeration), don't patch word-by-word. Prefer "no new directories on disk" over "no new skills, rules, or hooks." See `.claude/rules/summary-parity.md`.
+
+## Verification Architecture (three complementary patterns)
+
+[LEARN:pattern] Verification in this repo now operates at three architectural levels, each addressing a different failure mode. Do NOT collapse them — they are complementary, not redundant:
+
+1. **Critic-fixer loop** (`/qa-quarto`, `/review-paper --adversarial`) — **two agents, serial** — one reads the artifact and flags issues, the other applies fixes; loop until APPROVED. Best for **presentation + structural** bugs (Beamer↔Quarto parity, manuscript completeness). Agents see the full artifact; adversarial tension comes from role assignment.
+
+2. **Cross-artifact review** (`/review-paper` + `/review-r` + `/audit-reproducibility`) — **horizontal dependency traversal** — a manuscript's claims depend on scripts' outputs, so the manuscript reviewer spawns script reviewers and reproducibility checkers alongside the paper review. Best for **paper ↔ code consistency** (ATTs, coefficients, N match the outputs that produced them).
+
+3. **Post-Flight Verification / CoVe** (`/verify-claims` + `claim-verifier` agent, v1.7.0) — **single agent, fresh-context fork** — the verifier has never seen the draft; it answers verification questions from the source material alone, using `context: fork` to architecturally enforce independence. Best for **factual hallucination** (fabricated citations, wrong dataset fields, misattributed findings). Adapted from Dhuliawala et al. 2023 ([arXiv:2309.11495](https://arxiv.org/abs/2309.11495)).
+
+The key insight: each pattern enforces independence differently. Critic-fixer uses role tension; cross-artifact uses dependency graph traversal; CoVe uses context isolation. A skill that needs all three (e.g., `/review-paper --peer`) invokes them at different phases.
+
+[LEARN:pattern] Post-Flight Reports (v1.7.0) are the output-side twin of Pre-Flight Reports (v1.6.0). Pre-Flight proves inputs were read; Post-Flight proves claims hold. Both use structured output blocks, fail-closed fallbacks, and explicit opt-outs. Together with summary-parity (v1.6.1), they form the **discipline-pattern trilogy**: input discipline + framing discipline + output discipline. When designing a new skill that generates text, ask: does it need all three?
+
+[LEARN:audit] Skill frontmatter `allowed-tools` must cover every tool the skill body invokes, but this is easy to miss — the body reads as English ("spawn the verifier via Task") while the frontmatter reads as a bureaucratic array. Caught on PR #92 when Codex + Copilot both flagged 4 skills that promised `Task` in the body but had no `Task` in `allowed-tools`. Runtime failure mode: tool-permission error, or silent bypass of the promised protocol. Deep-audit Agent 3 now includes this check explicitly. Sibling check: if rule X's `paths:` includes skill Y, confirm skill Y actually implements rule X's protocol (rule-vs-implementation drift is the same class of bug at a different layer).

@@ -1,8 +1,8 @@
 ---
 name: interview-me
 description: Interactive interview that formalizes a fuzzy research idea into a structured spec (RQ, hypotheses, identification, data needs, empirical strategy). Use when user says "interview me", "help me think through this idea", "I have a half-baked idea", "formalize this into a project", "walk me through framing a study". Multi-turn Q&A; saves spec to disk. NOT for lit review (`/lit-review`) or ideation from scratch (`/research-ideation`).
-argument-hint: "[brief topic or 'start fresh']"
-allowed-tools: ["Read", "Write"]
+argument-hint: "[brief topic or 'start fresh'] [--no-verify]"
+allowed-tools: ["Read", "Write", "Task"]
 ---
 
 # Research Interview
@@ -98,6 +98,25 @@ Once you have enough information (typically 5-8 exchanges), produce a **Research
 ```
 
 **Save to:** `quality_reports/research_spec_[sanitized_topic].md`
+
+---
+
+## Post-Flight Verification (mandatory, CoVe — applies when the spec cites prior work)
+
+The research spec's **Motivation** and **Contribution** sections typically reference prior papers by author + year. Those citations are hallucination-prone. Before saving the spec, run the Post-Flight Verification protocol from [`.claude/rules/post-flight-verification.md`](../../rules/post-flight-verification.md) if the spec contains any citations.
+
+### Steps (skip if the spec cites zero papers)
+
+1. **Extract claims:** every paper-citation in the Motivation / Contribution sections ("Smith 2019 shows X"), any dataset-structure claims ("the CPS has field `educ_attain`"), any negative-literature assertions ("nobody has studied Y").
+2. **Generate verification questions:** specific, answerable questions per claim. "Does Smith (2019, *JEL*) Section 3 report finding X? Is the venue correct?"
+3. **Spawn `claim-verifier`** via `Task` with `subagent_type=claim-verifier` and `context=fork`. Hand it the claims + questions + source pointers (DOIs, arXiv links, `master_supporting_docs/` PDFs if the user provided any during the interview). Do NOT include the drafted spec.
+4. **Reconcile:** PASS → attach green block to the spec. PARTIAL → mark unverifiable citations with uncertainty flags. FAIL → rewrite the affected paragraph using the verifier's evidence before saving the spec.
+
+### Skip conditions
+
+- Spec contains zero paper citations (pure-methodology specs with no lit references).
+- `--no-verify` flag.
+- The user explicitly said during the interview "I'll verify the literature myself."
 
 ---
 

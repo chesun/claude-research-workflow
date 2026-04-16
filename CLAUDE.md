@@ -113,6 +113,7 @@ Enforced by `/commit` (halts + asks for override); not enforced by a git pre-com
 | `/deep-audit` | Repository-wide consistency audit |
 | `/permission-check` | Diagnose permission layers when prompts fire unexpectedly |
 | `/seven-pass-review` | Seven-pass adversarial manuscript review (parallel forked subagents) |
+| `/verify-claims [file]` | Chain-of-Verification fact-check (forked verifier, fresh context) |
 
 ---
 

@@ -56,6 +56,8 @@ Focus: `.claude/skills/*/SKILL.md` and `.claude/rules/*.md`
 - Valid YAML frontmatter in all files
 - No stale `disable-model-invocation: true`
 - `allowed-tools` values are sensible
+- **`allowed-tools` actually covers every tool the skill body invokes.** For every `Task` spawn, `Bash` command, `Write`/`Edit` call mentioned in the skill's Steps / Phases / Workflow body, verify the tool appears in the `allowed-tools` array. Common miss: skill body says "spawn `agent-X` via `Task` with `context=fork`" but `Task` is absent from `allowed-tools` — runtime permission error or silent bypass. Caught this class of bug after Codex/Copilot flagged it on PR #92 (4 skills promised `Task` in their Post-Flight sections but 3 of 4 had no `Task` permission).
+- **Rule `paths:` scope matches skill implementation.** If rule X lists skill Y in `paths:`, verify skill Y actually implements the protocol rule X mandates. A rule claiming a skill follows a protocol is meaningless if the skill doesn't.
 - Rule `paths:` reference existing directories
 - No contradictions between rules
 - CLAUDE.md skills table matches actual skill directories 1:1
