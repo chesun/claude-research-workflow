@@ -1,56 +1,82 @@
 # ==============================================================================
-# .gitignore for Academic Claude Code Projects
+# .gitignore — Academic Claude Code Projects
 # ==============================================================================
 
-# LaTeX build artifacts
+# --- LaTeX build artifacts ---
+# Bare *.log and *.out are NOT used — they collide with Stata logs and
+# shell nohup.out, respectively. Scope both to LaTeX directories.
 *.aux
 *.bbl
+*.bcf
 *.blg
 *.fdb_latexmk
 *.fls
-*.log
+*.lof
+*.lot
 *.nav
-*.out
+*.run.xml
 *.snm
+*.synctex.gz
 *.toc
 *.vrb
-*.synctex.gz
-*.run.xml
 *-blx.bib
+paper/**/*.log
+paper/**/*.out
+talks/**/*.log
+talks/**/*.out
+slides/**/*.log
+slides/**/*.out
+supplementary/**/*.log
+supplementary/**/*.out
 
-# Compiled PDFs (uncomment to track specific PDFs)
-# *.pdf
-
-# Python
+# --- Python ---
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
 
-# R
+# Always track dependency manifests (anti-rules — never ignore these)
+!requirements.txt
+!requirements-*.txt
+!environment.yml
+!pyproject.toml
+!Pipfile
+!Pipfile.lock
+
+# --- R ---
 .Rproj.user/
 .Rhistory
 .RData
 .Rdata
+.Ruserdata
 
-# OS files
+# --- OS ---
 .DS_Store
 Thumbs.db
 
-# Claude Code local files (not shared across machines)
+# --- Claude Code (local-only, not shared across machines) ---
 .claude/settings.local.json
 .claude/state/
+.claude/worktrees/
 CLAUDE.local.md
 
-# IDE
+# --- IDE / editor noise ---
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# Quarto rendering artifacts
+# --- Quarto ---
 /.quarto/
 
-# Output artifacts — uncomment lines below based on your preference
+# --- Compiled PDFs (uncomment per project to track specific outputs) ---
+# *.pdf
+
+# --- Output artifacts (uncomment per project) ---
 # *.rds
 # output/**/*.rds
