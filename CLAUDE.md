@@ -19,6 +19,8 @@
 - **Quality gates** -- weighted aggregate score; nothing ships below 80/100; see `quality.md`
 - **Worker-critic pairs** -- every creator has a paired critic; critics never edit files
 - **Primary source first** -- before citing a paper in a load-bearing artifact, read the PDF and produce reading notes in `master_supporting_docs/literature/reading_notes/`; hooks block edits otherwise (see `primary-source-first.md`)
+- **Decisions are ADRs** -- substantive design, identification, or specification decisions live in `decisions/NNNN_slug.md`; analysis docs hold reasoning, ADRs hold the record (see `decision-log.md`)
+- **Track TODOs** -- project root `TODO.md` tracks open work (Active / Up Next / Waiting / Backlog / Done); update after completing any task (see `todo-tracking.md`)
 - **[LEARN] tags** -- when corrected, save `[LEARN:category] wrong → right` to MEMORY.md
 
 ---
@@ -36,7 +38,9 @@
 ```
 [YOUR-PROJECT]/
 ├── CLAUDE.MD                    # This file
+├── TODO.md                      # Active work tracker (see todo-tracking.md)
 ├── .claude/                     # Rules, skills, agents, hooks
+├── decisions/                   # ADRs — NNNN_slug.md, append-only (see decision-log.md)
 ├── Bibliography_base.bib        # Centralized bibliography
 ├── paper/                       # Main LaTeX manuscript (source of truth)
 │   ├── main.tex                 # Primary paper file

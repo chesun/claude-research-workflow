@@ -31,6 +31,7 @@ from typing import Iterable
 # scoped to in-repo load-bearing artifacts. Overleaf paper .tex files live
 # outside the repo and are not reachable by the PreToolUse hook.
 ENFORCEABLE_PATTERNS = [
+    r"decisions/.*\.md$",
     r"experiments/designs/decisions/.*\.md$",
     r"experiments/designs/.*\.md$",
     r"theory/.*\.(tex|md)$",
