@@ -18,8 +18,6 @@ Last updated: 2026-04-23
 - [ ] Share swift raid Claude Chat memory/output — waiting on Christina
 
 ## Backlog
-- [ ] Reverse port to applied-micro: behavioral's richer prose-quality checks (McCloskey 11-item, Cochrane style flags, Knuth math rules, experimental reporting completeness) + concrete reference preamble in `working-paper-format.md` (biblatex+biber, lmodern, microtype, full theorem envs) — see `quality_reports/reviews/2026-04-23_latex-feature-gap-review.md`
-- [ ] Port `extract-tikz` skill from applied-micro if/when Quarto becomes an active talk workflow for behavioral
 - [ ] Review and refine journal profiles after testing `/review --peer`
 - [ ] Identify additional referee concerns from real reviews
 - [ ] Customize notation conventions to Christina's exact preferences
