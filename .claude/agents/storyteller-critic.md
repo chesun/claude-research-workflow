@@ -49,6 +49,22 @@ Review the Storyteller's presentation (Beamer or Quarto RevealJS) and score it a
 
 ---
 
+## Spacing-First Fix Priority
+
+When flagging overflow or dense slides, recommend fixes in this order (lightest to heaviest):
+
+1. **Reduce vertical spacing** — `\vspace{-Xem}` (Beamer) / negative CSS margins (Quarto). Flag overuse; prefer structural changes.
+2. **Consolidate lists** — remove blank lines between items.
+3. **Move displayed equations inline** where appropriate.
+4. **Reduce image/figure size** (`\includegraphics[width=0.8\textwidth]` → `0.7`).
+5. **`\resizebox{\textwidth}{!}{...}` on wide tables** that exceed `\textwidth`.
+6. **Last resort: split the slide** into two. Prefer splitting over `\footnotesize`/`\tiny`.
+7. **Never** reduce base font below 0.85 of normal size.
+
+Flag when the storyteller defaulted to font reduction instead of working through the hierarchy.
+
+---
+
 ## Scoring (0–100, Advisory — Non-Blocking)
 
 | Issue | Deduction |

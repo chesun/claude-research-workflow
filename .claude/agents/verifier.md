@@ -92,39 +92,79 @@ cd otree && otree devserver --check 2>&1 | tail -20
 
 ## Submission Checks (6–11)
 
+These implement the AEA Data Editor 6-check audit. `replication-protocol.md` §5 defines the workflow; this section is the detailed criteria.
+
 ### 6. Package Inventory
-- All scripts present and numbered sequentially
-- Master script exists (runs everything in order)
-- No orphan scripts (scripts not called by master)
+- README exists in package root (`README.md` / `README.pdf` / `README.txt`).
+- README contains: data sources, script order, software requirements, runtime estimate.
+- All scripts listed in README actually exist; all referenced outputs actually generate.
+- Scripts numbered sequentially (`01_`, `02_`, ...) or have a clear ordering.
+- Master script exists and runs everything in order.
+- No stray/orphan files (undocumented scripts, leftover data).
+
+**FAIL if:** no README, or README references scripts that don't exist.
 
 ### 7. Dependency Verification
-- R: `renv.lock` or `sessionInfo()` output exists
-- Stata: version number and `ssc install` list documented
-- Python: `requirements.txt` or `pyproject.toml` exists
-- Non-standard packages documented with install instructions
+- Parse all `library()` / `ssc install` / `import` calls across scripts.
+- List all required packages with versions (`sessionInfo()` in R, `which` in Stata, `pip freeze` in Python).
+- **Flag non-CRAN packages** (GitHub-only packages need install instructions).
+- Stata version documented; Python `requirements.txt` present.
+
+**FAIL if:** undocumented non-CRAN packages, or software versions not stated.
 
 ### 8. Data Provenance
-- Every dataset has a documented source
-- Access instructions for restricted data
-- No hardcoded paths
-- Data availability statement present
+- Every dataset used in scripts has a documented source in README.
+- Restricted/proprietary data: access instructions (where to apply, wait time).
+- Public data: URL or archive identifier.
+- Data files referenced in scripts exist OR have documented access instructions.
+- **Hardcoded absolute paths — hard fail:** grep for `/Users/`, `/home/`, `C:\\` across all scripts.
+- File paths are relative to package root.
+
+**FAIL if:** any dataset used without documented source, or hardcoded absolute paths present.
 
 ### 9. Execution Verification
-- Run master script end-to-end
-- Capture all output and errors
-- Report runtime
+Run the replication in a controlled way:
+
+```bash
+# Stata master
+stata-mp -b do master.do
+# R master
+Rscript master.R 2>&1 | tee run.log
+# Capture stderr, record wall-clock time
+```
+
+- All scripts complete without `Error in ...` messages.
+- Warnings documented or benign.
+- Output files (tables, figures) are created.
+- Wall-clock runtime captured and compared to README estimate.
+
+**FAIL if:** any script errors, expected outputs not created, or runtime exceeds documented estimate by > 2×.
 
 ### 10. Output Cross-Reference
-- Every table and figure in the paper traced to a specific script
-- No orphan outputs (generated but not referenced)
-- No missing outputs (referenced but not generated)
+- For each table in the paper: corresponding output file exists.
+- For each figure in the paper: corresponding output file exists.
+- **Output file timestamps newer than script timestamps** (confirms scripts were actually run in this audit).
+- **Spot-check 2–3 key numbers per table** — values in output match paper within replication tolerance (`quality.md` §4).
+- Figure appearance matches paper (visual check).
 
-### 11. README Completeness (AEA Format)
-- Data availability statement
-- Computational requirements (software, packages, hardware, runtime)
-- Description of programs (numbered, with inputs/outputs)
-- Instructions for replication
-- List of tables and figures with generating scripts
+**FAIL if:** any paper table/figure has no corresponding output, or spot-check values don't match.
+
+### 11. README Completeness (AEA Data Editor Standard)
+Required sections:
+
+- **Data Availability Statement** — all data sources described
+- **Computational Requirements** — software + version, packages + versions, hardware, runtime, memory (if > 8 GB), IRB approval (human subjects)
+- **Description of Programs** — what each script does, in order
+- **Instructions for Replicators** — step-by-step, from data access to final output
+
+Required content:
+
+- Software version (Stata 17, R X.X.X, etc.)
+- Package versions (from `sessionInfo()` or explicit list)
+- Estimated runtime on a standard machine
+- Memory requirements if > 8 GB
+
+**FAIL if:** any required section missing, or software/package versions not documented.
 
 ---
 

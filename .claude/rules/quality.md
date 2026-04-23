@@ -92,3 +92,88 @@ The same issue may have different deductions by phase:
 ### Principle
 
 Early phases are about getting the direction right. Late phases are about getting the details right. Critics should match their tone and rigor to the phase.
+
+---
+
+## 3. Per-Target Deduction Tables
+
+**Concrete deductions critics apply when scoring their target.** These supplement the severity gradient with target-specific rubrics.
+
+### Paper LaTeX (`paper/main.tex`)
+
+| Severity | Issue | Deduction |
+|----------|-------|-----------|
+| Critical | Compilation failure (pdflatex) | -100 |
+| Critical | Numbers in text don't match tables | -25 |
+| Critical | Undefined citation | -15 |
+| Critical | Broken reference (`\ref`) | -15 |
+| Critical | Overfull hbox > 10pt | -10 |
+| Critical | Typo in equation | -10 |
+| Major | Notation inconsistency | -5 |
+| Major | Missing figure/table at referenced path | -5 |
+| Major | Hedging language ("interestingly", "it is worth noting") | -3 per (max -15) |
+| Minor | Overfull hbox 1–10pt | -1 |
+| Minor | Long lines >100 chars (except math formulas) | -1 |
+
+### Stata Scripts (`.do`) — primary
+
+| Severity | Issue | Deduction |
+|----------|-------|-----------|
+| Critical | Script doesn't run | -100 |
+| Critical | Domain-specific bugs (wrong clustering, wrong estimand) | -30 |
+| Critical | Code doesn't match design / strategy memo | -25 |
+| Critical | Hardcoded absolute paths | -20 |
+| Major | Missing robustness checks | -15 |
+| Major | Missing `set seed` | -10 |
+| Major | Missing `esttab`/`outreg2` output | -5 |
+| Minor | No documentation headers | -5 |
+
+### R / Python Scripts — secondary
+
+| Severity | Issue | Deduction |
+|----------|-------|-----------|
+| Critical | Syntax errors / script doesn't run | -100 |
+| Critical | Domain-specific bugs (wrong clustering, wrong estimand) | -30 |
+| Critical | Code doesn't match design / strategy memo | -25 |
+| Critical | Hardcoded absolute paths | -20 |
+| Major | Missing robustness checks | -15 |
+| Major | Wrong clustering level | -15 |
+| Major | Missing `set.seed()` | -10 |
+| Major | Magnitude of main result implausible | -10 |
+| Major | Non-reproducible output (no `sessionInfo()`) | -5 |
+| Minor | No documentation headers | -5 |
+
+### Talks (Beamer) — Advisory, Non-Blocking
+
+| Severity | Issue | Deduction |
+|----------|-------|-----------|
+| Critical | Compilation failure | -100 |
+| Major | Slide count outside format range | -10 |
+| Major | Result not in paper (talk-only result) | -10 |
+| Major | Notation mismatch with paper | -5 |
+| Minor | Overfull hbox | -2 |
+| Minor | Dense slide without spacing fix | -1 |
+
+Talk scores are reported as "Talk: XX/100" but do **not** block commits or PRs.
+
+### Enforcement
+
+- **Score < 80:** block commit; list blocking issues.
+- **Score < 90:** allow commit, warn; list recommendations.
+- **Score ≥ 95 + all components ≥ 80:** submission-ready.
+- User can override with justification (logged in `research_journal.md`).
+
+---
+
+## 4. Replication Tolerance Thresholds
+
+For verifying replication of an external paper or prior versions. See `replication-protocol.md` for the full workflow.
+
+| Quantity | Tolerance | Rationale |
+|----------|-----------|-----------|
+| Integers (N, counts) | Exact match | No reason for any difference |
+| Point estimates | < 0.01 | Rounding in paper display |
+| Standard errors | < 0.05 | Bootstrap/clustering variation |
+| P-values | Same significance level | Exact p may differ slightly |
+| Percentages | < 0.1pp | Display rounding |
+| Runtime estimate | Within 2× documented | Machine-dependent |
