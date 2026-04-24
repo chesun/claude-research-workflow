@@ -14,7 +14,7 @@ The overall project score that gates submission (>= 95) is a weighted aggregate:
 |-----------|--------|-------------|
 | Literature coverage | 10% | librarian-critic's score of librarian |
 | Data quality | 10% | explorer-critic's score of explorer |
-| Identification validity | 25% | strategist-critic's score of strategist |
+| Strategy / design validity | 25% | strategist-critic (applied-micro overlay) **or** designer-critic (behavioral overlay) — whichever the project's overlay supplies |
 | Code quality | 15% | coder-critic's score of coder |
 | Paper quality | 25% | Average of domain-referee + methods-referee scores |
 | Manuscript polish | 10% | writer-critic's score of writer |
