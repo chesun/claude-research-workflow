@@ -21,20 +21,33 @@ This skill orchestrates the full dependency graph. Each phase activates when its
 Phase 1: Discovery
   ├── /discover interview → Research Spec + Domain Profile
   ├── /discover lit → Literature Synthesis + BibTeX
-  └── /discover data → Data Assessment
+  └── /discover data → Data Assessment (if existing data)
 
-Phase 2: Strategy (depends on Phase 1)
-  └── /strategize → Strategy Memo + Robustness Plan
+Phase 2: Theory (depends on Phase 1, optional)
+  └── /theory develop → Model + Testable Predictions
 
-Phase 3: Execution (depends on Phase 2)
+Phase 3: Experiment Design (depends on Phase 1-2)
+  ├── /design experiment → 14-step Design Checklist
+  └── /design power → Power Analysis + Sample Size
+
+Phase 4: Pre-registration (GATE — depends on Phase 3)
+  └── /preregister → AsPredicted or OSF PAP (no data collection without this)
+
+Phase 5: Implementation (depends on Phase 4)
+  ├── /qualtrics create → Survey (if online/survey experiment)
+  └── /otree create → oTree app (if lab/interactive experiment)
+
+[DATA COLLECTION — happens outside Claude]
+
+Phase 6: Execution (depends on data)
   ├── /analyze → Scripts + Tables + Figures
   └── /write → Paper Sections
 
-Phase 4: Peer Review (depends on Phase 3)
+Phase 7: Peer Review (depends on Phase 6)
   ├── /review --all → Comprehensive Quality Score
   └── /review --peer → domain-referee + methods-referee Reports
 
-Phase 5: Submission (depends on Phase 4, score >= 95)
+Phase 8: Submission (depends on Phase 7, score >= 95)
   ├── /submit target → Journal Recommendations
   ├── /submit package → Replication Package
   └── /submit final → Final Verification
@@ -43,6 +56,16 @@ Phase 5: Submission (depends on Phase 4, score >= 95)
 ---
 
 ## Workflow
+
+### Step 0: Enter Plan Mode
+
+Before any work begins:
+1. **Enter plan mode** — use `EnterPlanMode`
+2. **Create the project folder structure** — `theory/`, `experiments/designs/`, `experiments/protocols/`, `experiments/instructions/`, `experiments/oTree/`, `experiments/qualtrics/`, `data/raw/`, `data/cleaned/`, `data/simulated/`, `scripts/stata/`, `scripts/python/`, `replication/`, `quality_reports/`, `explorations/`, `master_supporting_docs/`
+3. **Draft a high-level plan** — what phases are needed, estimated scope
+4. **Save to disk** — `quality_reports/plans/YYYY-MM-DD_new-project.md`
+5. **Present to user** — wait for approval before proceeding
+6. **Exit plan mode** — only after approval
 
 ### Step 1: Discovery Phase
 
@@ -62,17 +85,35 @@ Phase 5: Submission (depends on Phase 4, score >= 95)
 
 **Gate:** Research spec and literature review must exist before proceeding.
 
-### Step 2: Strategy Phase
+### Step 2: Theory Phase (optional)
 
-4. **Run `/strategize`** to design the empirical strategy:
-   - Strategist proposes identification strategy
-   - strategist-critic validates the design
+4. **Run `/theory develop`** if the project has a formal model:
+   - Theorist builds model following Varian KISS workflow
+   - theorist-critic validates via 16-item checklist
+   - Output: testable predictions that feed into experiment design
 
-**Gate:** Strategy memo must pass strategist-critic review (score >= 80).
+**Gate:** If theory phase is used, theorist-critic score >= 80.
 
-### Step 3: Execution Phase
+### Step 3: Experiment Design Phase
 
-5. **Run `/analyze`** to implement the strategy:
+5. **Run `/design experiment`** to design the experiment:
+   - Designer produces 14-step inference-first checklist
+   - designer-critic validates the design
+6. **Run `/design power`** for power analysis and sample size
+7. **Run `/preregister`** to generate pre-registration document
+
+**HARD GATE:** Pre-registration must be filed before any data collection.
+
+### Step 4: Implementation Phase
+
+8. **Run `/qualtrics create`** or **`/otree create`** to build the experiment
+   - qualtrics-specialist or otree-specialist implements the design
+
+[DATA COLLECTION — happens outside Claude]
+
+### Step 5: Execution Phase
+
+9. **Run `/analyze`** to implement the analysis:
    - Data-engineer cleans data and creates figures
    - Coder writes analysis scripts
    - coder-critic reviews code
@@ -108,7 +149,10 @@ Phase 5: Submission (depends on Phase 4, score >= 95)
 
 The pipeline pauses for user input at these points:
 - After interview (approve research spec)
-- After strategy memo (approve identification strategy)
+- After theory (approve model and predictions, if applicable)
+- After experiment design (approve design checklist)
+- After pre-registration (approve before filing — this is a commitment)
+- After data collection (user confirms data is ready)
 - After data analysis (review results before paper drafting)
 - After peer review (review feedback before revision)
 - Before submission (approve journal choice)

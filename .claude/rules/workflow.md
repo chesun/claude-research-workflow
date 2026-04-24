@@ -98,10 +98,11 @@ The Orchestrator selects agents based on what the task requires:
 | Literature/references | librarian + librarian-critic |
 | Data sourcing | explorer + explorer-critic |
 | Data engineering | data-engineer + coder-critic |
-| Identification strategy (applied-micro overlay) | strategist + strategist-critic |
-| Experimental design (behavioral overlay) | designer + designer-critic |
-| Formal theory/model (behavioral overlay) | theorist + theorist-critic |
-| R/Stata/Python scripts | coder + coder-critic |
+| Formal theory/model | theorist + theorist-critic |
+| Experiment design | designer + designer-critic |
+| Qualtrics survey | qualtrics-specialist |
+| oTree experiment | otree-specialist |
+| Stata/R/Python scripts | coder + coder-critic |
 | Paper manuscript | writer + writer-critic |
 | Peer review | Orchestrator → domain-referee + methods-referee |
 | Beamer talks | storyteller + storyteller-critic |
@@ -112,7 +113,8 @@ The Orchestrator selects agents based on what the task requires:
 
 Independent phases run concurrently:
 - Literature and Data discovery run in parallel
-- Code and Paper execution run in parallel (after Strategy)
+- Theory and Design can overlap (theory produces predictions that feed design)
+- Code and Paper execution run in parallel (after Design + Pre-registration)
 - Presentation can run parallel with Peer Review
 
 ### Limits
@@ -122,9 +124,9 @@ Independent phases run concurrently:
 - **Verification retries:** max 2 attempts
 - Never loop indefinitely
 
-### Simplified Mode (R Scripts / Explorations)
+### Simplified Mode (Stata/R Scripts / Explorations)
 
-For standalone R scripts, simulations, and explorations — use the simplified loop:
+For standalone scripts, simulations, and explorations — use the simplified loop:
 
 ```
 Plan approved → implement → run code → check outputs → score → done
@@ -159,8 +161,12 @@ When user says "just do it" / "handle it":
 | Phase | Requires | Can Re-enter? |
 |-------|----------|---------------|
 | Discovery | Research idea | Always — librarian is persistent |
-| Strategy | At least one of: literature review OR data assessment | Yes — new data or literature can trigger re-strategy |
-| Execution (Code) | Approved strategy/design (strategist-critic OR designer-critic >= 80) | Yes — strategy revision triggers re-coding |
+| Theory | Literature review or research question | Yes — new evidence can trigger model revision |
+| Design | Testable predictions (from theory) OR research question | Yes — theory revision triggers redesign |
+| **Pre-registration** | **Approved design (designer-critic >= 80)** | **GATE — no data collection without it** |
+| Implementation | Approved design → Qualtrics/oTree code | Yes — design changes trigger reimplementation |
+| Data Collection | Pre-registration filed + implementation approved | No — once started, design is locked |
+| Execution (Code) | Data collected + approved design | Yes — new data triggers re-analysis |
 | Execution (Write) | Approved code (coder-critic >= 80) | Yes — new results trigger rewriting |
 | Peer Review | Approved paper (writer-critic >= 80) + approved code | Yes — major revisions loop back |
 | Submission | Orchestrator accepts + Verifier PASS + overall >= 95 | No — terminal |
@@ -180,8 +186,11 @@ A referee says "control for X." The Orchestrator routes back to coder (not throu
 
 Independent phases run concurrently:
 - Literature (librarian + librarian-critic) and Data (explorer + explorer-critic) run in parallel
-- Code (coder + coder-critic) and Paper (writer + writer-critic) run in parallel after Strategy
+- Theory (theorist + theorist-critic) and Design (designer + designer-critic) can overlap
+- Code (coder + coder-critic) and Paper (writer + writer-critic) run in parallel after Pre-registration
 - Presentation can run parallel with Peer Review
+
+**Pre-registration gate:** The `/preregister` skill must produce a filed registration before any data collection begins. This is a hard gate — the Orchestrator will not dispatch data collection or analysis agents without it.
 
 ---
 
@@ -203,9 +212,9 @@ The Orchestrator activates Discovery → Strategy → Execution → Peer Review 
 
 The user invokes a skill directly:
 
-> `/strategize paper/main.tex` (applied-micro overlay) or `/design experiment` (behavioral overlay)
+> `/strategize paper/main.tex`
 
-This runs the relevant critic agent alone, right now, no phase dependencies. The concrete skill names depend on the overlay installed.
+This runs the strategist-critic agent alone, right now, no phase dependencies.
 
 ### Why Both Modes
 
@@ -220,8 +229,7 @@ All skills in the reference below work without pipeline context when invoked dir
 | Skill | What It Does |
 |-------|-------------|
 | `/discover` | Literature search + data discovery |
-| `/strategize` (applied-micro overlay) | Identification strategy design + review |
-| `/design`, `/theory`, `/preregister` (behavioral overlay) | Experiment design, formal model, pre-registration |
+| `/strategize` | Identification strategy design + review |
 | `/analyze` | End-to-end data analysis (code + debug) |
 | `/write` | Draft paper sections + humanizer pass |
 | `/review` | Simulated peer review (domain + methods referees) |

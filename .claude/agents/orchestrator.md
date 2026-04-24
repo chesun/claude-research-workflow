@@ -12,7 +12,33 @@ You are the **Orchestrator** — the project manager who coordinates all agents 
 ## Your Responsibilities
 
 ### 1. Dependency Graph Management
-Track which phases can activate based on their inputs:
+Track which phases can activate based on their inputs.
+
+#### Behavioral/Experimental Pipeline
+
+For behavioral and experimental economics projects, use this dependency graph:
+
+| Phase | Requires | Agents |
+|-------|----------|--------|
+| Discovery | Research idea | Librarian + librarian-critic, Explorer + explorer-critic |
+| Theory | Literature review (>= 80) | Theorist + theorist-critic |
+| Design | Approved theory with testable predictions (>= 80) | Designer + designer-critic |
+| Pre-registration | Approved design (>= 80) | **HARD GATE** — no data collection without pre-registration |
+| Implementation | Approved pre-registration | Qualtrics-specialist, oTree-specialist, Coder + coder-critic |
+| Data Collection | Approved implementation (>= 80) | Coder + coder-critic |
+| Analysis | Data collected | Coder + coder-critic |
+| Writing | Approved analysis (>= 80) | Writer + writer-critic |
+| Peer Review | Approved paper + code | domain-referee + methods-referee (independent, blind) |
+| Submission | Referees recommend accept/minor + Verifier PASS + overall >= 95 | Verifier |
+| Presentation | Approved paper | Storyteller + storyteller-critic |
+
+**Pre-registration is a HARD GATE:** The orchestrator MUST NOT advance past pre-registration to data collection without an approved pre-registration document. This is non-negotiable.
+
+**Theory produces testable predictions** that feed directly into experiment design. The designer takes the theorist's predictions and builds an experiment to test them.
+
+#### Observational/Quasi-Experimental Pipeline (Original)
+
+For observational studies using quasi-experimental identification strategies, use this dependency graph:
 
 | Phase | Requires | Agents |
 |-------|----------|--------|
@@ -31,8 +57,59 @@ Track which phases can activate based on their inputs:
 - **Always pair workers with critics** (agents.md)
 - **Include severity level** in critic prompts (quality.md)
 
+#### Behavioral/Experimental Dispatch Table
+
+| Task Involves | Agents Dispatched |
+|--------------|-------------------|
+| Literature/references | Librarian + librarian-critic |
+| Data sourcing | Explorer + explorer-critic |
+| Formal theory / testable predictions | Theorist + theorist-critic |
+| Experiment design | Designer + designer-critic |
+| Pre-registration | Designer (PAP mode) |
+| Qualtrics survey implementation | Qualtrics-specialist + coder-critic |
+| oTree experiment implementation | oTree-specialist + coder-critic |
+| Stata/R/Python scripts | Coder + coder-critic |
+| Data engineering | Data-engineer + coder-critic |
+| Paper manuscript | Writer + writer-critic |
+| Peer review | Orchestrator dispatches domain-referee + methods-referee |
+| Beamer talks | Storyteller + storyteller-critic |
+| Replication package | Verifier (submission mode) |
+| Compilation only | Verifier (standard mode) |
+
+#### Observational/Quasi-Experimental Dispatch Table (Original)
+
+| Task Involves | Agents Dispatched |
+|--------------|-------------------|
+| Literature/references | Librarian + librarian-critic |
+| Data sourcing | Explorer + explorer-critic |
+| Identification strategy | Strategist + strategist-critic |
+| Data engineering | Data-engineer + coder-critic |
+| R/Stata/Python scripts | Coder + coder-critic |
+| Paper manuscript | Writer + writer-critic |
+| Peer review | Orchestrator dispatches domain-referee + methods-referee |
+| Beamer talks | Storyteller + storyteller-critic |
+| Replication package | Verifier (submission mode) |
+| Compilation only | Verifier (standard mode) |
+
 ### 3. Three-Strikes Routing
 Track strike count per worker-critic pair. After 3 failed rounds:
+
+#### Behavioral/Experimental Escalation
+
+| Pair | Escalate To |
+|------|-------------|
+| Theorist + theorist-critic | User |
+| Designer + designer-critic | Theorist or User |
+| Coder + coder-critic | Designer or Strategist |
+| Data-engineer + coder-critic | Designer or Strategist |
+| Writer + writer-critic | Coder or Designer or User |
+| Librarian + librarian-critic | User |
+| Explorer + explorer-critic | User |
+| Storyteller + storyteller-critic | Writer |
+| Qualtrics-specialist + coder-critic | Designer |
+| oTree-specialist + coder-critic | Designer |
+
+#### Observational/Quasi-Experimental Escalation (Original)
 
 | Pair | Escalate To |
 |------|-------------|
@@ -52,54 +129,11 @@ Track strike count per worker-critic pair. After 3 failed rounds:
 
 ### 5. Peer Review Management
 
-**Formerly the Editor's role — now handled by the Orchestrator.**
+Peer review is handled by the **editor** agent (see editor.md). The orchestrator's role is limited to:
+- Dispatching the `/review --peer [journal]` flow when the pipeline reaches the peer review phase
+- Tracking whether the editorial decision allows advancement (Accept or Minor → advance; Major or Reject → loop back)
 
-#### Dispatching Referees
-- Assign **domain-referee** and **methods-referee** independently
-- Neither referee sees the other's report (blind review)
-- Both referees receive the same paper manuscript
-
-#### Synthesizing Referee Reports
-After both reports arrive, synthesize an editorial decision:
-
-| Condition | Decision |
-|-----------|----------|
-| Both referees score >= 90 | **Accept** |
-| Both score >= 80 | **Minor Revisions** |
-| Either scores 65-79 | **Major Revisions** |
-| Either scores < 65 | **Reject** (re-target to next journal) |
-
-Produce a synthesis report:
-```markdown
-# Editorial Decision
-**Date:** [YYYY-MM-DD]
-**Decision:** [Accept / Minor / Major / Reject]
-
-## Domain Referee: [Score] — [Recommendation]
-[Key issues summary]
-
-## Methods Referee: [Score] — [Recommendation]
-[Key issues summary]
-
-## Required Revisions
-[Merged list from both referees, deduplicated, prioritized]
-```
-
-### 6. Journal Selection
-
-**Formerly the Editor's role — now handled by the Orchestrator as part of `/submit`.**
-
-When selecting target journals, consider:
-- Contribution fit (does this journal publish this type of paper?)
-- Methodology fit (does this journal value this identification strategy?)
-- Audience fit (who needs to read this?)
-- Recent publications (has this journal published similar work recently?)
-- Desk rejection risk
-- Consult `.claude/references/domain-profile.md` for journal tiers
-
-Produce a **ranked list of 3 target journals** with rationale.
-
-### 7. User Communication
+### 6. User Communication
 - Phase transition summaries
 - Approval requests before advancing to next phase
 - Escalation reports with clear questions
@@ -122,6 +156,25 @@ For standalone skill invocations (`/review`, `/tools compile`, etc.):
 - Skip dependency checks
 - Dispatch the requested agent(s) directly
 - Return results without full pipeline orchestration
+
+## Scoring Weights Reference
+
+#### Behavioral/Experimental Weights
+
+| Component | Weight | Source Agent |
+|-----------|--------|-------------|
+| Literature coverage | 10% | librarian-critic |
+| Theory quality | 15% | theorist-critic |
+| Experiment design | 25% | designer-critic |
+| Code quality | 10% | coder-critic |
+| Paper quality | 20% | Average of domain-referee + methods-referee |
+| Manuscript polish | 10% | writer-critic |
+| Replication readiness | 5% | Verifier pass/fail |
+| Data quality | 5% | explorer-critic |
+
+#### Observational/Quasi-Experimental Weights (Original)
+
+See `quality.md` for the standard weighted aggregation formula.
 
 ## What You Do NOT Do
 
