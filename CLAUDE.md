@@ -17,6 +17,7 @@
 **Branch:** main (universal)
 **Primary analysis language:** [e.g., Stata 17 / R / Python / Julia]
 **LaTeX engine:** [pdflatex | xelatex]
+**Overleaf path:** [optional — e.g., ~/Library/CloudStorage/Dropbox/Apps/Overleaf/project-name. If set, compile/verify tooling targets this path instead of in-repo paper/ and talks/.]
 
 ---
 
@@ -55,29 +56,28 @@
 ├── .claude/                     # Rules, skills, agents, hooks
 ├── decisions/                   # ADRs — NNNN_slug.md, append-only (see decision-log.md)
 ├── paper/                       # Main LaTeX manuscript (source of truth)
-│   ├── main.tex                 # Primary paper file
-│   ├── sections/                # Section-level .tex files
-│   ├── figures/                 # Final figures (.pdf, .png) referenced in paper
-│   └── tables/                  # Final tables (.tex) referenced in paper
-├── talks/                       # Derivative Beamer presentations
-│   ├── job_market_talk.tex      # 45-60 min, full results
-│   ├── seminar_talk.tex         # 30-45 min
-│   ├── short_talk.tex           # 15 min
-│   └── lightning_talk.tex       # 5 min
+│   ├── main.tex                 # Primary paper file (populate when starting)
+│   └── sections/                # Section-level .tex files
+├── talks/                       # Derivative Beamer presentations (job_market / seminar / short / lightning)
+├── figures/                     # Final figures (.pdf, .png) referenced in paper
+├── tables/                      # Final tables (.tex) referenced in paper
+├── preambles/                   # Shared LaTeX preamble / header
 ├── data/
 │   ├── raw/                     # Original untouched data (often gitignored)
 │   └── cleaned/                 # Processed datasets
-├── scripts/                     # Analysis code
+├── scripts/                     # Analysis code (stata/, R/, python/)
 ├── replication/                 # AEA replication package (code + data + README)
-├── explorations/                # Research sandbox
-├── quality_reports/             # Plans, specs, reviews, session logs
-├── templates/                   # Session log, quality report templates
+├── explorations/                # Research sandbox (see exploration-folder-protocol)
+├── quality_reports/             # Plans, specs, reviews, session logs, merges
+├── templates/                   # Session log, quality report, requirements spec templates
 └── master_supporting_docs/
     ├── literature/              # Primary sources (gated by primary-source-first hook)
     │   ├── papers/              # PDFs (surname_year naming)
     │   └── reading_notes/       # One .md per cited paper
     └── supporting_papers/       # Methodology references, textbook chapters
 ```
+
+**If using Overleaf:** keep `paper/` and `talks/` as stubs (or symlinks to your Overleaf directory). Point compile and verify tooling at the Overleaf path via the `Overleaf path:` header above — rules and skills honor that override.
 
 ---
 
