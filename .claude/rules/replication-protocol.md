@@ -24,7 +24,7 @@ Before writing any analysis code that builds on another paper:
 
 ## Phase 2: Translate & Execute
 
-- Follow `stata-conventions.md` or `r-code-conventions.md` for language standards.
+- Follow `stata-code-conventions.md` or `r-code-conventions.md` for language standards.
 - Translate line-by-line initially — don't "improve" during replication.
 - Match original specification exactly (covariates, sample, clustering, SE method).
 - Save all intermediate results.
@@ -132,6 +132,6 @@ After all analyses are complete and paper is ready for submission:
 
 ## Relationship to Other Rules
 
-- **Scripts conventions:** `stata-conventions.md` or `r-code-conventions.md`
+- **Scripts conventions:** `stata-code-conventions.md` or `r-code-conventions.md`
 - **Verifier agent:** `agents/verifier.md` runs the 6-check AEA audit in submission mode using the criteria above
 - **Verification:** `verification-protocol.md` handles end-of-task compile/run checks

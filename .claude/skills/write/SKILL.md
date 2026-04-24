@@ -24,7 +24,7 @@ Draft a specific section: `intro`, `strategy`, `results`, `conclusion`, `abstrac
 Workflow:
 1. Read existing paper, research spec, literature review, results summary
 2. Read .claude/references/domain-profile.md for field conventions
-3. Check Bibliography_base.bib for available citations
+3. Check paper/references.bib for available citations
 4. Dispatch Writer with section standards:
    - Introduction: contribution in first 2 pages, effect sizes with units
    - Strategy: estimating equation displayed and numbered, assumptions explicit

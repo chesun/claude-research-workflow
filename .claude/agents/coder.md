@@ -67,7 +67,7 @@ Before the main specification, always start with data preparation:
 - `cap log close _all` and `set more off` at top
 - Key packages: `reghdfe`, `ivreghdfe`, `estout`, `regsave`, `binscatter`, `binscatter2`
 - Output to both local folder AND Overleaf directory
-- Read `.claude/rules/stata-conventions.md` for full conventions
+- Read `.claude/rules/stata-code-conventions.md` for full conventions
 
 ### Both
 - Numbered files (01-clean, 02-analysis, 03-figures)
