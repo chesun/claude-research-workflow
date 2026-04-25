@@ -92,10 +92,83 @@ AUTHOR_YEAR = re.compile(
 )
 
 # Escape hatch: <!-- primary-source-ok: stem1, stem2 -->
+# Use non-greedy `.+?` with the explicit `-->` terminator so stems containing
+# hyphens (e.g., `chetty-friedman-rockoff_2014`) are not truncated. The earlier
+# `[^-]+` pattern stopped at the first hyphen, silently dropping any stems
+# listed after a hyphen-containing one.
 ESCAPE_HATCH = re.compile(
-    r"<!--\s*primary-source-ok:\s*(?P<stems>[^-]+)-->",
-    re.IGNORECASE,
+    r"<!--\s*primary-source-ok:\s*(?P<stems>.+?)\s*-->",
+    re.IGNORECASE | re.DOTALL,
 )
+
+# Sentence-boundary detector. A capitalized first word right after a sentence
+# terminator is almost never a surname citation; it's just the next sentence.
+SENTENCE_BOUNDARY = re.compile(r"(?:[.?!:;]\s+|\n\s*\n)\s*$")
+
+# Words that are *never* surnames. Applied independent of the project allowlist
+# so the hook is reasonable on day one (when the allowlist is empty). Keep this
+# list conservative — only words with effectively zero chance of being a real
+# surname in academic prose.
+NEVER_SURNAMES = frozenset({
+    # Articles, demonstratives, copulae
+    "the", "a", "an", "this", "these", "those", "that",
+    # Prepositions
+    "in", "on", "at", "from", "for", "to", "by", "with", "of",
+    # Pronouns
+    "we", "our", "us", "i", "you", "your", "he", "she", "they", "their", "it", "its",
+    # Quantifiers
+    "all", "some", "most", "both", "each", "every", "any", "no", "none",
+    # Adverbs / discourse markers
+    "only", "also", "even", "still", "yet", "however", "moreover",
+    "additionally", "furthermore", "thus", "therefore", "hence",
+    "meanwhile", "instead", "rather", "indeed",
+    # Adjectives commonly capitalized at sentence start
+    "available", "important", "notable", "key", "main", "primary",
+    "significant", "relevant", "specific", "general",
+    # Question / subordinator words
+    "when", "where", "why", "how", "what", "which", "who", "whose",
+    "if", "unless", "until", "while", "since", "because", "although",
+    "despite", "given", "based", "using", "according", "see",
+    "though", "before", "after",
+    # Seasons
+    "spring", "summer", "fall", "autumn", "winter",
+    # Days of the week
+    "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+    # Months
+    "january", "february", "march", "april", "may", "june",
+    "july", "august", "september", "october", "november", "december",
+    # Document-structure words
+    "table", "figure", "panel", "column", "row", "section", "appendix",
+    "chapter", "footnote", "equation", "model", "specification",
+    "step", "stage", "phase", "round", "wave", "cohort", "year", "yr",
+    "note", "notes",
+})
+
+
+def _is_sentence_start(text: str, pos: int) -> bool:
+    """True if `pos` is at start-of-document or right after a sentence terminator."""
+    if pos == 0:
+        return True
+    return bool(SENTENCE_BOUNDARY.search(text[:pos]))
+
+
+def _split_hyphenated_surname(token: str) -> list[str]:
+    """If token has 3+ hyphen-separated capitalized name-like parts, split it.
+
+    Used to handle method-name compounds like `Chetty-Friedman-Rockoff` that
+    appear as a single hyphenated token but represent multiple surnames. A
+    properly-named reading-notes file uses underscores, so the split lets the
+    extractor build the right stem.
+
+    Returns a single-element list (the original token) if the heuristic
+    doesn't apply.
+    """
+    parts = token.split("-")
+    if len(parts) < 3:
+        return [token]
+    if all(p[:1].isupper() and p[1:].isalpha() and len(p) >= 2 for p in parts):
+        return parts
+    return [token]
 
 # Markdown section-header / citation-metadata line patterns for matching
 # compiled reading-notes files.
@@ -111,27 +184,63 @@ def is_enforceable(rel_path: str) -> bool:
 def extract_citations(text: str) -> list[tuple[str, str]]:
     """Return list of (stem, display) tuples for citations in text.
 
-    If KNOWN_SURNAMES is non-empty, filters via the allowlist to avoid
-    false positives. If empty (the default when the project hasn't
-    populated `.claude/state/primary_source_surnames.txt`), every
-    Author-Year match is accepted — erring on the side of more false
-    positives rather than silently skipping unfamiliar citations.
+    Applies three filters in order:
+
+    1. **NEVER_SURNAMES blocklist** — words that are never surnames
+       (function words, seasons, months, table/figure/etc.). Drops the
+       match regardless of allowlist state.
+    2. **Sentence-start filter** — a capitalized first word right after a
+       sentence terminator is dropped unless the project allowlist
+       explicitly contains it. Sentence-start function-word + year is
+       almost never a citation.
+    3. **Hyphenated-name decomposition** — if the captured `first` group
+       is a 3+ part hyphenated capitalized token (e.g.,
+       "Chetty-Friedman-Rockoff"), split it and treat each part as a
+       surname. Builds an underscore-joined stem matching reading-notes
+       filename conventions.
+    4. **Allowlist filter** — if KNOWN_SURNAMES is non-empty, the leading
+       surname must appear in it. If empty (default for new projects),
+       all matches that pass filters 1–3 are accepted.
     """
     citations: list[tuple[str, str]] = []
     seen: set[str] = set()
     allowlist_active = bool(KNOWN_SURNAMES)
+
     for match in AUTHOR_YEAR.finditer(text):
         first = match.group("first") or ""
         second = match.group("second") or ""
         third = match.group("third") or ""
         year = match.group("year") or ""
 
-        if allowlist_active:
-            if first.lower() not in KNOWN_SURNAMES:
+        # Filter 1: hard-coded blocklist — independent of allowlist
+        if first.lower() in NEVER_SURNAMES:
+            continue
+
+        # Filter 2: sentence-start positions require explicit allowlist match
+        if _is_sentence_start(text, match.start()):
+            if not (allowlist_active and first.lower() in KNOWN_SURNAMES):
                 continue
-            surnames = [s for s in [first, second, third] if s and s.lower() in KNOWN_SURNAMES]
+
+        # Filter 3: hyphenated-name decomposition (handles method compounds)
+        first_parts = _split_hyphenated_surname(first)
+        if len(first_parts) > 1:
+            # Decomposed compound; treat each part as a surname slot
+            all_parts = first_parts + [p for p in [second, third] if p]
+            if allowlist_active:
+                if first_parts[0].lower() not in KNOWN_SURNAMES:
+                    continue
+                surnames = [p for p in all_parts if p.lower() in KNOWN_SURNAMES]
+            else:
+                surnames = all_parts
         else:
-            surnames = [s for s in [first, second, third] if s]
+            # Filter 4: standard allowlist filter
+            if allowlist_active:
+                if first.lower() not in KNOWN_SURNAMES:
+                    continue
+                surnames = [s for s in [first, second, third] if s and s.lower() in KNOWN_SURNAMES]
+            else:
+                surnames = [s for s in [first, second, third] if s]
+
         if not surnames:
             continue
 
