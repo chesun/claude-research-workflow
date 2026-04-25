@@ -45,13 +45,17 @@ The `README.md` in `master_supporting_docs/literature/reading_notes/` specifies 
 
 Use this section to head off future conflation errors. When downstream docs (ADRs, analysis memos, hypotheses, session logs) have previously misframed the paper, record the misreading and the corrected reading side-by-side.
 
-## Project-specific surname allowlist (optional)
+## Citation extraction — four filters
 
-The hook extracts citations via an Author-Year regex. Without filtering, this matches false positives like "Table 2 (2024)" or other coincidental capitalized-word-plus-year patterns.
+The hook extracts citations via an Author-Year regex. Four filters apply in order:
 
-An optional allowlist at `.claude/state/primary_source_surnames.txt` (one lowercase surname per line) reduces false positives. **When the file is empty or missing, every Author-Year match is accepted** — the hook errs toward noise rather than silently skipping unfamiliar citations.
+1. **Built-in blocklist (`NEVER_SURNAMES`).** Hard-coded set of words that are *never* surnames in academic prose: function words ("the", "in", "from"), seasons ("spring", "summer"), months, days of the week, document-structure words ("table", "figure", "section", "panel", "cohort"), and pronouns. These drop regardless of allowlist state. Eliminates the common false-positive classes ("Spring 2015", "Table 2 (2024)", "Cohort 2018", "From 1999 onward...") without any project configuration.
 
-Populate the allowlist as you accumulate cited authors for this project. Applied-micro and behavioral projects will have different allowlists.
+2. **Sentence-start filter.** A capitalized first word right after a sentence terminator (`.?!:;` or paragraph break) is dropped *unless* it appears in the project allowlist. A real citation at sentence start ("Chetty (2014) shows...") still extracts when "chetty" is in the allowlist; sentence-start function words ("Only", "Available", "These") that snuck past the blocklist get dropped here.
+
+3. **Hyphenated-name decomposition.** A 3+ part hyphenated capitalized token (e.g., `Chetty-Friedman-Rockoff`) is split into separate surnames and the stem is built with underscores (`chetty_friedman_rockoff_2014`). This matches reading-notes filename conventions. Two-part hyphenated tokens (`Goldsmith-Pinkham`) are preserved as single hyphenated surnames since real hyphen-containing surnames are common.
+
+4. **Project allowlist (`.claude/state/primary_source_surnames.txt`).** Optional, one lowercase surname per line. When the file is empty or missing, all matches that pass filters 1–3 are accepted. Populated allowlists tighten the filter further — only Author-Year matches whose leading surname is in the allowlist extract. Recommended: populate as you accumulate cited authors. Applied-micro and behavioral projects will have different allowlists.
 
 ## Escape hatch
 
@@ -59,6 +63,16 @@ If you need to cite a paper *without* making a new framing claim (e.g., fixing a
 
 ```
 <!-- primary-source-ok: smith_jones_2024, angrist_pischke_2009 -->
+```
+
+Hyphenated stems (e.g., `chetty-friedman-rockoff_2014`) are supported — the parser uses a non-greedy match terminated by `-->` so hyphens inside stems don't truncate the list. Comments may also span multiple lines:
+
+```
+<!-- primary-source-ok:
+  smith_jones_2024,
+  chetty-friedman-rockoff_2014,
+  goldsmith-pinkham_2020
+-->
 ```
 
 - For PreToolUse (file edits): include the comment in the delta.
