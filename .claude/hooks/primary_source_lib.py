@@ -184,20 +184,22 @@ def is_enforceable(rel_path: str) -> bool:
 def extract_citations(text: str) -> list[tuple[str, str]]:
     """Return list of (stem, display) tuples for citations in text.
 
-    Applies three filters in order:
+    Applies four filters in order:
 
     1. **NEVER_SURNAMES blocklist** — words that are never surnames
        (function words, seasons, months, table/figure/etc.). Drops the
        match regardless of allowlist state.
-    2. **Sentence-start filter** — a capitalized first word right after a
-       sentence terminator is dropped unless the project allowlist
-       explicitly contains it. Sentence-start function-word + year is
-       almost never a citation.
-    3. **Hyphenated-name decomposition** — if the captured `first` group
+    2. **Hyphenated-name decomposition** — if the captured `first` group
        is a 3+ part hyphenated capitalized token (e.g.,
        "Chetty-Friedman-Rockoff"), split it and treat each part as a
        surname. Builds an underscore-joined stem matching reading-notes
-       filename conventions.
+       filename conventions. Runs before the sentence-start check so
+       that sentence-start hyphenated compounds can be tested against
+       the allowlist using the decomposed head.
+    3. **Sentence-start filter** — a capitalized first word right after a
+       sentence terminator is dropped unless the project allowlist
+       explicitly contains the (possibly-decomposed) head. Sentence-
+       start function-word + year is almost never a citation.
     4. **Allowlist filter** — if KNOWN_SURNAMES is non-empty, the leading
        surname must appear in it. If empty (default for new projects),
        all matches that pass filters 1–3 are accepted.
@@ -216,13 +218,20 @@ def extract_citations(text: str) -> list[tuple[str, str]]:
         if first.lower() in NEVER_SURNAMES:
             continue
 
-        # Filter 2: sentence-start positions require explicit allowlist match
+        # Filter 2: hyphenated-name decomposition (handles method compounds)
+        # Runs BEFORE the sentence-start check so that sentence-start hyphenated
+        # compounds like "Chetty-Friedman-Rockoff (2014)" can be tested against
+        # the allowlist using the decomposed head, not the full hyphenated form.
+        first_parts = _split_hyphenated_surname(first)
+
+        # Filter 3: sentence-start positions require explicit allowlist match
+        # on the head of the (possibly-decomposed) compound.
         if _is_sentence_start(text, match.start()):
-            if not (allowlist_active and first.lower() in KNOWN_SURNAMES):
+            head = first_parts[0].lower()
+            if not (allowlist_active and head in KNOWN_SURNAMES):
                 continue
 
-        # Filter 3: hyphenated-name decomposition (handles method compounds)
-        first_parts = _split_hyphenated_surname(first)
+        # Filter 4: allowlist + surname collection
         if len(first_parts) > 1:
             # Decomposed compound; treat each part as a surname slot
             all_parts = first_parts + [p for p in [second, third] if p]
@@ -233,7 +242,7 @@ def extract_citations(text: str) -> list[tuple[str, str]]:
             else:
                 surnames = all_parts
         else:
-            # Filter 4: standard allowlist filter
+            # Standard allowlist filter
             if allowlist_active:
                 if first.lower() not in KNOWN_SURNAMES:
                     continue

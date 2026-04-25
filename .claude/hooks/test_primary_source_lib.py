@@ -161,6 +161,57 @@ assert_escape_stems(
     "escape hatch spans multiple lines (DOTALL)",
 )
 
+print("\n=== Hyphenated compound at sentence-start (filter 3 must run before filter 2) ===")
+# These tests require chetty/friedman/rockoff in the allowlist because
+# sentence-start positions only pass when the head surname is allowlisted.
+lib.KNOWN_SURNAMES = {"chetty", "friedman", "rockoff"}
+try:
+    assert_matches(
+        "Chetty-Friedman-Rockoff (2014) is canonical.",
+        {"chetty_friedman_rockoff_2014"},
+        "hyphenated method at start of string",
+    )
+    assert_matches(
+        "Reference: Chetty-Friedman-Rockoff (2014).",
+        {"chetty_friedman_rockoff_2014"},
+        "hyphenated method right after colon",
+    )
+    assert_matches(
+        "Foo. Chetty-Friedman-Rockoff (2014) extends earlier work.",
+        {"chetty_friedman_rockoff_2014"},
+        "hyphenated method right after period",
+    )
+    assert_matches(
+        "Per the canonical Chetty-Friedman-Rockoff (2014) method.",
+        {"chetty_friedman_rockoff_2014"},
+        "hyphenated method mid-sentence (regression guard)",
+    )
+    # Comma-form at sentence start (allowlist active for chetty)
+    assert_matches(
+        "Chetty, Friedman, and Rockoff (2014) is canonical.",
+        {"chetty_friedman_rockoff_2014"},
+        "comma-form three-author at sentence start",
+    )
+finally:
+    lib.KNOWN_SURNAMES = set()
+
+print("\n=== Negative: unknown hyphenated compound at sentence-start still rejected ===")
+# With empty allowlist, sentence-start hyphenated compound has no head surname
+# in any allowlist, so should be rejected.
+assert_no_match(
+    "Foo-Bar-Baz (2020) is the method.",
+    "unknown hyphenated compound at sentence-start (no allowlist)",
+)
+# Even with allowlist active but missing the head:
+lib.KNOWN_SURNAMES = {"chetty"}
+try:
+    assert_no_match(
+        "Foo-Bar-Baz (2020) is the method.",
+        "unknown hyphenated compound at sentence-start (allowlist missing head)",
+    )
+finally:
+    lib.KNOWN_SURNAMES = set()
+
 print("\n=== Sentence-start citation passes if surname is in allowlist ===")
 # Temporarily inject a surname into the allowlist for this test
 lib.KNOWN_SURNAMES = {"chetty"}
