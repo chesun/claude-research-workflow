@@ -25,6 +25,14 @@ def _load_lib():
 lib = _load_lib()
 
 
+# Save the project's actual allowlist so we can restore at exit, and clamp to
+# empty for the bulk of the tests so behavior is reproducible regardless of
+# what the project has populated. The "sentence-start citation passes if
+# surname is in allowlist" test temporarily injects a known surname.
+_PROJECT_ALLOWLIST = lib.KNOWN_SURNAMES
+lib.KNOWN_SURNAMES = set()
+
+
 # --- Helpers ---------------------------------------------------------------
 
 
@@ -155,7 +163,6 @@ assert_escape_stems(
 
 print("\n=== Sentence-start citation passes if surname is in allowlist ===")
 # Temporarily inject a surname into the allowlist for this test
-saved_allowlist = lib.KNOWN_SURNAMES
 lib.KNOWN_SURNAMES = {"chetty"}
 try:
     assert_matches(
@@ -172,12 +179,15 @@ try:
         "sentence-start 'Only' drops; mid-sentence 'Chetty' still extracts",
     )
 finally:
-    lib.KNOWN_SURNAMES = saved_allowlist
+    lib.KNOWN_SURNAMES = set()  # back to empty for residual test below
 
 print("\n=== Residual: real surname at sentence start with empty allowlist ===")
 # Documented as unavoidable noise; user uses escape hatch.
 result = stems("Smith 2020 published a related result.")
 # With empty allowlist, sentence-start Smith is dropped (good, suppresses noise)
 print(f"INFO: empty-allowlist sentence-start 'Smith 2020' -> {result} (expected: empty)")
+
+# Restore project's actual allowlist (in case anything imports the lib after)
+lib.KNOWN_SURNAMES = _PROJECT_ALLOWLIST
 
 print("\nAll tests passed.")
