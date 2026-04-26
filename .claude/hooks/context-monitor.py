@@ -89,9 +89,14 @@ def estimate_context_percentage() -> float:
     cache["tool_calls"] = tool_calls
     save_cache(cache)
 
-    # Heuristic: assume ~200 tool calls fills context (very rough estimate)
-    # This is intentionally conservative to trigger warnings early
-    MAX_TOOL_CALLS = 150
+    # Heuristic: tuned for Claude Opus 4.7 with the 1M-context variant.
+    # Empirically, va_consolidated sessions reached ~500 tool calls before
+    # auto-compact fired. With MAX_TOOL_CALLS=500: 80% warning at call 400,
+    # 90% warning + state snapshot at call 450 — close enough to real
+    # auto-compact to be informative without crying wolf.
+    # Override via CONTEXT_MONITOR_MAX_TOOL_CALLS env var if the heuristic
+    # drifts on a given project.
+    MAX_TOOL_CALLS = int(os.environ.get("CONTEXT_MONITOR_MAX_TOOL_CALLS", "500"))
 
     percentage = min((tool_calls / MAX_TOOL_CALLS) * 100, 100)
     return percentage
@@ -173,6 +178,47 @@ No context is lost — auto-compact preserves important information.
 """
 
 
+def capture_precompact_snapshot() -> None:
+    """Write the same pre-compact-state.json that pre-compact.py would write.
+
+    Used as a fallback at the 90% threshold so state is captured even when
+    Claude Code's PreCompact hook silently bypasses on auto-compact.
+    Idempotent: skips if a snapshot already exists for this session.
+    """
+    state_file = get_session_dir() / "pre-compact-state.json"
+    if state_file.exists():
+        return
+
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR", "")
+    if not project_dir:
+        return
+
+    # Import lazily so the main hook path stays cheap.
+    hook_path = Path(__file__).parent / "pre-compact.py"
+    if not hook_path.exists():
+        return
+
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("pre_compact", hook_path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+
+        plan_info = mod.find_active_plan(project_dir)
+        decisions = mod.extract_recent_decisions(project_dir)
+        state = {
+            "trigger": "context-monitor-fallback",
+            "plan_path": plan_info["plan_path"] if plan_info else None,
+            "plan_status": plan_info["status"] if plan_info else None,
+            "current_task": plan_info.get("current_task") if plan_info else None,
+            "decisions": decisions,
+        }
+        mod.save_state(state)
+    except Exception:
+        # Fail open — never block Claude due to a fallback bug.
+        pass
+
+
 def run_context_monitor() -> int:
     """Main monitoring logic."""
     # Read hook input
@@ -193,19 +239,24 @@ def run_context_monitor() -> int:
     # Check /learn thresholds (40%, 55%, 65%)
     for threshold in LEARN_THRESHOLDS:
         if percentage >= threshold and threshold not in shown["learn"]:
-            print(format_learn_reminder(percentage, threshold))
+            print(format_learn_reminder(percentage, threshold), file=sys.stderr)
             mark_threshold_shown("learn", threshold)
             return 0  # Only show one message at a time
 
     # Check 90% threshold (critical)
     if percentage >= THRESHOLD_CRITICAL and not shown["warn_90"]:
-        print(format_warn_90(percentage))
+        print(format_warn_90(percentage), file=sys.stderr)
         mark_threshold_shown("warn_90", True)
+        # Fallback: capture pre-compact state snapshot. Claude Code's PreCompact
+        # hook can silently bypass on auto-compact when MCP servers are present
+        # (anthropics/claude-code#14111). Writing here ensures state is captured
+        # before auto-compact regardless of whether PreCompact fires.
+        capture_precompact_snapshot()
         return 0  # Non-blocking warning (exit 2 would block Claude)
 
     # Check 80% threshold (info)
     if percentage >= THRESHOLD_WARN and not shown["warn_80"]:
-        print(format_warn_80(percentage))
+        print(format_warn_80(percentage), file=sys.stderr)
         mark_threshold_shown("warn_80", True)
         return 0
 
