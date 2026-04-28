@@ -82,3 +82,7 @@ CLAUDE.local.md
 # --- Output artifacts (uncomment per project) ---
 # *.rds
 # output/**/*.rds
+
+# --- Academic PDFs (copyright; users add their own locally) ---
+master_supporting_docs/literature/papers/*.pdf
+master_supporting_docs/literature/papers/**/*.pdf
