@@ -66,7 +66,7 @@ The principle that compliance claims about any artifact require positive evidenc
 
 ### Agent
 
-A specialized worker dispatched by Claude Code with its own system prompt and tool permissions. Subagents are a Claude Code platform feature — see the [Claude Code documentation](https://docs.claude.com/claude-code) for subagent mechanics (definition format, tool restrictions, dispatch contracts). In this workflow, agent definitions live in `.claude/agents/<name>.md`. The workflow has 17 universal agents (creators like `librarian`, `coder`, `writer`; critics like `librarian-critic`, `coder-critic`, `writer-critic`; infrastructure like `orchestrator`, `verifier`). Each has a focused job. See `reference/agents.md` *(planned for v0.2.x)* for this workflow's specific agents.
+A specialized worker dispatched by Claude Code with its own system prompt and tool permissions. Subagents are a Claude Code platform feature — see the [Claude Code Subagents documentation](https://code.claude.com/docs/en/sub-agents.md) for definition format, tool restrictions, and dispatch contracts. In this workflow, agent definitions live in `.claude/agents/<name>.md`. The workflow has 17 universal agents (creators like `librarian`, `coder`, `writer`; critics like `librarian-critic`, `coder-critic`, `writer-critic`; infrastructure like `orchestrator`, `verifier`). Each has a focused job. See `reference/agents.md` *(planned for v0.2.x)* for this workflow's specific agents.
 
 ### Critic
 
@@ -84,7 +84,7 @@ The four rules that prevent fabrication: `no-assumptions.md` (user-side), `prima
 
 ### Hook
 
-A program that fires automatically at a Claude Code lifecycle event (PreToolUse, PostToolUse, Stop, PreCompact, SessionStart). Hooks are a Claude Code platform feature; see the [Claude Code documentation](https://docs.claude.com/claude-code) for the full hook event list, input/output contract, and configuration syntax. The workflow uses 11 hooks for citation grounding, session-log reminders, context-survival snapshots, and file-protection guards. Hooks can block tool calls (exit code 2) or just emit warnings (exit code 0). See `reference/hooks.md` *(planned for v0.2.x)* for this workflow's specific hooks.
+A program that fires automatically at a Claude Code lifecycle event (PreToolUse, PostToolUse, Stop, PreCompact, SessionStart). Hooks are a Claude Code platform feature; see the [Claude Code Hooks documentation](https://code.claude.com/docs/en/hooks.md) for the full hook event list, input/output JSON contract, exit codes, and `settings.json` configuration syntax. The workflow uses 11 hooks for citation grounding, session-log reminders, context-survival snapshots, and file-protection guards. Hooks can block tool calls (exit code 2) or just emit warnings (exit code 0). See `reference/hooks.md` *(planned for v0.2.x)* for this workflow's specific hooks.
 
 ### Inference-first checklist
 
@@ -112,11 +112,11 @@ The weighted aggregate score computed across components (literature, data, ident
 
 ### Rule
 
-A markdown file in `.claude/rules/` that codifies a workflow convention. Rules are specific to this workflow (not a generic Claude Code feature) — they're loaded by being referenced from `CLAUDE.md`, which Claude Code reads at session start. See the [Claude Code documentation](https://docs.claude.com/claude-code) for the CLAUDE.md import system. In this workflow, rules apply either to scoped paths (e.g., `figures.md` applies only to figure-generating scripts) or universally. See `reference/rules.md` *(planned for v0.2.x)* for the catalogue.
+A markdown file in `.claude/rules/` that codifies a workflow convention. Rules are specific to this workflow (not a generic Claude Code feature) — they're loaded by being referenced from `CLAUDE.md`, which Claude Code reads at session start. See the [Claude Code Memory documentation](https://code.claude.com/docs/en/memory.md) for the CLAUDE.md format and import system. In this workflow, rules apply either to scoped paths (e.g., `figures.md` applies only to figure-generating scripts) or universally. See `reference/rules.md` *(planned for v0.2.x)* for the catalogue.
 
 ### Skill
 
-A user-invocable command in Claude Code, e.g., `/discover`, `/strategize`, `/write`, `/submit`. Skills are a Claude Code platform feature — see the [Claude Code documentation](https://docs.claude.com/claude-code) for skill mechanics (slash-command syntax, skill resolution, scoping). In this workflow, each skill is defined in `.claude/skills/<name>/SKILL.md` and represents a focused recipe — dispatching one agent or coordinating multiple. See `reference/skills.md` *(planned for v0.2.x)* for this workflow's specific skills.
+A user-invocable command in Claude Code, e.g., `/discover`, `/strategize`, `/write`, `/submit`. Skills are a Claude Code platform feature — see the [Claude Code Skills documentation](https://code.claude.com/docs/en/skills.md) for slash-command syntax, skill resolution, and scoping. In this workflow, each skill is defined in `.claude/skills/<name>/SKILL.md` and represents a focused recipe — dispatching one agent or coordinating multiple. See `reference/skills.md` *(planned for v0.2.x)* for this workflow's specific skills.
 
 ### Skeleton (template-skeleton form)
 
