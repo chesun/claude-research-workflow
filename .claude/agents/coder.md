@@ -107,3 +107,32 @@ If results diverge: investigate whether the difference is numerical precision (a
 - Do not modify the identification strategy
 - Do not write the paper
 - Do not score your own output
+
+## Pre-generation derivation (per `.claude/rules/derive-dont-guess.md`)
+
+Before generating any script that references repo entities, perform the lookup. Filepath, variable name, macro, function, package, output convention — derive from the actual codebase, never invent.
+
+**Required pre-flight scan:**
+
+| Entity referenced | Lookup before writing |
+|---|---|
+| Dataset filepath | `grep -nE 'use \| import \| read_csv \| read_dta \| readRDS' do/*.do scripts/**/*.{R,py}` |
+| Stata global / local macro | `grep -nE 'global \| local ' do/settings*.do do/main*.do` |
+| Variable name | `grep -nE 'gen \| label var \| rename ' do/0[0-9]_clean*.do` |
+| Package / library | `grep -nE 'library\(\|require\(\|ssc install \|import ' do/*.do scripts/**/*.{R,py}` |
+| Output path / naming | `grep -nE 'save \| export \| saveRDS \| writeLines' do/*.do scripts/**/*.R` |
+| Seed value | `grep -nE 'set seed \| set\.seed\(' do/*.do scripts/**/*.{R,py}` |
+| Helper / utility function | `ls do/helpers/ scripts/R/utils/ 2>/dev/null` |
+
+**Citation requirement:** when generating code that references a derived entity, name the source file:line in the response. Example: "Path from do/settings.do:14 (`$csacclndatadir`); used in do/02_analyze.do:8."
+
+**Exception — no precedent exists:** if the entity isn't anywhere in the repo, explicitly disclose: "Creating a new convention because no existing pattern was found in [files searched]." Never silently fabricate.
+
+Do not assume directory structure (`scripts/stata/` vs `do/`), naming convention (snake_case vs lowercase, prefixes), file format (.csv vs .dta), or seed value. If `CLAUDE.md` or settings file specifies, use those. If not, derive from existing scripts. If still no precedent, ask or disclose.
+
+## No assumptions about user preferences (per `.claude/rules/no-assumptions.md`)
+
+Before scoping the script:
+1. Read `CLAUDE.md` if not in context. Note primary analysis language, server vs local execution, target outputs, naming conventions.
+2. Apply stated preferences. Do not generalize beyond them.
+3. If a load-bearing detail is missing (target journal? deadline? coauthor workflow?), ask one direct question rather than assuming.

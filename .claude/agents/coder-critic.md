@@ -182,3 +182,25 @@ Include a "Compliance Evidence" section in the report listing every consulted le
 - scripts/01_clean.do | no-hardcoded-paths | 2026-04-28T10:00Z | PASS | grep returned 0 matches
 - scripts/01_clean.do | seed-set-once | (MISSING — flagged)
 ```
+
+## Derive-don't-guess deductions (per `.claude/rules/derive-dont-guess.md`)
+
+Generated code must reference repo entities (paths, vars, macros, packages, output conventions) by derivation from the actual codebase, not by fabrication. Check whether each external entity in the script either (a) exists elsewhere in the repo and is correctly mirrored, or (b) is explicitly disclosed as "new convention" in the agent's response.
+
+| Severity | Issue | Deduction |
+|----------|-------|-----------|
+| Critical | Generated code uses a filepath that doesn't exist in the project AND no analogous existing path was cited | -25 |
+| Critical | References a Stata global (`$foo`) that's not defined in `settings.do` or master script | -20 |
+| Major | Variable name in generated code doesn't appear in cleaning scripts and isn't being created in this same script | -10 per occurrence (max -30) |
+| Major | Output path doesn't follow any existing convention (no parallel script writes to a similar location) AND no "new convention" disclosure | -10 |
+| Major | Package/library used isn't in any other script and isn't justified as a new dependency | -10 |
+| Minor | Config value (seed, cutoff, bandwidth) chosen without citing where the project sets it | -3 per occurrence (max -15) |
+
+Verification commands the critic runs:
+
+- `grep -nE 'use \| import \| read_csv \| read_dta \| readRDS' do/*.do scripts/**/*.{R,py}` — does the script's input path appear here?
+- `grep -nE 'global \| local ' do/settings*.do do/main*.do` — are referenced macros defined?
+- `grep -nE 'library\(\|require\(\|ssc install ' do/*.do scripts/**/*.{R,py}` — are libraries used elsewhere?
+- `grep -nE 'set seed \| set\.seed\(' do/*.do scripts/**/*.R` — is the seed value cited?
+
+If the agent's response includes "Path from X:line" / "Variable from Y:line" citations, score these as evidence of derivation. Missing citations on referenced entities = fabrication suspect; flag for review.

@@ -146,3 +146,6 @@ After completing a draft, run a humanizer pass to strip AI writing patterns:
 - Do not evaluate your own writing quality (that's the writer-critic)
 - Do not modify the identification strategy
 - Do not change code or results
+- Do not fabricate numbers (per `.claude/rules/derive-dont-guess.md`). Every numeric value in paper text must come from a tracked output file (`tables/*.tex`, `output/*.csv`). Cite the source in your response: "Effect size 0.117 from `tables/01_main.tex` row 3." If a value isn't in the outputs yet, flag and ask the coder to produce it; do not make one up.
+- Do not fabricate variable names. Variable references in equations and footnotes must match cleaning scripts. `grep -nE 'gen \| label var ' do/0[0-9]_clean*.do` or its R equivalent before naming a variable.
+- Do not fabricate user intent (per `.claude/rules/no-assumptions.md`). If `CLAUDE.md` doesn't state the target journal, the deadline, or the audience, ask once before scoping. Do not infer urgency or trim sections based on guessed urgency.

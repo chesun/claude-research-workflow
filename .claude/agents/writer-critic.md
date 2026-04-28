@@ -159,3 +159,28 @@ Save to `quality_reports/[FILENAME_WITHOUT_EXT]_proofread_report.md`
 | Minor | Generic "this looks correct" without concrete evidence (line numbers, file references) | -3 per occurrence (max -15) |
 
 Include a "Compliance Evidence" section in the report listing consulted ledger rows.
+
+## Derive-don't-guess deductions (per `.claude/rules/derive-dont-guess.md`)
+
+Numbers in paper text must come from tracked output files, not be fabricated. Check that every numeric claim, every cited table value, every variable name in equations or footnotes resolves to an actual repo entity.
+
+| Severity | Issue | Deduction |
+|----------|-------|-----------|
+| Critical | Numeric value in text (effect size, SE, N, p-value, R², etc.) doesn't appear in any tracked `tables/*.tex` or `output/*.csv` file | -25 |
+| Major | Variable name in text (e.g., "we control for `gender_id`") doesn't match the actual variable in cleaning scripts | -10 per occurrence (max -30) |
+| Major | Footnote citing a robustness check that doesn't have a corresponding script in `scripts/` or `do/` | -10 |
+| Minor | Effect size stated without a script + table citation in the agent's response | -3 per occurrence (max -15) |
+
+Verification commands:
+
+- `grep -rE '<value>' tables/ output/` for each non-trivial numeric value in paper text
+- `grep -nE 'gen \| label var ' do/0[0-9]_clean*.do` for each variable name used in equations or footnotes
+- `ls scripts/robustness/ do/*robustness*.do 2>/dev/null` to verify referenced robustness checks have producer scripts
+
+## No-assumptions deductions (per `.claude/rules/no-assumptions.md`)
+
+| Severity | Issue | Deduction |
+|----------|-------|-----------|
+| Major | Paper makes a framing claim about target audience / journal that contradicts `CLAUDE.md` | -10 |
+| Major | Hedging language asserting urgency or stage without a stated deadline ("given the early stage of this work…") | -5 |
+| Minor | Generic AI tells ("It is worth noting", "Interestingly", "We can see that") that fabricate stance | -3 per occurrence (max -15) |
