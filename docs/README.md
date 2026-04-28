@@ -11,7 +11,7 @@ Two prerequisites paths depending on where you're starting:
 - **Have you used git, the terminal, and Claude Code before?** → start at [`getting-started/installation.md`](getting-started/installation.md).
 - **Any of those unfamiliar?** → start at [`getting-started/prerequisites.md`](getting-started/prerequisites.md). It points at external resources that get you to working competence in ~3 hours of reading. Come back when you're ready.
 
-After installation, decide which branch you want — [`getting-started/branch-model.md`](getting-started/branch-model.md) walks through `main` vs `applied-micro` vs `behavioral` with one-line guidance for picking. Then read [`getting-started/first-session.md`](getting-started/first-session.md) (planned for v0.2.x) to see what a typical first day with the workflow looks like.
+After installation, decide which branch you want — [`getting-started/branch-model.md`](getting-started/branch-model.md) walks through `main` vs `applied-micro` vs `behavioral` with one-line guidance for picking. Then read [`getting-started/first-session.md`](getting-started/first-session.md) to see what a typical first day with the workflow looks like.
 
 **Before using the workflow on real research, also read [`concepts/appropriate-use.md`](concepts/appropriate-use.md).** It's the most important page in these docs — explains where the workflow fits (handles execution) and where your judgment remains irreplaceable (substantive expertise, literature knowledge, quality control). The applied-micro vs behavioral asymmetry — how much you can lean on the workflow — is discussed there in detail.
 
@@ -38,7 +38,7 @@ The `reference/` pages are catalogues, not tutorials:
 
 ## I'm forking this workflow for my own lab or research group
 
-Read [`../CONTRIBUTING.md`](../CONTRIBUTING.md) for what's in scope here vs what should live in your fork. Then [`concepts/upstream-differences.md`](concepts/upstream-differences.md) for what this fork adds vs upstreams, so you know what's new. Then `customization/adapting-claude-md.md` *(planned for v0.2.c)* for the bracketed placeholders in `CLAUDE.md`.
+Read [`../CONTRIBUTING.md`](../CONTRIBUTING.md) for what's in scope here vs what should live in your fork. Then [`concepts/upstream-differences.md`](concepts/upstream-differences.md) for what this fork adds vs upstreams, so you know what's new. Then [`customization/adapting-claude-md.md`](customization/adapting-claude-md.md) for the bracketed placeholders in `CLAUDE.md` plus how to add project-specific rules / skills / hooks.
 
 ## I'm a contributor
 
@@ -48,4 +48,4 @@ Read [`../CONTRIBUTING.md`](../CONTRIBUTING.md) for what's in scope here vs what
 
 ## Status of these docs
 
-This is the v0.1.0 preview docs set. Phase 2a (entry points: README, prerequisites, installation, branch model, epistemic rules, glossary) and Phase 2b (concept depth + reference catalogues for skills, agents, rules, hooks) are complete. Phase 2c (first-session walkthrough, customization guide, FAQ, plus overlay-specific docs on the `applied-micro` and `behavioral` branches) fills in over the v0.2.x cycle. Pages marked *(planned for v0.2.x)* are listed as roadmap. The `README.md` at the project root remains the canonical short-form pitch; these pages are the long form.
+This is the v0.1.0 preview docs set. The universal pages are complete: entry points (prerequisites, installation, branch model, first session), concepts (epistemic rules, appropriate use, worker–critic pairs, quality scoring, verification ledger, upstream differences), reference catalogues (skills, agents, rules, hooks, glossary), customization (adapting CLAUDE.md), contributing, and FAQ. Overlay-specific walkthroughs (`getting-started/applied-micro.md` on the `applied-micro` branch and `getting-started/behavioral.md` on `behavioral`) ship in v0.2.x. The `README.md` at the project root remains the canonical short-form pitch; these pages are the long form.
