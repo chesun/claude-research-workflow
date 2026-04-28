@@ -142,6 +142,10 @@ NEVER_SURNAMES = frozenset({
     "chapter", "footnote", "equation", "model", "specification",
     "step", "stage", "phase", "round", "wave", "cohort", "year", "yr",
     "note", "notes",
+    # Role-words used as placeholders in citation-style examples
+    # ("Author and Author (year)", "Coauthor (year)", etc.)
+    "author", "authors", "coauthor", "coauthors", "co-author", "co-authors",
+    "editor", "editors", "name", "names", "surname", "surnames",
 })
 
 
