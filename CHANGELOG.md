@@ -77,4 +77,8 @@ The next release will fill in `docs/` (per [`quality_reports/plans/2026-04-28_pu
 
 No breaking changes are planned for v0.2.0; the docs ship is additive.
 
+Also planned cleanup:
+
+- **`NEVER_SURNAMES` blocklist expansion.** Add common book/series-title nouns (`methodology`, `handbook`, `encyclopedia`, `review`, `annual`, `bulletin`, `journal`, `volume`, `issue`) that can false-positive as surnames when the regex pairs them with a year (e.g., "Handbook of Experimental Methodology 2025" parsing as "Methodology (2025)"). Same fix pattern as `v0.1.0`'s role-words expansion (author, coauthor, editor, etc.).
+
 [v0.1.0]: https://github.com/chesun/claude-research-workflow/releases/tag/v0.1.0
