@@ -1,6 +1,6 @@
 # Inference-First Design Checklist (14 Steps)
 
-This is the portable reference version of the checklist. The designer agent reads this file when producing experiment designs. See `quality_reports/plans/2026-03-28_behavioral-plan-v3-hugo-base.md` Section 5 for the full annotated version with citations.
+This is the portable reference version of the checklist. The designer agent reads this file when producing experiment designs. For the academic provenance behind each item — specific papers, authors, and rationale — see `.claude/rules/experiment-design-principles.md`, which carries the in-line attributions for the 13 design principles this checklist operationalizes.
 
 ---
 
