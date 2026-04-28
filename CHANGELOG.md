@@ -6,7 +6,7 @@ All notable changes to this fork are documented here. The format follows [Keep a
 
 ## [v0.1.0] — 2026-04-28 (Preview)
 
-First public release. The workflow has been used internally on multiple research projects (`bdm_bic`, `tx_peer_effects_local`, `va_consolidated`, `csac`, `csac2025`) and is now opened up for forking.
+First public release. The workflow has been tested internally on multiple research projects across applied micro and behavioral economics, and is now opened up for forking.
 
 ### Added
 
