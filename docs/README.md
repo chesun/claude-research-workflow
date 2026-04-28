@@ -21,24 +21,24 @@ Read the `concepts/` pages — they explain the *what* and *why* of each distinc
 
 - [`concepts/epistemic-rules.md`](concepts/epistemic-rules.md) — the four-rule "don't fabricate" stack (no-assumptions, primary-source-first, derive-don't-guess, adversarial-default). The most distinctive feature.
 - [`concepts/appropriate-use.md`](concepts/appropriate-use.md) — capable-RA analogy, applied-micro vs behavioral asymmetry, when to trust vs verify. Read before real-research use.
-- `concepts/worker-critic-pairs.md` *(planned for v0.2.x)* — adversarial pairing, three-strikes escalation, separation of powers.
-- `concepts/quality-scoring.md` *(planned for v0.2.x)* — weighted aggregate, deduction tables, gates.
-- `concepts/verification-ledger.md` *(planned for v0.2.x)* — what it caches, lookup protocol, file-hash semantics.
-- `concepts/upstream-differences.md` *(planned for v0.2.x)* — full diff vs `pedrohcgs/claude-code-my-workflow` and `hugosantanna/clo-author`.
+- [`concepts/worker-critic-pairs.md`](concepts/worker-critic-pairs.md) — adversarial pairing, three-strikes escalation, separation of powers.
+- [`concepts/quality-scoring.md`](concepts/quality-scoring.md) — weighted aggregate, deduction tables, gates.
+- [`concepts/verification-ledger.md`](concepts/verification-ledger.md) — what it caches, lookup protocol, file-hash semantics.
+- [`concepts/upstream-differences.md`](concepts/upstream-differences.md) — full diff vs `pedrohcgs/claude-code-my-workflow` and `hugosantanna/clo-author`.
 
 ## I want to look up a specific skill, rule, agent, or hook
 
 The `reference/` pages are catalogues, not tutorials:
 
-- `reference/skills.md` *(planned for v0.2.x)* — every `/command` with what it does and when to use it.
-- `reference/agents.md` *(planned for v0.2.x)* — agents and worker–critic mapping.
-- `reference/rules.md` *(planned for v0.2.x)* — every rule with one-paragraph summary.
-- `reference/hooks.md` *(planned for v0.2.x)* — what fires when, escape hatches.
+- [`reference/skills.md`](reference/skills.md) — every `/command` with what it does and when to use it.
+- [`reference/agents.md`](reference/agents.md) — agents and worker–critic mapping.
+- [`reference/rules.md`](reference/rules.md) — every rule with one-paragraph summary.
+- [`reference/hooks.md`](reference/hooks.md) — what fires when, escape hatches.
 - [`reference/glossary.md`](reference/glossary.md) — terms that may be unfamiliar (git, fork, branch, terminal, CLI, IDE, etc.) with one-paragraph definitions.
 
 ## I'm forking this workflow for my own lab or research group
 
-Read [`../CONTRIBUTING.md`](../CONTRIBUTING.md) for what's in scope here vs what should live in your fork. Then `concepts/upstream-differences.md` (when written) for what this fork adds vs upstreams, so you know what's new. Then `customization/adapting-claude-md.md` (when written) for the bracketed placeholders in `CLAUDE.md`.
+Read [`../CONTRIBUTING.md`](../CONTRIBUTING.md) for what's in scope here vs what should live in your fork. Then [`concepts/upstream-differences.md`](concepts/upstream-differences.md) for what this fork adds vs upstreams, so you know what's new. Then `customization/adapting-claude-md.md` *(planned for v0.2.c)* for the bracketed placeholders in `CLAUDE.md`.
 
 ## I'm a contributor
 
@@ -48,4 +48,4 @@ Read [`../CONTRIBUTING.md`](../CONTRIBUTING.md) for what's in scope here vs what
 
 ## Status of these docs
 
-This is the v0.1.0 preview docs set — the entry points. Pages marked *(planned for v0.2.x)* are listed as roadmap; deeper concepts and reference catalogues fill in over the v0.2.x cycle. The `README.md` at the project root remains the canonical short-form pitch; these pages are the long form.
+This is the v0.1.0 preview docs set. Phase 2a (entry points: README, prerequisites, installation, branch model, epistemic rules, glossary) and Phase 2b (concept depth + reference catalogues for skills, agents, rules, hooks) are complete. Phase 2c (first-session walkthrough, customization guide, FAQ, plus overlay-specific docs on the `applied-micro` and `behavioral` branches) fills in over the v0.2.x cycle. Pages marked *(planned for v0.2.x)* are listed as roadmap. The `README.md` at the project root remains the canonical short-form pitch; these pages are the long form.
