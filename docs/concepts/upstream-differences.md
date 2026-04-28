@@ -1,6 +1,8 @@
 # What this fork adds vs upstream
 
-This page is the audit trail for the workflow's distinctive contributions. A forker comparing this repo against the upstream chain can use this page to decide whether the additions are useful for them.
+This page is the audit trail for this fork's distinctive contributions. The numbers below are verified against actual upstream files (`pedrohcgs/claude-code-my-workflow@main` and `hugosantanna/clo-author@main` as of v0.1.0); claims are scoped to "file present / file modified / file new" rather than "what the file does," because the latter requires reading each upstream file in depth.
+
+A forker comparing this repo against the chain can use this page to decide whether the additions are useful for them.
 
 ---
 
@@ -8,85 +10,127 @@ This page is the audit trail for the workflow's distinctive contributions. A for
 
 Three repos in the chain:
 
-1. **`pedrohcgs/claude-code-my-workflow`** — Pedro Sant'Anna's original. Targeted lecture and slide production.
-2. **`hugosantanna/clo-author`** — Hugo Sant'Anna's adaptation, retargeted toward academic writing.
-3. **`chesun/claude-research-workflow`** *(this fork)* — research-paper production, with paradigm-specific overlays for applied micro and behavioral economics, plus the four-rule epistemic stack.
+1. **`pedrohcgs/claude-code-my-workflow`** — Pedro Sant'Anna's original. Targeted lecture and slide production. Source of much of the agent infrastructure (tikz-reviewer, editor, peer-review referees, verifier) and most of the context-management hooks (context-monitor, log-reminder, pre-compact, post-compact-restore, verify-reminder, notify).
+2. **`hugosantanna/clo-author`** — Hugo Sant'Anna's adaptation, retargeted from lecture/slide to academic-writing production. Source of the universal worker–critic agent set (librarian / explorer / data-engineer / coder / writer / storyteller, each with paired critic) plus the strategist + theorist creator-critic pairs, plus most of the universal-trunk skills (analyze, discover, new-project, review, revise, submit, talk, tools, write), plus core workflow rules (agents, workflow, quality, logging, revision, working-paper-format).
+3. **`chesun/claude-research-workflow`** *(this fork)* — research-paper production with explicit paradigm-specific overlays (applied-micro, behavioral) split off from the universal trunk, plus the four-rule epistemic stack and verification ledger.
 
 Each upstream is properly credited in [`../../LICENSE`](../../LICENSE) (dual copyright with Pedro's original work) and [`../../CONTRIBUTING.md`](../../CONTRIBUTING.md) (fork-attribution boilerplate).
 
 ---
 
-## What this fork *adds*
+## What's truly net-new in this fork
 
-Twelve categories of new content. Each one is something forkers get when they fork this repo that they would not get from either upstream.
+These are files present in this fork that exist in **neither** Pedro's main nor Hugo's main.
 
-### 1. Four-rule epistemic stack
+### Rules (11 net-new)
 
-The most distinctive contribution. Four rules that prevent four categories of fabrication: `no-assumptions.md` (user-side facts), `primary-source-first.md` (external papers, hook-enforced), `derive-don't-guess.md` (repo-internal facts), `adversarial-default.md` (compliance claims, ledger-backed). See [`epistemic-rules.md`](epistemic-rules.md) for depth.
+The four-rule epistemic stack and seven additional rules:
 
-### 2. Verification ledger
+| Rule | Purpose |
+|---|---|
+| `adversarial-default.md` | Burden-of-proof inversion for compliance claims; six per-domain checklists; backed by the verification ledger |
+| `derive-dont-guess.md` | Don't fabricate facts the repo encodes; per-entity-type lookup table; cite source `file:line` |
+| `no-assumptions.md` | Don't guess about user-side facts; ask, leave out, or explicitly disclose |
+| `primary-source-first.md` | Don't make framing claims about external papers without reading them; hook-enforced; citation-style convention |
+| `decision-log.md` | ADR convention for substantive design decisions in `decisions/NNNN_slug.md` |
+| `todo-tracking.md` | Project-root `TODO.md` conventions |
+| `output-length.md` | Responses > 15 lines write to a markdown file rather than printing inline |
+| `figures.md` | Publication-quality figure standards |
+| `tables.md` | Booktabs-based table standards |
+| `python-code-conventions.md` | Python-specific reproducibility conventions (Pedro has r-code-conventions; this fork adds Python and Stata) |
+| `stata-code-conventions.md` | Stata-specific reproducibility conventions |
 
-Markdown cache at `.claude/state/verification-ledger.md` that prevents the adversarial-default rule from causing re-check bloat. Each row keys on `(path, check, sha256[:12])`; subsequent checks on unchanged artifacts cite the cache and skip re-running. See [`verification-ledger.md`](verification-ledger.md).
+### Hooks (4 net-new files)
 
-### 3. Three-branch model with paradigm overlays
+The primary-source-first hook set:
 
-`main` is the universal trunk; `applied-micro` adds identification tooling (DiD/IV/RDD/synthetic-control diagnostics, balance tables, event studies); `behavioral` adds experimental tooling (inference-first 14-step checklist, formal theory, oTree, Qualtrics, pre-registration). The overlays maintain only their additions on top of main. See [`../getting-started/branch-model.md`](../getting-started/branch-model.md).
+| Hook file | Purpose |
+|---|---|
+| `primary-source-check.py` | PreToolUse hook blocking edits citing un-read papers |
+| `primary-source-audit.py` | Stop hook auditing conversation prose for the same |
+| `primary_source_lib.py` | Shared library with the four-filter regex extractor (built-in blocklist, sentence-start filter, hyphenated-name decomposition, project allowlist) |
+| `test_primary_source_lib.py` | 27 regression tests for the extractor |
 
-### 4. Quality scoring with deduction tables
+### Skills (1 net-new)
 
-Weighted aggregate score across components (literature, data, identification/design, code, paper, polish, replication). Gates: 80 (commit), 90 (PR), 95 + every component ≥ 80 (submission). Per-target deduction matrices that critics apply consistently. See [`quality-scoring.md`](quality-scoring.md).
+| Skill | Purpose |
+|---|---|
+| `/challenge` | Devil's-advocate review across modes (`--paper`, `--identification`, `--design`, `--theory`, `--fresh`) |
 
-### 5. Decision log (ADRs)
+### Verification ledger
 
-Substantive decisions live in `decisions/NNNN_slug.md` — append-only, immutable once `Decided`, supersession via new ADRs. The convention is borrowed from software-engineering practice; this fork applies it to research design choices (identification strategy, sample restrictions, experimental parameters).
+`.claude/state/verification-ledger.md` format and the file-hash-keyed lookup protocol that backs the `adversarial-default` rule. Net-new: no analogous mechanism in either upstream.
 
-### 6. Replication protocol
+### Other top-level
 
-Five-phase protocol from inventory through AEA-deposit prep. Concrete tolerance thresholds (integers exact, point estimates < 0.01, SEs < 0.05, p-values same significance level, percentages < 0.1pp). The verifier in submission mode runs the full 6-check AEA audit against this protocol. See `.claude/rules/replication-protocol.md`.
-
-### 7. Editor agent
-
-Synthesizes referee reports into editorial decisions (Accept / Minor Revisions / Major Revisions / Reject). Calibrated by journal culture via `.claude/references/journal-profiles.md`.
-
-### 8. Specialized critics
-
-Beyond the universal worker–critic pairs, this fork adds:
-
-- `tikz-reviewer` — devil's-advocate review of TikZ diagrams (label positioning, overlap, visual consistency).
-- `methods-referee` and `domain-referee` — independent blind reviewers for peer-review simulation. Score reports synthesized by the editor agent.
-
-### 9. Per-language code conventions
-
-`stata-code-conventions.md`, `r-code-conventions.md`, `python-code-conventions.md` — each codifies hardcoded-path detection, seed discipline, package conventions, output formats, and language-specific pitfalls (TWFE diagnostics in R, `cap log close` discipline in Stata, virtualenv enforcement in Python).
-
-### 10. Hooks beyond the upstreams
-
-- **`primary-source-check`** (PreToolUse) + **`primary-source-audit`** (Stop) — citation-grounding enforcement with four-filter regex extractor (built-in blocklist, sentence-start filter, hyphenated-name decomposition, project allowlist). Includes the citation-style convention (two-coauthor "Author and Author (year)") and the role-words blocklist (author, coauthor, editor, etc.) to prevent false-positives.
-- **`log-reminder`** (Stop) — hard-cap reminder every 10 responses to write to a session log; safety net for the incremental-logging rule.
-- **`verify-reminder`** (PostToolUse) — prompts verification after edits to Edit/Write artifacts.
-- **`context-monitor`** (PostToolUse) — usage warnings at 40 / 55 / 65 / 80 / 90%; writes a `pre-compact-state.json` snapshot at 90% as a fallback for [anthropics/claude-code#14111](https://github.com/anthropics/claude-code/issues/14111) (PreCompact silently bypasses on auto-compact when MCP servers are present). Output goes to `stderr` so the user actually sees it; `MAX_TOOL_CALLS=500` env-overridable, tuned for Opus 4.7 1M context.
-- **`pre-compact`** + **`post-compact-restore`** — state preservation across context compaction.
-- **`protect-files`** (PreToolUse) — guards against accidental writes to `settings.json`.
-
-### 11. Session-logging discipline
-
-Incremental rule (append a few lines whenever a design decision is made, the user corrects something, or the approach changes). Hard-cap reminder hook fires every 10 responses. Post-compact restoration via `SessionStart` hook reading the snapshot. Session logs survive context compaction.
-
-### 12. Single-source-of-truth + working-paper-format rules
-
-`single-source-of-truth.md` — paper as authoritative; talks/supplementary derive from it; SSOT chain documented; per-format slide counts.
-
-`working-paper-format.md` — economics-specific LaTeX preamble standards. `biblatex` + `biber` (not `natbib`); `lmodern`; `microtype`; deduction tables that the writer-critic applies.
+- `decisions/` directory and ADR template (paired with the new `decision-log.md` rule).
+- `master_supporting_docs/literature/{papers,reading_notes}/` directory structure (paired with the new `primary-source-first.md` rule and the gitignored-PDF policy in this fork).
 
 ---
 
-## What this fork *changes* (modifies upstream behavior)
+## What's inherited and substantively modified
 
-Three behavior shifts that aren't strictly additions:
+These files exist in one or both upstreams; this fork's versions have been substantially edited (or the file is the same name but the content has been substantively rewritten — git shows non-trivial diffs against the upstream version).
 
-- **Anti-hedging enforcement in writer + writer-critic.** Banned-word lists ("interestingly", "it is worth noting", "arguably", "it is important to note", "needless to say") with concrete deductions in the writer-critic.
-- **Severity gradient by phase.** Critics calibrate stance by phase (encouraging in Discovery, constructive in Strategy, strict in Execution, adversarial in Peer Review). Same issue gets different deductions depending on where in the pipeline it surfaces. See `quality.md` § "Severity gradient."
-- **Three-strikes escalation routing for worker-critic pairs.** If a pair fails to converge after 3 rounds, the orchestrator escalates to a higher level (different critic, the user, or a different agent type). Prevents infinite loops where the worker can't satisfy the critic. See [`worker-critic-pairs.md`](worker-critic-pairs.md).
+### Agents — inherited (workflow may have modified content for tone, scope, or to integrate with new rules)
+
+From Hugo's main: `coder`, `coder-critic`, `data-engineer`, `explorer`, `explorer-critic`, `librarian`, `librarian-critic`, `orchestrator`, `storyteller`, `storyteller-critic`, `writer`, `writer-critic`. The applied-micro overlay's `strategist` + `strategist-critic` and the behavioral overlay's `theorist` + `theorist-critic` also exist in Hugo's universal main (this fork moves them onto the paradigm-specific overlays).
+
+From Pedro's main: `tikz-reviewer`. Also: `editor`, `methods-referee`, `domain-referee`, `verifier` exist in **both** upstreams; this fork inherits them (likely from Hugo, who already imported them from Pedro's lecture-template lineage).
+
+### Hooks — inherited from Pedro (then modified here)
+
+| Hook | Origin | Modifications in this fork (significant items) |
+|---|---|---|
+| `context-monitor.py` | Pedro | Output redirected to `stderr` (was stdout, invisible to user); fallback at 90% writes a `pre-compact-state.json` snapshot to work around [`anthropics/claude-code#14111`](https://github.com/anthropics/claude-code/issues/14111) (PreCompact bypass under MCP-server load); `MAX_TOOL_CALLS=500` env-overridable, tuned for Opus 4.7 1M-context. |
+| `log-reminder.py` | Pedro | Inherited; behavior verified. |
+| `notify.sh` | Pedro | Inherited; macOS notifications. |
+| `pre-compact.py` | Pedro + Hugo | Inherited; state-capture for context survival. |
+| `post-compact-restore.py` | Pedro + Hugo | Inherited; reads pre-compact-state.json on session start. |
+| `verify-reminder.py` | Pedro | Inherited; prompts verification after edits. |
+| `protect-files.sh` | Hugo | Inherited; guards against accidental edits to protected files (settings.json). |
+
+### Skills — inherited
+
+From Pedro's main: `commit`, `context-status`, `deep-audit`, `learn` (4 skills).
+
+From Hugo's main: `analyze`, `discover`, `new-project`, `review`, `revise`, `submit`, `talk`, `tools`, `write` (9 skills).
+
+This fork's skill catalogue is essentially the union of those plus `/challenge` (net-new).
+
+### Rules — inherited
+
+From Pedro's main: `exploration-fast-track`, `exploration-folder-protocol`, `r-code-conventions`, `replication-protocol`, `single-source-of-truth`, `tikz-visual-quality`, `verification-protocol`.
+
+From Hugo's main: `agents`, `logging`, `quality`, `revision`, `workflow`, `working-paper-format`.
+
+From **both**: `meta-governance`.
+
+This fork inherits the union of these plus the 11 net-new rules listed above.
+
+---
+
+## Reorganization (not addition, but worth noting)
+
+Beyond net-new content, this fork **reorganizes** what's inherited:
+
+### Three-branch model with paradigm overlays
+
+Hugo's `clo-author` has the strategist + theorist creator-critic pairs on a single main branch. This fork separates them onto paradigm-specific overlay branches (`applied-micro` for strategist, `behavioral` for designer + theorist + otree-specialist + qualtrics-specialist). The `main` branch is the universal trunk; overlays are thin diffs.
+
+Practical implication: forkers checkout the overlay matching their work; they get only the agents/skills/rules relevant to their paradigm rather than all of them.
+
+### Behavior shifts in inherited critics
+
+- **Anti-hedging enforcement** in writer + writer-critic (banned-word lists with deductions). The writer agent inherited from Hugo; the anti-hedging emphasis was added.
+- **Severity gradient by phase** in the orchestrator and critics (encouraging in Discovery, adversarial in Peer Review, with deduction-by-phase tables in `quality.md`).
+- **Three-strikes escalation routing** for worker-critic pairs (configured in `agents.md`, applied by the orchestrator).
+
+These are non-trivial behavior changes layered onto inherited agent definitions — not net-new agents, but substantive enough to mention.
+
+### Hook + rule integration
+
+The new `primary-source-first` hooks integrate with the new `primary-source-first.md` rule and the new `master_supporting_docs/literature/` directory structure. Same for `adversarial-default` rule + verification ledger. These are integrations between net-new components rather than additions on top of inherited ones.
 
 ---
 
@@ -94,11 +138,11 @@ Three behavior shifts that aren't strictly additions:
 
 Be honest about scope:
 
-- **No code-execution sandbox / containerization.** Assumes the user runs scripts directly. If you want isolated execution, layer a container or Codespaces config on top.
-- **No CI/CD integration for paper compilation.** Whether/how to wire LaTeX builds into GitHub Actions is left to the user's preference.
-- **No web interface.** CLI-only, follows Claude Code's model.
-- **No domain coverage outside empirical economics / social science.** The applied-micro and behavioral overlays are calibrated for that audience. Other empirical fields (epi, finance, marketing) might fork and re-target.
-- **No commercial / paid-API integration assumptions.** The workflow uses Claude Code natively; no Anthropic API direct integration is assumed.
+- **No code-execution sandbox / containerization.** Assumes the user runs scripts directly.
+- **No CI/CD integration for paper compilation.** Whether/how to wire LaTeX builds into GitHub Actions is the user's call.
+- **No web interface.** CLI-only.
+- **No domain coverage outside empirical economics / social science.** The applied-micro and behavioral overlays are calibrated for that audience.
+- **No commercial / paid-API integration assumptions.**
 
 ---
 
@@ -106,22 +150,22 @@ Be honest about scope:
 
 For someone coming from `pedrohcgs/claude-code-my-workflow`:
 
-- Rule and skill names have changed in some cases. Check `.claude/rules/` and `.claude/skills/` against your previous fork; the directory layout is similar but content differs.
-- The decision log (`decisions/`) and session logs (`quality_reports/session_logs/`) are new conventions; you don't need to retrofit old work.
-- The four-rule epistemic stack imposes more rigor than the upstream defaults. Expect more "the agent asked instead of guessing" interactions; that's intentional.
+- The lecture / slide / Quarto-specific skills (`create-lecture`, `slide-excellence`, `qa-quarto`, `translate-to-quarto`, `pedagogy-review`, `seven-pass-review`, `audit-reproducibility`, `permission-check`, `verify-claims`, `respond-to-referees`, etc.) are not present in this fork — they were dropped in Hugo's research re-target, and this fork didn't re-add them.
+- The agent set is mostly Hugo's universal worker-critic pairs; Pedro's lecture-specific agents (`beamer-translator`, `pedagogy-reviewer`, `quarto-critic`, `quarto-fixer`, `r-reviewer`, `slide-auditor`, `domain-reviewer`, `proofreader`, `claim-verifier`) are not present.
+- The four-rule epistemic stack is the major net-new rule set; expect more "the agent asked instead of guessing" interactions.
 
 For someone coming from `hugosantanna/clo-author`:
 
-- The folder layout is similar; the differences are in `.claude/` (more rules, more agents, hooks) and the addition of the overlay branches.
-- The writer-critic's anti-hedging enforcement may flag prose patterns that worked in the original. Read `.claude/rules/working-paper-format.md` and the writer-critic agent.
+- The agent / skill catalogue is similar; the differences are the four net-new rules, the new primary-source-first hooks, the verification ledger, the strategist / theorist split onto overlay branches, and the new ADR + replication-protocol + per-language code conventions.
+- The writer-critic's anti-hedging deductions may flag prose patterns that worked in Hugo's version.
 
 ---
 
 ## Cross-references
 
-- [`../../README.md`](../../README.md) — short-form pitch with the same five contribution highlights
+- [`../../README.md`](../../README.md) — short-form pitch
 - [`../../CONTRIBUTING.md`](../../CONTRIBUTING.md) — attribution chain template for your own forks
-- [`epistemic-rules.md`](epistemic-rules.md) — depth on the four-rule stack
-- [`verification-ledger.md`](verification-ledger.md) — depth on the ledger format
-- [`worker-critic-pairs.md`](worker-critic-pairs.md) — depth on the adversarial-pairing model
-- [`quality-scoring.md`](quality-scoring.md) — depth on the scoring rubric
+- [`epistemic-rules.md`](epistemic-rules.md) — depth on the four-rule stack (the net-new contribution)
+- [`verification-ledger.md`](verification-ledger.md) — depth on the ledger format (also net-new)
+- [`worker-critic-pairs.md`](worker-critic-pairs.md) — the adversarial-pairing model inherited from Hugo and behavior-modified here
+- [`quality-scoring.md`](quality-scoring.md) — the scoring rubric, rules-from-multiple-upstreams plus deductions added here
