@@ -22,19 +22,19 @@ Main is the trunk. The two overlays are thin diffs maintained on their own branc
 
 ## What this fork adds (vs. upstream)
 
-The original `pedrohcgs/claude-code-my-workflow` was a lecture/slide production template; `hugosantanna/clo-author` adapted it for academic writing. This fork orients the entire pipeline at empirical research output and adds:
+The original `pedrohcgs/claude-code-my-workflow` was a lecture/slide production template (source of much of the agent infrastructure and most context-management hooks). `hugosantanna/clo-author` adapted it for academic-writing production (source of the universal worker–critic agent set, most pipeline skills, and core workflow rules). This fork inherits both, adds five distinctive net-new contributions, and reorganizes the agent set into paradigm-specific overlay branches:
 
-1. **Four-rule epistemic stack** (the workflow's "don't fabricate" guards):
-   - **`no-assumptions.md`** — don't guess about user-side facts (preferences, deadlines, target journal). Ask, leave out, or explicitly assume.
-   - **`primary-source-first.md`** — don't make framing claims about external papers without reading them. Hook-enforced; reading notes required in `master_supporting_docs/literature/reading_notes/`.
-   - **`derive-dont-guess.md`** — don't fabricate facts the repo encodes (filepaths, variable names, macros, output conventions). Look them up.
-   - **`adversarial-default.md`** — don't claim compliance without evidence. Verification results cached in `.claude/state/verification-ledger.md` to avoid re-check bloat.
-2. **Three-branch model with paradigm overlays.** `main` is the universal trunk; `applied-micro` adds identification tooling (DiD/IV/RDD diagnostics, balance tables, event studies); `behavioral` adds experimental-design tooling (inference-first 14-step checklist, formal theory, oTree, Qualtrics, pre-registration).
-3. **Quality scoring with deduction tables.** 80/90/95 thresholds, weighted aggregate across components, per-target deduction matrices that critics apply consistently. No vague "looks fine" sign-offs.
-4. **Decision log (ADRs) + replication protocol.** Substantive decisions live in `decisions/NNNN_slug.md` (append-only, supersession via new ADRs). Replication has a 5-phase AEA-deposit-ready protocol with concrete tolerance thresholds.
-5. **Domain-specific overlays with academic provenance.** The behavioral overlay's 13 design principles (`.claude/rules/experiment-design-principles.md`) and 14-step inference-first checklist (`.claude/references/inference-first-checklist.md`) carry in-line attributions to the experimental-economics literature on test selection, IC, measurement error, parameter selection, and pre-registration.
+1. **Four-rule epistemic stack** (net-new — none of these rules exist in either upstream):
+   - **`no-assumptions.md`** — don't guess about user-side facts. Ask, leave out, or explicitly disclose.
+   - **`primary-source-first.md`** — don't make framing claims about external papers without reading them. Hook-enforced (PreToolUse + Stop audit, both net-new in this fork).
+   - **`derive-dont-guess.md`** — don't fabricate facts the repo encodes (filepaths, vars, macros). Cite source `file:line`.
+   - **`adversarial-default.md`** — don't claim compliance without evidence. Backed by the verification ledger.
+2. **Verification ledger** (net-new). `.claude/state/verification-ledger.md` caches `(path, check, sha256[:12])` triples so adversarial-default's "demand evidence" doesn't cause re-check bloat.
+3. **Behavioral overlay's design rules with academic provenance** (net-new). The 13 design principles (`.claude/rules/experiment-design-principles.md`) and 14-step inference-first checklist (`.claude/references/inference-first-checklist.md`) carry in-line attributions to the experimental-economics literature.
+4. **Decision log (ADRs)** (net-new rule). Substantive decisions live in `decisions/NNNN_slug.md`, append-only, supersession via new ADRs. Convention codified in net-new `decision-log.md`.
+5. **Three-branch reorganization with paradigm overlays.** `main` is the universal trunk; `applied-micro` and `behavioral` are thin overlay branches with paradigm-specific agents and skills. Hugo's `clo-author` had `strategist` + `theorist` on a single main; this fork moves them onto the relevant overlays so forkers see only what's relevant to their paradigm.
 
-A full diff vs upstream lives at `docs/concepts/upstream-differences.md` (Phase 2 of the docs work — coming next).
+For the verified file-by-file provenance — what's net-new, what's inherited from Pedro, what's inherited from Hugo, what's inherited and substantively modified — see [`docs/concepts/upstream-differences.md`](docs/concepts/upstream-differences.md).
 
 ---
 
