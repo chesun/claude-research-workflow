@@ -93,11 +93,14 @@ This fork descends from [`pedrohcgs/claude-code-my-workflow`](https://github.com
 
 ---
 
-## [Unreleased] — Planned for v0.1.1
+## [v0.1.1] — 2026-04-28
 
-Polish items deferred from v0.1.0:
+### Fixed
 
-- **`NEVER_SURNAMES` blocklist expansion.** Add common book/series-title nouns (`methodology`, `handbook`, `encyclopedia`, `review`, `annual`, `bulletin`, `journal`, `volume`, `issue`) that can false-positive as surnames when the regex pairs them with a year (e.g., "Handbook of Experimental Methodology 2025" parsing as "Methodology (2025)"). Same fix pattern as `v0.1.0`'s role-words expansion (author, coauthor, editor, etc.).
+- **`NEVER_SURNAMES` blocklist expanded** with common book/series-title nouns (`methodology`, `handbook`, `encyclopedia`, `review`, `annual`, `bulletin`, `journal`, `volume`, `issue`, plus plurals). These were previously parsed as surnames when adjacent to a year (e.g., "Handbook of Experimental Methodology 2025" → false-positive citation `methodology_2025`). Same blocklist mechanism that catches seasons, months, and document-structure words. Updated regression tests in `.claude/hooks/test_primary_source_lib.py` cover all 9 added words.
+
+## [Unreleased] — Planned for v0.1.2
+
 - **Auto-archive sweep skill.** A `/tools archive-stale` subcommand to sweep `Status: Completed` reviews/plans older than 90 days into `archive/`. Currently the lifecycle rule documents the protocol but moves are manual.
 
 [v0.1.0]: https://github.com/chesun/claude-research-workflow/releases/tag/v0.1.0
