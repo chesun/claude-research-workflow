@@ -21,9 +21,11 @@ Recommended reading order:
 2. [`getting-started/installation.md`](getting-started/installation.md) — fork → clone → branch-pick → CLAUDE.md customize → first-launch verification. Includes troubleshooting for the eight most common issues.
 3. [`getting-started/branch-model.md`](getting-started/branch-model.md) — decision tree for picking `main` vs `applied-micro` vs `behavioral`. What each overlay adds.
 4. [`getting-started/first-session.md`](getting-started/first-session.md) — walkthrough of a typical first day. What plan-mode looks like, what agent dispatches feel like, course-correction signals.
-5. **Overlay-specific walkthrough** (only after step 3 confirms an overlay):
-   - **Applied-micro overlay:** `git checkout applied-micro` then read [`getting-started/applied-micro.md`](getting-started/applied-micro.md). Covers `/strategize`, `/balance`, `/event-study`, the strategist + critic agents, the air-gapped-workflow rule, and the identification-checklists reference.
-   - **Behavioral overlay:** `git checkout behavioral` then read [`getting-started/behavioral.md`](getting-started/behavioral.md). Covers `/design`, `/theory`, `/preregister`, `/otree`, `/qualtrics`, the four creator–critic agent pairs, the 13 design principles, and the 14-step inference-first checklist.
+5. **Overlay-specific walkthrough** — read both even if you're still evaluating, since these are portable previews of what each overlay offers:
+   - [`getting-started/applied-micro.md`](getting-started/applied-micro.md) — `/strategize`, `/balance`, `/event-study`, the strategist + critic agents, the air-gapped-workflow rule, the identification-checklists reference.
+   - [`getting-started/behavioral.md`](getting-started/behavioral.md) — `/design`, `/theory`, `/preregister`, `/otree`, `/qualtrics`, the four creator–critic agent pairs, the 13 design principles, the 14-step inference-first checklist.
+
+   Both walkthroughs live on all three branches. Reading them requires no checkout. *Running* the skills they describe requires being on the corresponding overlay branch — `git checkout applied-micro` or `git checkout behavioral`.
 
 > **Before using the workflow on real research, also read [`concepts/appropriate-use.md`](concepts/appropriate-use.md).** It's the most important page in these docs — explains where the workflow fits (handles execution) and where your judgment remains irreplaceable (substantive expertise, literature knowledge, quality control). The applied-micro vs behavioral asymmetry — how much you can lean on the workflow — is discussed in detail.
 
@@ -89,8 +91,8 @@ docs/
 │   ├── installation.md
 │   ├── branch-model.md
 │   ├── first-session.md
-│   ├── applied-micro.md               ← only on the `applied-micro` branch
-│   └── behavioral.md                  ← only on the `behavioral` branch
+│   ├── applied-micro.md               ← walkthrough (portable; runnable only on `applied-micro` branch)
+│   └── behavioral.md                  ← walkthrough (portable; runnable only on `behavioral` branch)
 ├── concepts/
 │   ├── README.md                      ← section index
 │   ├── appropriate-use.md
