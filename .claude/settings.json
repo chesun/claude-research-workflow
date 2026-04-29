@@ -97,6 +97,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "startup|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-reset.py",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "PostToolUse": [
