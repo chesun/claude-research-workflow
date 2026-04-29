@@ -123,6 +123,7 @@ Practical implication: forkers checkout the overlay matching their work; they ge
 ### Behavior shifts in inherited critics
 
 - **Anti-hedging enforcement** in writer + writer-critic (banned-word lists with deductions). The writer agent inherited from Hugo; the anti-hedging emphasis was added.
+- **Universal anti-AI-prose rule** (`.claude/rules/anti-ai-prose.md`) — catalog of ~35 patterns across 6 categories (lexical, syntactic, structural, rhetorical, content, communication) with severity tiers and voice profiles (academic / slide / correspondence / blog / docs). Paired with the universal `/humanize [path]` skill, deduction tables in writer-critic and storyteller-critic, and references from the writer + storyteller agents. Hugo's writer had a paper-only inline humanizer section; this fork promotes the catalog to a rule, applies it to slides + correspondence + docs + blog, and adds structural / burstiness patterns the original didn't cover.
 - **Severity gradient by phase** in the orchestrator and critics (encouraging in Discovery, adversarial in Peer Review, with deduction-by-phase tables in `quality.md`).
 - **Three-strikes escalation routing** for worker-critic pairs (configured in `agents.md`, applied by the orchestrator).
 

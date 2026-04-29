@@ -106,6 +106,7 @@ Early phases are about getting the direction right. Late phases are about gettin
 | Major | Notation inconsistency | -5 |
 | Major | Missing figure/table at referenced path | -5 |
 | Major | Hedging language ("interestingly", "it is worth noting") | -3 per (max -15) |
+| Major | Anti-AI-prose violations (em-dash density, AI vocabulary cluster, tricolon overuse, significance inflation, etc.) — see `.claude/rules/anti-ai-prose.md` for the full catalog and `agents/writer-critic.md` for the per-pattern table | varies, capped at -30 |
 | Minor | Overfull hbox 1–10pt | -1 |
 | Minor | Long lines >100 chars (except math formulas) | -1 |
 
@@ -148,6 +149,7 @@ Early phases are about getting the direction right. Late phases are about gettin
 | Major | Slide count outside format range | -10 |
 | Major | Result not in paper (talk-only result) | -10 |
 | Major | Notation mismatch with paper | -5 |
+| Major | Anti-AI-prose violations on slides (em-dash density, tricolon overuse, AI vocabulary, hook-slide promotional inflation) — see `.claude/rules/anti-ai-prose.md` (voice profile `slide`) and `agents/storyteller-critic.md` for the per-pattern table | varies, capped at -15 |
 | Minor | Overfull hbox | -2 |
 | Minor | Dense slide without spacing fix | -1 |
 

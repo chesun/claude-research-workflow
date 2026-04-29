@@ -223,7 +223,8 @@ All skills in the reference below work without pipeline context when invoked dir
 | `/strategize` (applied-micro overlay) | Identification strategy design + review |
 | `/design`, `/theory`, `/preregister` (behavioral overlay) | Experiment design, formal model, pre-registration |
 | `/analyze` | End-to-end data analysis (code + debug) |
-| `/write` | Draft paper sections + humanizer pass |
+| `/write` | Draft paper sections (anti-hedging, notation protocol) |
+| `/humanize` | Strip AI writing patterns from any external-facing doc (paper, slide, README, blog, cover/response letter) per `.claude/rules/anti-ai-prose.md` |
 | `/review` | Simulated peer review (domain + methods referees) |
 | `/revise` | R&R routing per revision-protocol |
 | `/talk` | Beamer talk from paper |

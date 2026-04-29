@@ -79,6 +79,25 @@ Flag when storyteller defaulted to font reduction instead of working through the
 | Inconsistent notation with paper | -5 |
 | Font too small for projection | -3 per slide |
 
+### Anti-AI-prose deductions (per `.claude/rules/anti-ai-prose.md`, voice profile `slide`)
+
+Slides have less prose than papers, but AI tells stand out more on a projection screen. Score against the rule's catalog with the slide profile (terse, declarative, oral-friendly; tricolons and em-dashes especially overused on slides — hard cap).
+
+| Severity | Issue | Deduction |
+|----------|-------|-----------|
+| Critical | Em-dash density >2 per 100 words across slide bodies — rule § S1 | -10 |
+| Critical | Mirror-and-echo phrasing on slides ("Great question!", echo of section title) — rule § M1 | -5 per |
+| Major | Tricolon overuse (3+ slide bullets in rule-of-three structure on the same slide) — rule § S2 | -3 per slide |
+| Major | Promotional adjectives on hook slide ("groundbreaking", "comprehensive", "transformative") — rule § L2 | -3 per |
+| Major | AI vocabulary cluster on slide bodies (`delve`, `navigate`, `leverage`, `tapestry`, `landscape`) — rule § L1 | -3 per |
+| Major | Roadmap signposting on slide ("In this section we will explore...") — rule § R3 | -2 per |
+| Minor | Significance inflation on hook slide ("pivotal moment", "watershed") — rule § C1 | -2 per |
+| Minor | Decorative emoji used as bullet markers in academic talks — rule § M3 | -2 per |
+
+**Cap:** Total anti-AI-prose deduction is capped at -15 per talk. Slides have less prose, so the cap is tighter than the paper's -30.
+
+Respect `<!-- anti-ai-ok: <reason> -->` escape comments per the rule.
+
 Talk scores are **advisory** — they do not block commits or PRs.
 
 ## Three Strikes Escalation

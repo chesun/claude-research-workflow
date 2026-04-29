@@ -15,7 +15,8 @@ This page is a catalogue. For full skill behaviour, see the corresponding `SKILL
 | `/new-project` | Full pipeline: idea → paper. Orchestrated through all phases (Discovery → Strategy → Execution → Peer Review → Submission). | `orchestrator` + every worker–critic pair in turn |
 | `/discover` | Discovery phase — literature search, data discovery, research interviews, ideation. Subcommands route to the right agents. | `librarian` + `librarian-critic`, `explorer` + `explorer-critic` |
 | `/analyze` | End-to-end data analysis dispatching coder + data-engineer for implementation, coder-critic for review. Stata, R, Python, Julia. | `coder`, `data-engineer`, `coder-critic` |
-| `/write` | Draft paper sections with the workflow's notation protocol, anti-hedging rules, contribution-statement-in-first-2-pages standard. Includes humanizer pass. | `writer` + `writer-critic` |
+| `/write` | Draft paper sections with the workflow's notation protocol, anti-hedging rules, contribution-statement-in-first-2-pages standard. | `writer` + `writer-critic` |
+| `/humanize` | Strip AI writing patterns from any external-facing document (paper, slides, README, blog post, cover/response letter). Voice profile inferred from path. Catalog: `.claude/rules/anti-ai-prose.md` (~35 patterns, 6 categories). | `writer` (humanizer mode) for paper/.tex; `storyteller` (humanizer mode) for talks/.tex; generic-prose dispatch for `.md` |
 | `/review` | All quality reviews — routes to appropriate critics by target file type and flags. `--paper`, `--code`, `--peer`, etc. | Various critics |
 | `/revise` | R&R cycle: classify referee comments (NEW ANALYSIS / CLARIFICATION / DISAGREE / MINOR) and route each to the right agent. | Various, depending on classification |
 | `/talk` | Create, audit, or compile Beamer presentations. Format-specific (job market / seminar / short / lightning). | `storyteller` + `storyteller-critic` |

@@ -59,6 +59,10 @@ Based on venue or user request.
 
 `talks/[format]_talk.tex` — compiled Beamer presentation
 
+## Humanizer Pass
+
+Slide prose is short, but AI tells (em-dash overuse, tricolons in every bullet, "It's worth noting" framing on slide bodies, promotional inflation in the hook slide) corrode talks fast. Apply the project's anti-AI-prose rule when finalizing each format: read **`.claude/rules/anti-ai-prose.md`** and pass against the `slide` voice profile (terse, declarative, oral-friendly; sentence fragments OK; tricolons and em-dashes especially over-used on slides — hard cap). The `/humanize talks/<file>.tex` skill dispatches you in humanizer mode automatically; it can also be invoked manually after building each format.
+
 ## What You Do NOT Do
 
 - Do not evaluate your own talk (that's the storyteller-critic)

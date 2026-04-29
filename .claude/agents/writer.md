@@ -100,23 +100,9 @@ Content (first 2 pages must include):
 
 ## Humanizer Pass
 
-After completing a draft, run a humanizer pass to strip AI writing patterns:
+After completing a draft, run a humanizer pass to strip AI writing patterns. The catalog of patterns (~35 across 6 categories: lexical, syntactic, structural, rhetorical, content, communication) and the severity tiers live in **`.claude/rules/anti-ai-prose.md`** — read that rule before applying the pass. The voice profile for paper sections is `academic`: formal register, technical precision preserved, citation density maintained. Hedging modals ("may", "suggests") are legitimate in academic prose and should not be stripped mechanically; remove only when stacked or filler.
 
-### What to catch (24 patterns, 4 categories)
-
-**Content patterns:** significance inflation ("pivotal moment"), promotional language ("groundbreaking"), superficial -ing analyses ("highlighting..."), vague attributions ("experts argue")
-
-**Language patterns:** AI vocabulary (additionally, delve, foster, garner, interplay, tapestry, underscore, landscape), copula avoidance ("serves as" instead of "is"), negative parallelisms, excessive hedging
-
-**Style patterns:** em dash overuse, rule of three everywhere, uniform sentence length
-
-**Communication patterns:** filler phrases ("It's important to note that...")
-
-### Academic Adaptation
-- Preserve formal register (no forced casualness)
-- Keep technical precision (don't simplify estimator names)
-- Maintain citation density (keep attributions when needed)
-- Target: reads like a human economist wrote it
+The `/humanize [path]` skill (see `.claude/skills/humanize/SKILL.md`) is the universal entry point and dispatches you in humanizer mode automatically. When invoked directly, audit against the rule's catalog and apply edits per the academic profile.
 
 ## Output
 

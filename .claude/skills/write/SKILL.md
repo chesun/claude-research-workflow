@@ -1,15 +1,15 @@
 ---
 name: write
-description: Draft academic economics paper sections with notation protocol, anti-hedging, and humanizer pass. Replaces /draft-paper and /humanizer.
-argument-hint: "[section or mode: intro | strategy | results | conclusion | abstract | full | humanize] [file path (optional)]"
+description: Draft academic economics paper sections with notation protocol and anti-hedging. Replaces /draft-paper. (For the humanizer pass, use /humanize — universal across papers, slides, and other external-facing docs.)
+argument-hint: "[section: intro | strategy | results | conclusion | abstract | full]"
 allowed-tools: Read,Grep,Glob,Write,Edit,Task
 ---
 
 # Write
 
-Draft paper sections or apply humanizer pass by dispatching the **Writer** agent.
+Draft paper sections by dispatching the **Writer** agent.
 
-**Input:** `$ARGUMENTS` — section name or mode, optionally followed by file path.
+**Input:** `$ARGUMENTS` — section name.
 
 ---
 
@@ -34,17 +34,11 @@ Workflow:
 6. Humanizer pass runs automatically before finalizing
 7. Save to paper/sections/[section].tex
 
-### `/write humanize [file]` — Humanizer Pass Only
-Strip AI writing patterns from existing text without rewriting content.
+### Humanizer pass — moved to `/humanize`
 
-**Agent:** Writer (humanizer mode)
-**Output:** Edited file with AI patterns removed
+The humanizer pass is now a separate, universal skill: **`/humanize [path]`**. It dispatches the Writer (for `paper/`), Storyteller (for `talks/`), or generic-prose mode (for `docs/`, `blog/`, `README.md`, etc.) based on the path. See `.claude/skills/humanize/SKILL.md` and the catalog rule at `.claude/rules/anti-ai-prose.md`.
 
-Strips 24 patterns across 4 categories:
-- Structural: forced narrative arcs, artificial progression
-- Lexical: "delve,leverage,nuanced,robust"
-- Rhetorical: rule-of-three, negative parallelisms, em dash overuse
-- Formatting: excessive bullet points, promotional language
+For backward compatibility, `/write humanize <file>` aliases to `/humanize <file>` and prints a one-line deprecation note.
 
 ---
 

@@ -108,7 +108,8 @@ See `quality.md` for weighted aggregation formula.
 | `/discover [mode] [topic]` | Discovery: interview, literature, data, ideation |
 | `/strategize [question]` | Identification strategy or pre-analysis plan |
 | `/analyze [dataset]` | End-to-end data analysis |
-| `/write [section]` | Draft paper sections + humanizer pass |
+| `/write [section]` | Draft paper sections (anti-hedging, notation protocol) |
+| `/humanize [path]` | Strip AI writing patterns from any external-facing doc (paper, slide, README, blog, cover/response letter) |
 | `/review [file/--flag]` | Quality reviews (routes by target: paper, code, peer) |
 | `/revise [report]` | R&R cycle: classify + route referee comments |
 | `/talk [mode] [format]` | Create, audit, or compile Beamer presentations |
