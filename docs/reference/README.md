@@ -33,4 +33,5 @@ The reference pages exist for browsing — getting a sense of what exists in the
 - [`../concepts/`](../concepts/) — design rationale for the items catalogued here
 - [`../getting-started/`](../getting-started/) — installation and first-session
 - [`../customization/`](../customization/) — adapting / extending these for your project
+- [`../faq.md`](../faq.md) — quick answers to common questions
 - [`../README.md`](../README.md) — top-level docs nav hub

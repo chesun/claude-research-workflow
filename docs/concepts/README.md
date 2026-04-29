@@ -33,4 +33,5 @@ The "why" pages. These explain the design decisions behind distinctive workflow 
 - [`../reference/`](../reference/) — pure catalogues of skills, agents, rules, hooks
 - [`../getting-started/`](../getting-started/) — installation and first-session if you haven't gotten there yet
 - [`../customization/`](../customization/) — adapting the workflow for your project
+- [`../faq.md`](../faq.md) — quick answers to common questions
 - [`../README.md`](../README.md) — top-level docs nav hub
