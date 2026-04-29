@@ -46,34 +46,38 @@ Simulates journal peer review:
 2. Dispatch **methods-referee** — econometric methods review (5 dimensions, weighted)
 3. Both reviews are independent and blind
 4. If a journal name is provided, pass it to both referees — they read `.claude/references/journal-profiles.md` and calibrate to that journal's review culture
-5. Orchestrator synthesizes editorial decision: Accept / Minor / Major / Reject
-6. Save reports to `quality_reports/`
+5. Both write reports to `quality_reports/reviews/YYYY-MM-DD_<target>_domain_review.md` and `..._methods_review.md` per `.claude/rules/agents.md` § 2.
+6. Orchestrator dispatches **editor** to synthesize an editorial decision: Accept / Minor / Major / Reject (saved as `..._editor_review.md`).
 
 ### Code Review (`--code` or auto-detect .R/.py/.do)
 Dispatch **coder-critic** in standalone mode:
 - Categories 4-12 only (code quality, no strategy comparison)
-- Save report to `quality_reports/[file]_code_review.md`
+- Critic writes report to `quality_reports/reviews/YYYY-MM-DD_<target>_coder_review.md` per the canonical path.
 
 ### Causal Audit (`--methods`)
-Dispatch **strategist-critic** standalone:
+Dispatch **strategist-critic** standalone (applied-micro overlay):
 - Full 4-phase review (claim, design, inference, polish)
-- Save report to `quality_reports/[file]_strategy_review.md`
+- Critic writes report to `quality_reports/reviews/YYYY-MM-DD_<target>_strategist_review.md`.
 
 ### Manuscript Polish (`--proofread`)
 Dispatch **writer-critic** standalone:
 - 6 categories: structure, claims-evidence, ID fidelity, writing, grammar, compilation
-- Save report to `quality_reports/[file]_proofread_report.md`
+- Critic writes report to `quality_reports/reviews/YYYY-MM-DD_<target>_writer_review.md`.
 
 ### Cross-Language Replication (`--replicate [language]`)
 Re-implement existing code in a different language and compare outputs:
 1. Auto-detect source language from file extension (`.R`, `.py`, `.do`, `.jl`)
-2. Dispatch **Coder** in replication mode — re-implement in target language
-3. **coder-critic** reviews both implementations
-4. Compare numerical outputs per `.claude/references/domain-profile.md` Quality Tolerance Thresholds
-5. Save replicated script to `scripts/[target-language]/`
-6. Save report to `quality_reports/[file]_replication_report.md`
+2. Dispatch **Coder** in replication mode — re-implement in target language (writes to `scripts/[target-language]/`)
+3. **coder-critic** reviews both implementations and writes report to `quality_reports/reviews/YYYY-MM-DD_<target>_replicate_<lang>_coder_review.md`.
+4. Compare numerical outputs per `.claude/references/domain-profile.md` Quality Tolerance Thresholds.
 
 Divergences are flagged with exact values. The report includes a side-by-side table.
+
+---
+
+## Review-report path convention
+
+All critics write to `quality_reports/reviews/YYYY-MM-DD_<target>_<critic>_review.md`. Critics consult `quality_reports/reviews/INDEX.md` first; if an `Active` review exists for the same target, they follow the supersession protocol (mark prior `Status: Superseded by <new-path>`, `git mv` to `archive/`, set `Supersedes:` in the new report, update `INDEX.md`). See `quality_reports/reviews/README.md` for full lifecycle conventions.
 
 ---
 
@@ -92,5 +96,5 @@ Divergences are flagged with exact values. The report includes a side-by-side ta
 ## Principles
 - **Smart routing.** File type determines the default review mode.
 - **Flags override.** Use explicit flags for targeted reviews.
-- **Critics never edit.** All reviews produce reports only.
+- **Critics never edit source artifacts.** They do write review reports to `quality_reports/reviews/` — that is the audit trail. Source vs report distinction per `.claude/rules/agents.md` § 2.
 - **Proportional severity.** Phase-aware deductions per quality.md.

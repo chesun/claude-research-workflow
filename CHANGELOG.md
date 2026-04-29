@@ -59,26 +59,45 @@ Synthesizes referee reports into editorial decisions. Selects dispositions (Acce
 #### Quality scoring
 Weighted aggregate score across components: literature 10%, data 10%, strategy/design 25%, code 15%, paper 25%, polish 10%, replication 5%. Gate thresholds: 80 (commit), 90 (PR), 95 + every component ≥ 80 (submission). Per-target deduction matrices in `quality.md`.
 
+#### Critic-write architecture + reviews/plans lifecycle
+Reframes the "critics never create" rule as a source-vs-report distinction. *Source artifacts* (`paper/`, `talks/`, `scripts/`, `do/`, `decisions/`, `theory/`, `experiments/designs/`, `figures/`, `tables/`, `references.bib`, `data/cleaned/`) remain read-only for critics. *Report artifacts* (`quality_reports/reviews/`) are write-encouraged so every critic invocation produces an audit trail.
+
+All 13 critic-style agents (10 universal: `coder-critic`, `writer-critic`, `librarian-critic`, `explorer-critic`, `storyteller-critic`, `tikz-reviewer`, `domain-referee`, `methods-referee`, `verifier`, `editor`; plus `strategist-critic` on applied-micro and `designer-critic`, `theorist-critic` on behavioral) gained `Write` permission and a canonical save path:
+
+```
+quality_reports/reviews/YYYY-MM-DD_<target>_<critic>_review.md
+```
+
+Required header per review: `Date`, `Reviewer`, `Target`, `Score`, `Status: Active`, optional `Supersedes:`. Status values: `Active | Completed | Superseded by <path> | Archived`.
+
+Lifecycle protocol prevents indefinite top-level growth in `quality_reports/reviews/` and `quality_reports/plans/`:
+
+- **Supersession**: new review of the same target marks the prior `Status: Superseded by <new>`, `git mv` it to `archive/`, set `Supersedes:` in the new report, update `INDEX.md`.
+- **Time-based archive**: `Status: Completed` + 90 days idle → move to `archive/`.
+- **`INDEX.md` per folder**: lists `Active` items; critics consult before writing to avoid parallel duplicates.
+
+Conventions documented in `quality_reports/reviews/README.md` and `quality_reports/plans/README.md`. Rule encoded in `.claude/rules/agents.md` § 2 + § 2a. Concepts page updated at `docs/concepts/worker-critic-pairs.md`.
+
+#### Public documentation site
+`docs/` ships with v0.1.0 as the long-form companion to `README.md`. 24 pages organized by audience:
+
+- `docs/getting-started/` (7 pages) — prerequisites, installation, branch model, first-session walkthrough, plus portable applied-micro and behavioral overlay previews readable from any branch.
+- `docs/concepts/` (7 pages) — appropriate-use ("capable-RA" analogy), epistemic-rules deep-dive, verification-ledger, worker-critic pairs, quality scoring, file-by-file upstream-differences diff vs `pedrohcgs/claude-code-my-workflow` and `hugosantanna/clo-author`.
+- `docs/reference/` (6 pages) — catalogues of skills, agents, rules, hooks; glossary.
+- `docs/customization/` (2 pages) — adapting `CLAUDE.md`, extending rules.
+- `docs/faq.md`, `docs/contributing.md` — top-level lookup utilities.
+
 ### Acknowledgements
 
 This fork descends from [`pedrohcgs/claude-code-my-workflow`](https://github.com/pedrohcgs/claude-code-my-workflow) (original lecture/slide template by Pedro Sant'Anna) and [`hugosantanna/clo-author`](https://github.com/hugosantanna/clo-author) (academic-writing adaptation by Hugo Sant'Anna). The research-paper re-target, the four-rule epistemic stack, the verification ledger, the three-branch overlay model, the quality scoring system, and the domain-specific tooling are added in this fork.
 
 ---
 
-## [Unreleased] — Planned for v0.2.0
+## [Unreleased] — Planned for v0.1.1
 
-The next release will fill in `docs/` (per [`quality_reports/plans/2026-04-28_public-release-docs-plan.md`](quality_reports/plans/2026-04-28_public-release-docs-plan.md)):
-
-- `docs/getting-started/` — prerequisites, installation, first-session walkthrough, branch model, applied-micro overlay walkthrough, behavioral overlay walkthrough.
-- `docs/concepts/` — epistemic-rules deep-dive, worker-critic pairs, quality scoring, verification ledger, full upstream-differences diff.
-- `docs/reference/` — skills, agents, rules, hooks catalogues, glossary.
-- `docs/customization/` — adapting CLAUDE.md, extending rules.
-- `docs/faq.md` — anticipated questions.
-
-No breaking changes are planned for v0.2.0; the docs ship is additive.
-
-Also planned cleanup:
+Polish items deferred from v0.1.0:
 
 - **`NEVER_SURNAMES` blocklist expansion.** Add common book/series-title nouns (`methodology`, `handbook`, `encyclopedia`, `review`, `annual`, `bulletin`, `journal`, `volume`, `issue`) that can false-positive as surnames when the regex pairs them with a year (e.g., "Handbook of Experimental Methodology 2025" parsing as "Methodology (2025)"). Same fix pattern as `v0.1.0`'s role-words expansion (author, coauthor, editor, etc.).
+- **Auto-archive sweep skill.** A `/tools archive-stale` subcommand to sweep `Status: Completed` reviews/plans older than 90 days into `archive/`. Currently the lifecycle rule documents the protocol but moves are manual.
 
 [v0.1.0]: https://github.com/chesun/claude-research-workflow/releases/tag/v0.1.0
