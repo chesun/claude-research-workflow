@@ -146,6 +146,12 @@ NEVER_SURNAMES = frozenset({
     # ("Author and Author (year)", "Coauthor (year)", etc.)
     "author", "authors", "coauthor", "coauthors", "co-author", "co-authors",
     "editor", "editors", "name", "names", "surname", "surnames",
+    # Book/series-title nouns that frequently appear capitalized adjacent to
+    # a year and false-positive as surnames. Common pattern: "Handbook of
+    # Experimental Methodology, 2025" or "Annual Review of Economics 2024".
+    "methodology", "methodologies", "handbook", "handbooks", "encyclopedia",
+    "review", "reviews", "annual", "bulletin", "bulletins",
+    "journal", "journals", "volume", "volumes", "issue", "issues",
 })
 
 
