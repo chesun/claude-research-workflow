@@ -1,8 +1,8 @@
 # Worker–critic pairs
 
-Every creator agent in this workflow has a paired critic. The creator produces an artifact (code, paper section, talk, strategy memo, experiment design); the critic evaluates it against a deduction rubric and produces a score. Critics never edit files; creators never self-score. This separation is structural, not advisory.
+Every creator agent in this workflow has a paired critic. The creator produces an artifact (code, paper section, talk, strategy memo, experiment design); the critic evaluates it against a deduction rubric, produces a score, and writes a review report to `quality_reports/reviews/`. Critics never edit *source artifacts*; they always write a *review report*. Creators never self-score. This separation is structural, not advisory.
 
-This page explains why the model is shaped this way, how the pairs interact, and what happens when a pair can't converge.
+This page explains why the model is shaped this way, how the pairs interact, what happens when a pair can't converge, and how the review-report file lifecycle works.
 
 ---
 
@@ -56,17 +56,41 @@ The structure mirrors a real journal review where two referees and an editor eac
 
 Critics produce:
 
-- A **scored report** with a numeric score (0–100, derived from a deduction rubric).
+- A **scored review report** written to `quality_reports/reviews/YYYY-MM-DD_<target>_<critic>_review.md`. This is the audit trail — the record of what was reviewed, by whom, with what verdict.
+- A **numeric score** (0–100, derived from a deduction rubric) in the report header.
 - A **list of issues**, each tagged with severity (Critical / Major / Minor) and a deduction value.
 - **Suggestions for fixes**, but as recommendations only — never implementations.
 
 What critics never do:
 
-- Edit source files. The job is to evaluate, not produce.
+- Edit *source artifacts*: `paper/`, `talks/`, `scripts/`, `do/`, `figures/`, `tables/`, `references.bib`, `decisions/`, `theory/`, `experiments/designs/`, `data/cleaned/`. These are read-only.
 - Score themselves or other critics' work.
-- Run code (only specific critics like `verifier` do).
+- Run code (only specific critics like `verifier` do, since verification *requires* compile/execute).
 
-If a critic invocation produces a file in `scripts/`, `paper/`, or `talks/`, the orchestrator flags it as a violation of the separation-of-powers rule.
+The boundary is **source vs report**: critics may write report artifacts (review reports, ledger updates), but they may not modify source artifacts. The orchestrator flags two kinds of violation: a critic that touches a source artifact, or a critic invocation that produces no review report.
+
+---
+
+## Review-report file lifecycle
+
+Critic-produced review reports accumulate over time. The workflow uses a lightweight lifecycle to prevent navigational bloat.
+
+**Status field.** Every review declares its status in the header: `Active` (current), `Completed` (work shipped), `Superseded by <path>` (replaced by a newer review of the same target), or `Archived` (moved out of top-level browsing).
+
+**Supersession.** When a critic writes a new review for a target that already has an `Active` review:
+
+1. The prior review's `Status` is changed to `Superseded by <new-path>`.
+2. It moves via `git mv` to `quality_reports/reviews/archive/`.
+3. The new review's header includes `Supersedes: <archive/old-path>`.
+4. `quality_reports/reviews/INDEX.md` is updated.
+
+**Time-based archive.** A `Completed` review with no edits for 90+ days moves to `archive/` on the next sweep. The top-level `reviews/` directory stays scannable; history is preserved one level down (still git-tracked, still grep-able).
+
+**INDEX.md.** Lists `Active` reviews with one-line summaries. Critics consult it before writing — if an `Active` review for the same target exists, follow the supersession protocol.
+
+The same lifecycle applies to `quality_reports/plans/`, with `Active` / `Approved` / `Completed` / `Superseded` / `Archived` statuses.
+
+Full conventions: [`quality_reports/reviews/README.md`](../../quality_reports/reviews/README.md), [`quality_reports/plans/README.md`](../../quality_reports/plans/README.md).
 
 ---
 
