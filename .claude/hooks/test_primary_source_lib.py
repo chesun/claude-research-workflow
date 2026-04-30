@@ -280,7 +280,8 @@ print("\n=== Year-separator requirement (no shorthand-coalescing) ===")
 # The original misparse: `Cameron-Miller, Eyting-2024` was coalescing into
 # stem `cameron-miller_eyting-_2024` because (a) the surname char class
 # allowed `Eyting-` (trailing hyphen) and (b) the year regex allowed zero
-# separator. Fix requires whitespace/paren/comma before the year.
+# separator. Fix requires whitespace/paren/comma before the year AND
+# requires surname captures to end in a letter.
 assert_no_match(
     "PDFs (Cameron-Miller, Eyting-2024) need to move.",
     "shorthand 'Eyting-2024' must not coalesce with adjacent surname",
@@ -292,6 +293,25 @@ assert_no_match(
 assert_no_match(
     "References include Smith-2020.",
     "shorthand 'Smith-2020' mid-sentence must not match",
+)
+
+print("\n=== Surname-ending-in-letter constraint (residual case) ===")
+# Even with year-separator, this still mis-coalesced before the
+# trailing-letter constraint on the surname char class:
+# `Cameron-Miller and Eyting- (2024)` -> the year sep ` (` was satisfied, so
+# `second = "Eyting-"` got captured and post-stripping produced
+# `cameron-miller_eyting_2024`. Anchor: surname must end in a letter.
+assert_no_match(
+    "We follow Cameron-Miller and Eyting- (2024) per the typo.",
+    "second surname ending in trailing hyphen must not match",
+)
+assert_no_match(
+    "Cited as Smith- (2020) somewhere.",
+    "first surname ending in trailing hyphen must not match",
+)
+assert_no_match(
+    "See Foo and Bar' (2020) for details.",
+    "second surname ending in trailing apostrophe must not match",
 )
 
 print("\n=== Adjacent citations connected by 'and' (must extract both) ===")

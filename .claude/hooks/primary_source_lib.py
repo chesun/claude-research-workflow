@@ -80,23 +80,33 @@ KNOWN_SURNAMES = _load_surname_allowlist()
 #   Karni (2009)
 #   Brown et al. (2025)
 #
-# Year-separator requirement (the `(?:\s+\(?|\(|,\s*\(?)` group before `year`):
-# the year MUST be preceded by at least one of whitespace, open-paren, or
-# comma. This prevents the false-positive misparse where an inline shorthand
-# like `Eyting-2024` (year hyphenated directly to surname, no separator)
-# coalesces with an adjacent comma'd surname into a fictitious co-author
-# citation. Concretely, `Cameron-Miller, Eyting-2024` previously produced
-# stem `cameron-miller_eyting-_2024` because:
-#   - `[A-Z][A-Za-z\-']+` greedy-matched `second = "Eyting-"` (trailing hyphen),
-#   - the old year regex `\s*\(?` allowed zero separator before `2024`.
-# Real citations always have whitespace, paren, or comma before the year, so
-# requiring a separator catches the shorthand without breaking valid forms.
+# Two coupled constraints prevent the original "shorthand-coalescing" misparse:
+#
+# 1. **Surname char class ends in a letter.** `[A-Z][A-Za-z\-']*[A-Za-z]`
+#    instead of the laxer `[A-Z][A-Za-z\-']+`. Real surnames never end in
+#    `-` or `'`. Without the trailing-letter anchor, greedy matching captured
+#    `second = "Eyting-"` (trailing hyphen) from inputs like `Eyting-2024`
+#    or quoted hook output like `Eyting- (2024)`. Anchoring on a letter at
+#    the end forces `second = "Eyting"` and leaves the stray punctuation
+#    for the year-separator check to reject.
+#
+# 2. **Year requires explicit separator before it.** `(?:\s+\(?|\(|,\s*\(?)`
+#    before `year` — at least one of whitespace, open-paren, or comma. Real
+#    citations always have one of these (`Smith (2020)`, `Smith 2020`,
+#    `Smith, 2020`); the inline shorthand `Smith-2020` does not.
+#
+# Together, these block the original false-positive case
+# (`Cameron-Miller, Eyting-2024` → stem `cameron-miller_eyting-_2024`)
+# AND the residual case where my own prose quoted the hook's parsed string
+# `Cameron-Miller and Eyting- (2024)` (which after the year-separator fix
+# alone still parsed because ` (` is a valid separator). Constraint 1
+# prevents `Eyting-` from being captured at all.
 AUTHOR_YEAR = re.compile(
     r"""
     \b
-    (?P<first>[A-Z][A-Za-z\-']+)
-    (?:\s*(?:,|and|&)\s*(?P<second>[A-Z][A-Za-z\-']+))?
-    (?:\s*(?:,\s*and|&)\s*(?P<third>[A-Z][A-Za-z\-']+))?
+    (?P<first>[A-Z][A-Za-z\-']*[A-Za-z])
+    (?:\s*(?:,|and|&)\s*(?P<second>[A-Z][A-Za-z\-']*[A-Za-z]))?
+    (?:\s*(?:,\s*and|&)\s*(?P<third>[A-Z][A-Za-z\-']*[A-Za-z]))?
     (?:\s+et\s+al\.?)?
     (?:\s+\(?|\(|,\s*\(?)(?P<year>(?:19|20)\d{2})[a-z]?\)?
     """,
