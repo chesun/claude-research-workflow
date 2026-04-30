@@ -79,6 +79,18 @@ KNOWN_SURNAMES = _load_surname_allowlist()
 #   Danz, Vesterlund, and Wilson (2024)
 #   Karni (2009)
 #   Brown et al. (2025)
+#
+# Year-separator requirement (the `(?:\s+\(?|\(|,\s*\(?)` group before `year`):
+# the year MUST be preceded by at least one of whitespace, open-paren, or
+# comma. This prevents the false-positive misparse where an inline shorthand
+# like `Eyting-2024` (year hyphenated directly to surname, no separator)
+# coalesces with an adjacent comma'd surname into a fictitious co-author
+# citation. Concretely, `Cameron-Miller, Eyting-2024` previously produced
+# stem `cameron-miller_eyting-_2024` because:
+#   - `[A-Z][A-Za-z\-']+` greedy-matched `second = "Eyting-"` (trailing hyphen),
+#   - the old year regex `\s*\(?` allowed zero separator before `2024`.
+# Real citations always have whitespace, paren, or comma before the year, so
+# requiring a separator catches the shorthand without breaking valid forms.
 AUTHOR_YEAR = re.compile(
     r"""
     \b
@@ -86,7 +98,7 @@ AUTHOR_YEAR = re.compile(
     (?:\s*(?:,|and|&)\s*(?P<second>[A-Z][A-Za-z\-']+))?
     (?:\s*(?:,\s*and|&)\s*(?P<third>[A-Z][A-Za-z\-']+))?
     (?:\s+et\s+al\.?)?
-    \s*\(?(?P<year>(?:19|20)\d{2})[a-z]?\)?
+    (?:\s+\(?|\(|,\s*\(?)(?P<year>(?:19|20)\d{2})[a-z]?\)?
     """,
     re.VERBOSE,
 )
@@ -223,6 +235,14 @@ def extract_citations(text: str) -> list[tuple[str, str]]:
         second = match.group("second") or ""
         third = match.group("third") or ""
         year = match.group("year") or ""
+
+        # Defense in depth: strip trailing hyphens/apostrophes from surname
+        # captures. Real surnames don't end in `-` or `'`. If one slips through
+        # (e.g., from a malformed compound the year-separator filter didn't
+        # catch), strip rather than propagate to the stem.
+        first = first.rstrip("-'")
+        second = second.rstrip("-'")
+        third = third.rstrip("-'")
 
         # Filter 1: hard-coded blocklist — independent of allowlist
         if first.lower() in NEVER_SURNAMES:
