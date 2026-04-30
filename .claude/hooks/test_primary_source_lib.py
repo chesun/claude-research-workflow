@@ -276,6 +276,63 @@ try:
 finally:
     lib.KNOWN_SURNAMES = set()  # back to empty for residual test below
 
+print("\n=== Year-separator requirement (no shorthand-coalescing) ===")
+# The original misparse: `Cameron-Miller, Eyting-2024` was coalescing into
+# stem `cameron-miller_eyting-_2024` because (a) the surname char class
+# allowed `Eyting-` (trailing hyphen) and (b) the year regex allowed zero
+# separator. Fix requires whitespace/paren/comma before the year.
+assert_no_match(
+    "PDFs (Cameron-Miller, Eyting-2024) need to move.",
+    "shorthand 'Eyting-2024' must not coalesce with adjacent surname",
+)
+assert_no_match(
+    "Smith-2020 was a milestone.",
+    "shorthand 'Smith-2020' alone (no separator) must not match",
+)
+assert_no_match(
+    "References include Smith-2020.",
+    "shorthand 'Smith-2020' mid-sentence must not match",
+)
+
+print("\n=== Adjacent citations connected by 'and' (must extract both) ===")
+# Variations of the original misparse case: two distinct citations connected
+# by list-conjunction `and` or comma. Both must extract independently.
+assert_matches(
+    "We cite Eyting (2024) and Cameron-Miller (2015) together.",
+    {"eyting_2024", "cameron-miller_2015"},
+    "two citations joined by ' and '",
+)
+assert_matches(
+    "Including Cameron-Miller (2015), Eyting (2024) as the relevant pair.",
+    {"cameron-miller_2015", "eyting_2024"},
+    "two citations comma-separated (mid-sentence)",
+)
+assert_matches(
+    "Following Smith (2020), Jones (2021), and Brown (2022)...",
+    {"smith_2020", "jones_2021", "brown_2022"},
+    "three independent citations in a list",
+)
+
+print("\n=== Real two-author citation still works (regression guard) ===")
+# Defensive: ensure my year-separator fix didn't break the legitimate
+# two-coauthor form. `Smith and Jones (2020)` must still match as one
+# citation, not two.
+assert_matches(
+    "Following Smith and Jones (2020), we estimate the effect.",
+    {"smith_jones_2020"},
+    "two-author 'X and Y (year)' form preserved",
+)
+assert_matches(
+    "See Chetty & Friedman 2014 for the canonical version.",
+    {"chetty_friedman_2014"},
+    "two-author '&' + bare year preserved",
+)
+assert_matches(
+    "We follow Smith, Jones, and Brown (2022) for the design.",
+    {"smith_jones_brown_2022"},
+    "three-author comma+and form preserved (mid-sentence)",
+)
+
 print("\n=== Residual: real surname at sentence start with empty allowlist ===")
 # Documented as unavoidable noise; user uses escape hatch.
 result = stems("Smith 2020 published a related result.")
