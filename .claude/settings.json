@@ -111,7 +111,6 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Bash|Task",
         "hooks": [
           {
             "type": "command",

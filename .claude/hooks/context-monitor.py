@@ -39,6 +39,16 @@ THRESHOLD_CRITICAL = 90
 # Throttle interval in seconds (skip checks if below threshold and recent check)
 THROTTLE_INTERVAL = 60
 
+# Floor at which the PreCompact fallback snapshot starts refreshing on every
+# tool call. The Claude Code PreCompact hook silently bypasses when MCP servers
+# are loaded (anthropics/claude-code#14111), so this fallback is the only
+# guarantee that pre-compact-state.json exists before auto-compact fires.
+# 60% gives ~600 tool calls of buffer at MAX_TOOL_CALLS=1500.
+SNAPSHOT_FLOOR = 60
+# Throttle snapshot refreshes to avoid filesystem churn — refresh at most
+# once every N seconds while past the floor.
+SNAPSHOT_REFRESH_INTERVAL = 30
+
 
 def get_session_dir() -> Path:
     """Get the session directory for storing cache files."""
@@ -90,13 +100,15 @@ def estimate_context_percentage() -> float:
     save_cache(cache)
 
     # Heuristic: tuned for Claude Opus 4.7 with the 1M-context variant.
-    # Empirically, va_consolidated sessions reached ~500 tool calls before
-    # auto-compact fired. With MAX_TOOL_CALLS=500: 80% warning at call 400,
-    # 90% warning + state snapshot at call 450 — close enough to real
-    # auto-compact to be informative without crying wolf.
+    # Counter increments on EVERY PostToolUse (matcher is unset in
+    # settings.json), so this counts Read/Edit/Write/Grep/Glob/Agent calls
+    # as well as Bash/Task. Prior tuning of 500 was Bash|Task-only and
+    # undercounted by a factor of ~3 in mixed-tool sessions, causing the
+    # 80%/90% warnings (and the PreCompact fallback snapshot) to never fire
+    # before auto-compact. 1500 is the recalibrated all-tools default.
     # Override via CONTEXT_MONITOR_MAX_TOOL_CALLS env var if the heuristic
     # drifts on a given project.
-    MAX_TOOL_CALLS = int(os.environ.get("CONTEXT_MONITOR_MAX_TOOL_CALLS", "500"))
+    MAX_TOOL_CALLS = int(os.environ.get("CONTEXT_MONITOR_MAX_TOOL_CALLS", "1500"))
 
     percentage = min((tool_calls / MAX_TOOL_CALLS) * 100, 100)
     return percentage
@@ -181,14 +193,12 @@ No context is lost — auto-compact preserves important information.
 def capture_precompact_snapshot() -> None:
     """Write the same pre-compact-state.json that pre-compact.py would write.
 
-    Used as a fallback at the 90% threshold so state is captured even when
-    Claude Code's PreCompact hook silently bypasses on auto-compact.
-    Idempotent: skips if a snapshot already exists for this session.
+    Used as a fallback so state is captured even when Claude Code's PreCompact
+    hook silently bypasses on auto-compact (anthropics/claude-code#14111).
+    Always overwrites — the latest snapshot is the one closest to compaction,
+    and PreCompact (if it ever fires) runs after the last PostToolUse, so
+    its write would still win.
     """
-    state_file = get_session_dir() / "pre-compact-state.json"
-    if state_file.exists():
-        return
-
     project_dir = os.environ.get("CLAUDE_PROJECT_DIR", "")
     if not project_dir:
         return
@@ -230,6 +240,18 @@ def run_context_monitor() -> int:
     # Estimate current context usage
     percentage = estimate_context_percentage()
 
+    # Refresh the PreCompact fallback snapshot continuously past SNAPSHOT_FLOOR.
+    # This runs BEFORE the throttle check so a fresh snapshot is guaranteed
+    # even when warnings are throttled. Self-throttled to SNAPSHOT_REFRESH_INTERVAL.
+    if percentage >= SNAPSHOT_FLOOR:
+        cache = read_cache()
+        last_snapshot = cache.get("last_snapshot_time", 0)
+        now = time.time()
+        if (now - last_snapshot) >= SNAPSHOT_REFRESH_INTERVAL:
+            capture_precompact_snapshot()
+            cache["last_snapshot_time"] = now
+            save_cache(cache)
+
     # Check throttling
     if is_throttled(percentage):
         return 0
@@ -243,15 +265,11 @@ def run_context_monitor() -> int:
             mark_threshold_shown("learn", threshold)
             return 0  # Only show one message at a time
 
-    # Check 90% threshold (critical)
+    # Check 90% threshold (critical). Snapshot already refreshed above via
+    # SNAPSHOT_FLOOR logic — no need to call capture_precompact_snapshot here.
     if percentage >= THRESHOLD_CRITICAL and not shown["warn_90"]:
         print(format_warn_90(percentage), file=sys.stderr)
         mark_threshold_shown("warn_90", True)
-        # Fallback: capture pre-compact state snapshot. Claude Code's PreCompact
-        # hook can silently bypass on auto-compact when MCP servers are present
-        # (anthropics/claude-code#14111). Writing here ensures state is captured
-        # before auto-compact regardless of whether PreCompact fires.
-        capture_precompact_snapshot()
         return 0  # Non-blocking warning (exit 2 would block Claude)
 
     # Check 80% threshold (info)
