@@ -45,17 +45,19 @@ The `README.md` in `master_supporting_docs/literature/reading_notes/` specifies 
 
 Use this section to head off future conflation errors. When downstream docs (ADRs, analysis memos, hypotheses, session logs) have previously misframed the paper, record the misreading and the corrected reading side-by-side.
 
-## Citation extraction — four filters
+## Citation extraction — five filters
 
-The hook extracts citations via an Author-Year regex. Four filters apply in order:
+The hook extracts citations via an Author-Year regex. Five filters apply in order:
 
 1. **Built-in blocklist (`NEVER_SURNAMES`).** Hard-coded set of words that are *never* surnames in academic prose: function words ("the", "in", "from"), seasons ("spring", "summer"), months, days of the week, document-structure words ("table", "figure", "section", "panel", "cohort"), pronouns, role-placeholder words used in citation-style examples ("Author", "Authors", "Coauthor", "Editor", "Name", "Surname"), and book/series-title nouns ("Handbook", "Methodology", "Encyclopedia", "Annual", "Bulletin", "Journal", "Review", "Volume", "Issue"). These drop regardless of allowlist state. Eliminates the common false-positive classes ("Spring 2015", "Table 2 (2024)", "Cohort 2018", "From 1999 onward...", "Author and Author (year)", "Handbook of Experimental Methodology 2025") without any project configuration.
 
-2. **Sentence-start filter.** A capitalized first word right after a sentence terminator (`.?!:;` or paragraph break) is dropped *unless* it appears in the project allowlist. A real citation at sentence start (`Chetty (2014) shows...`) still extracts when "chetty" is in the allowlist; sentence-start function words ("Only", "Available", "These") that snuck past the blocklist get dropped here.
+2. **All-caps token filter.** A captured surname written entirely in uppercase (length ≥ 3) is rejected. Real surnames in academic prose are written `Smith`, never `SMITH`. This catches two common false-positive classes that no fixed blocklist can keep up with: status markers (`COMPLETED (2026)`, `DRAFT (2025)`, `DONE (2024)`, `BLOCKED (2026)`, `ACTIVE (2026)`, `TODO (2026)`, `FIXME (2026)`, `WIP (2026)`, `PENDING (2025)`) and acronym corporate authors (`BLS (2024)`, `OECD (2023)`, `USDA (2025)`, `IRS (2024)`, `CDC (2023)`). Status markers are not citations; corporate-author citations are *data* attributions, not framing claims about research papers, so they don't require reading notes. Mixed-case surnames (`McGregor`, `DeAngelo`, `O'Brien`) still match — the filter only fires when `token.isupper()` is true.
 
-3. **Hyphenated-name decomposition.** A 3+ part hyphenated capitalized token (e.g., `Chetty-Friedman-Rockoff`) is split into separate surnames and the stem is built with underscores (`chetty_friedman_rockoff_2014`). This matches reading-notes filename conventions. Two-part hyphenated tokens (`Goldsmith-Pinkham`) are preserved as single hyphenated surnames since real hyphen-containing surnames are common.
+3. **Sentence-start filter.** A capitalized first word right after a sentence terminator (`.?!:;` or paragraph break) is dropped *unless* it appears in the project allowlist. A real citation at sentence start (`Chetty (2014) shows...`) still extracts when "chetty" is in the allowlist; sentence-start function words ("Only", "Available", "These") that snuck past the blocklist get dropped here.
 
-4. **Project allowlist (`.claude/state/primary_source_surnames.txt`).** Optional, one lowercase surname per line. When the file is empty or missing, all matches that pass filters 1–3 are accepted. Populated allowlists tighten the filter further — only Author-Year matches whose leading surname is in the allowlist extract. Recommended: populate as you accumulate cited authors. Applied-micro and behavioral projects will have different allowlists.
+4. **Hyphenated-name decomposition.** A 3+ part hyphenated capitalized token (e.g., `Chetty-Friedman-Rockoff`) is split into separate surnames and the stem is built with underscores (`chetty_friedman_rockoff_2014`). This matches reading-notes filename conventions. Two-part hyphenated tokens (`Goldsmith-Pinkham`) are preserved as single hyphenated surnames since real hyphen-containing surnames are common.
+
+5. **Project allowlist (`.claude/state/primary_source_surnames.txt`).** Optional, one lowercase surname per line. When the file is empty or missing, all matches that pass filters 1–4 are accepted. Populated allowlists tighten the filter further — only Author-Year matches whose leading surname is in the allowlist extract. Recommended: populate as you accumulate cited authors. Applied-micro and behavioral projects will have different allowlists.
 
 ## Escape hatch
 

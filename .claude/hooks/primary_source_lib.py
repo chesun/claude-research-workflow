@@ -246,7 +246,7 @@ def _mask_code_spans(text: str) -> str:
 def extract_citations(text: str) -> list[tuple[str, str]]:
     """Return list of (stem, display) tuples for citations in text.
 
-    Applies five filters in order:
+    Applies six filters in order:
 
     0. **Code-span mask** — content inside Markdown inline-code (`...`) or
        code fences (``````...``````) is replaced with same-length whitespace
@@ -256,6 +256,15 @@ def extract_citations(text: str) -> list[tuple[str, str]]:
     1. **NEVER_SURNAMES blocklist** — words that are never surnames
        (function words, seasons, months, table/figure/etc.). Drops the
        match regardless of allowlist state.
+    1a. **All-caps token filter** — captured surnames written in all
+       uppercase (length >= 3) are rejected. Real surnames in academic
+       prose are written `Smith`, never `SMITH`. This catches status
+       markers (`COMPLETED (2026)`, `DRAFT (2025)`, `DONE (2024)`,
+       `BLOCKED (2026)`, `ACTIVE (2026)`, `TODO (2026)`, `FIXME (2026)`,
+       `WIP (2026)`, `PENDING (2025)`) and acronym corporate authors
+       (`BLS (2024)`, `OECD (2023)`, `USDA (2025)`). Corporate-author
+       data citations are not framing claims about research papers, so
+       they don't require reading notes.
     2. **Hyphenated-name decomposition** — if the captured `first` group
        is a 3+ part hyphenated capitalized token (e.g.,
        "Chetty-Friedman-Rockoff"), split it and treat each part as a
@@ -292,6 +301,15 @@ def extract_citations(text: str) -> list[tuple[str, str]]:
 
         # Filter 1: hard-coded blocklist — independent of allowlist
         if first.lower() in NEVER_SURNAMES:
+            continue
+
+        # Filter 1a: all-caps tokens (length >= 3) are status markers
+        # (COMPLETED, DRAFT, DONE, BLOCKED, PENDING, ACTIVE, TODO, FIXME, WIP)
+        # or acronym corporate authors (BLS, OECD, USDA). Real surnames in
+        # academic prose are never written ALL-CAPS; corporate-author
+        # citations are data attributions, not framing claims about research
+        # papers, so they don't require reading notes.
+        if len(first) >= 3 and first.isupper():
             continue
 
         # Filter 2: hyphenated-name decomposition (handles method compounds)
