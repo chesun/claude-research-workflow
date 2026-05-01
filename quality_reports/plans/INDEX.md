@@ -6,6 +6,11 @@ When creating a new plan, consult this index first. If an `Active` entry covers 
 
 ---
 
+## 2026-05
+
+- [2026-05-01_v0.2-tutorial-scope.md](2026-05-01_v0.2-tutorial-scope.md) — v0.2.x tutorial track: function-by-function demos, behavioral overlay priority, orchestrator de-emphasized
+- [2026-05-01_dropbox-symlink-setup-explainer.md](2026-05-01_dropbox-symlink-setup-explainer.md) — explainer for Dropbox-symlink approach to migrating gitignored bulk content (papers, raw data) across machines
+
 ## 2026-04
 
 - [2026-04-21_universal-gitignore.md](2026-04-21_universal-gitignore.md) — universal `.gitignore` (likely Completed; backfill status)
