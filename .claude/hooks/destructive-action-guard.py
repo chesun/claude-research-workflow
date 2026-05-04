@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shlex
 import sys
 from pathlib import Path
@@ -214,6 +215,160 @@ def _is_under_shared(resolved_path: str) -> str | None:
                     return parent + os.sep + seg
     return None
 
+# --- Tier 3: settings.json write gate -------------------------------------
+#
+# Closes the gap left by .claude/hooks/protect-files.sh, which is registered
+# only on the Edit|Write matcher. Bash commands that write to settings.json
+# (`>` redirection, `tee`, `sed -i`, `mv`/`cp`, scripted writes) bypass that
+# hook entirely. Tier 3 detects those write patterns when the target path
+# matches a Claude Code settings file and blocks them under the same
+# BYPASS_SHARED_GUARD=1 mechanism.
+#
+# Detection is heuristic — Bash is too expressive to classify perfectly.
+# Errs on the side of blocking; legitimate writes use the bypass.
+
+_SETTINGS_PATH_RE = re.compile(
+    r'\.claude/+settings(?:\.local)?\.json\b'
+)
+
+# A path-like token containing the settings.json regex. Allows for ~, $VAR,
+# {VAR}, ./, ../, plain alphanumerics, dots, hyphens, underscores.
+_SETTINGS_PATH_TOKEN_RE = re.compile(
+    r'[~/$\w.{}\-]*\.claude/+settings(?:\.local)?\.json'
+)
+
+def _is_claude_settings_token(token: str) -> bool:
+    """True if a single token references a Claude Code settings file path."""
+    return bool(_SETTINGS_PATH_RE.search(token))
+
+
+_WRITE_CALL_RE = re.compile(
+    r'(?:'
+    r'\.write_text\b'           # Path.write_text(...)
+    r'|json\.dump\b'            # json.dump(...)
+    r'|writeFileSync\b'         # node fs.writeFileSync
+    r'|fs\.write\b'             # node fs.write
+    r'|writelines\b'            # python writelines
+    r'|\.write\(\s*[\'"f]'      # .write("...") or .write(f"...")
+    r'|open\s*\([^)]*[\'"]w[\'"+]?'   # open(..., 'w') or 'w+', 'wb'
+    r'|File\.write\b'           # ruby File.write
+    r')'
+)
+
+
+def _check_settings_write(command: str) -> str | None:
+    """
+    Return a description string if `command` writes to a Claude Code
+    settings*.json file, else None.
+
+    Token-based detection: shlex preserves quoted argument bodies (commit
+    messages, heredocs interpolated via $(...), single/double quotes) as
+    opaque single tokens. So `git commit -m "...echo > .claude/settings.json..."`
+    has the message body as ONE token; the `>` inside is part of the string,
+    not a redirect operator. Token-walk sees `git`, `commit`, `-m`, and the
+    full message-as-one-token — never matches the redirect/tee/sed patterns.
+
+    Detects 5 write shapes:
+      1. Stdout redirection (`>`, `>>`, `&>`, `1>`, `2>`) → settings token.
+      2. `tee` (with optional flags) → settings token.
+      3. `sed -i` (in-place) with settings path among args.
+      4. `mv` / `cp` with settings path as destination (last positional).
+      5. Scripted write: python/node/ruby/perl token containing both a
+         settings.json reference AND a write call signature.
+    """
+    # Quick skip: no settings.json reference anywhere.
+    if not _SETTINGS_PATH_RE.search(command):
+        return None
+
+    # Tokenize. If the command isn't shlex-parseable (rare), bail out
+    # rather than risk false-positives. The PreToolUse fail-open principle
+    # applies — we'd rather miss a write than block a benign command.
+    try:
+        tokens = shlex.split(command, posix=True, comments=True)
+    except ValueError:
+        return None
+
+    if not tokens:
+        return None
+
+    # Tier-3 control operators that demarcate command segments. Mid-segment
+    # the redirect/tee/sed/mv/cp logic applies; across segments, each
+    # segment is treated independently (so `git commit -m "..."` followed
+    # by `&& echo '{}' > settings` correctly catches the second segment).
+    segment_break = {"|", "||", "&&", ";", "&"}
+
+    # Walk tokens looking for the 5 write shapes.
+    for i, t in enumerate(tokens):
+
+        # Pattern 1: redirect operators followed by a settings token.
+        # Standard tokenized forms: `>`, `>>`, `&>`, `1>`, `2>`, `>|`.
+        if t in (">", ">>", "&>", "1>", "2>", ">|", "&>>"):
+            if i + 1 < len(tokens) and _is_claude_settings_token(tokens[i + 1]):
+                return f"stdout redirection ({t}) to {tokens[i + 1]}"
+            continue
+
+        # Pattern 1b: glued-form redirect like `>.claude/settings.json` (no space).
+        # shlex keeps the leading `>` glued to the path token in this case.
+        m = re.match(r'^(>>?|&>|[12]>)\s*(\S.*\.claude/+settings(?:\.local)?\.json)$', t)
+        if m:
+            return f"stdout redirection ({m.group(1)}) to {m.group(2)}"
+
+        # Pattern 2: tee (possibly with flags) followed by settings token.
+        if t == "tee":
+            j = i + 1
+            while j < len(tokens) and tokens[j].startswith("-") and tokens[j] not in segment_break:
+                j += 1
+            if j < len(tokens) and _is_claude_settings_token(tokens[j]):
+                return f"tee writing to {tokens[j]}"
+            continue
+
+        # Pattern 3: sed -i (or -i.bak, -iX) with settings path in same segment.
+        if t == "sed":
+            has_inplace = False
+            for s in tokens[i + 1:]:
+                if s in segment_break:
+                    break
+                # -i, -i.bak, -i'.bak', -ie, etc. (BSD vs GNU sed both use -i prefix)
+                if s.startswith("-") and "i" in s.lstrip("-").split(".")[0]:
+                    # -i, -in, -E, -i.bak — only flag the inplace one
+                    flag_chars = s.lstrip("-").split(".")[0]
+                    if "i" in flag_chars:
+                        has_inplace = True
+                if has_inplace and _is_claude_settings_token(s):
+                    return f"sed -i in-place edit of {s}"
+            continue
+
+        # Pattern 4: mv / cp with settings path as last positional in segment.
+        if t in ("mv", "cp"):
+            # Collect positional args (skip flags) until segment break.
+            positional: list[str] = []
+            for s in tokens[i + 1:]:
+                if s in segment_break:
+                    break
+                if not s.startswith("-"):
+                    positional.append(s)
+            if positional and _is_claude_settings_token(positional[-1]):
+                return f"{t} overwrite of {positional[-1]}"
+            continue
+
+        # Pattern 5: scripted-write — a single token (typically the script
+        # body of `python -c '...'` or `node -e '...'`) that contains BOTH
+        # a settings path AND a write call.
+        if _is_claude_settings_token(t) and _WRITE_CALL_RE.search(t):
+            # Confirm we're inside a script context (preceding interpreter token).
+            interp = None
+            for back in range(i - 1, max(-1, i - 6), -1):
+                if back < 0:
+                    break
+                if re.match(r'^(python\d*|node|ruby|perl)$', tokens[back]):
+                    interp = tokens[back]
+                    break
+            if interp:
+                return f"scripted file write ({interp}) referencing settings.json"
+
+    return None
+
+
 # --- Command parsing -------------------------------------------------------
 
 def _strip_env_assignments(tokens: list[str]) -> tuple[list[str], dict[str, str]]:
@@ -302,6 +457,20 @@ def check_command(command: str, cwd: str) -> tuple[str | None, dict]:
     for label, predicate, reason in ALWAYS_BLOCKED:
         if predicate(tokens):
             return _format_block(label, reason, command, effective_cwd, []), debug
+
+    # Tier 3: settings.json write gate.
+    # Run on the post-bypass-strip, post-cd-chain command so that env-var
+    # bypass and `cd` prefixes don't change detection. We search the original
+    # command string (sans env-var prefix) — substring matching is more
+    # reliable than reconstructing tokens.
+    settings_reason = _check_settings_write(command)
+    if settings_reason:
+        return _format_block(
+            "write to .claude/settings*.json",
+            settings_reason + " — closes the gap that protect-files.sh "
+            "(Edit|Write matcher only) cannot cover for Bash file writes",
+            command, effective_cwd, [],
+        ), debug
 
     # Tier 2: path-conditional — extract paths.
     extractors = [
