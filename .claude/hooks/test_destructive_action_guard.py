@@ -343,6 +343,221 @@ assert_allow(f"mv {_FAKE_DROPBOX}/repo/foo {_FAKE_DROPBOX}/repo/bar",
 assert_allow("rm -i foo.txt", str(_FAKE_DROPBOX / "repo"), "rm -i allows (no recursive flag)")
 
 
+# --- Tier 3: settings.json write gate -------------------------------------
+
+print("\n=== Tier 3: settings.json write gate (closes protect-files.sh gap) ===")
+
+# Stdout redirection variants
+assert_block(
+    "echo '{}' > .claude/settings.json",
+    "/tmp/foo",
+    "echo > .claude/settings.json blocks",
+    expect_substr="settings",
+)
+assert_block(
+    "echo '{}' >> .claude/settings.json",
+    "/tmp/foo",
+    "echo >> .claude/settings.json blocks (append)",
+)
+assert_block(
+    "cat <<EOF > .claude/settings.json\n{}\nEOF",
+    "/tmp/foo",
+    "heredoc > .claude/settings.json blocks",
+)
+assert_block(
+    "echo '{}' > $CLAUDE_PROJECT_DIR/.claude/settings.json",
+    "/tmp/foo",
+    "redirect with $CLAUDE_PROJECT_DIR prefix blocks",
+)
+assert_block(
+    "echo '{}' > ~/repo/.claude/settings.json",
+    "/tmp/foo",
+    "redirect with ~ prefix blocks",
+)
+assert_block(
+    "echo '{}' > .claude/settings.local.json",
+    "/tmp/foo",
+    "settings.local.json variant also blocks",
+)
+
+# tee
+assert_block(
+    "echo '{}' | tee .claude/settings.json",
+    "/tmp/foo",
+    "echo | tee settings.json blocks",
+)
+assert_block(
+    "echo '{}' | tee -a .claude/settings.json",
+    "/tmp/foo",
+    "echo | tee -a settings.json blocks",
+)
+
+# sed -i
+assert_block(
+    'sed -i "s/foo/bar/" .claude/settings.json',
+    "/tmp/foo",
+    "sed -i settings.json blocks",
+)
+assert_block(
+    'sed -i.bak "s/foo/bar/" .claude/settings.json',
+    "/tmp/foo",
+    "sed -i.bak settings.json blocks",
+)
+
+# mv / cp
+assert_block(
+    "mv tmp.json .claude/settings.json",
+    "/tmp/foo",
+    "mv tmp.json settings.json blocks (overwrite)",
+)
+assert_block(
+    "cp template.json .claude/settings.json",
+    "/tmp/foo",
+    "cp template.json settings.json blocks",
+)
+
+# Scripted writes
+assert_block(
+    "python3 -c \"from pathlib import Path; Path('.claude/settings.json').write_text('{}')\"",
+    "/tmp/foo",
+    "python write_text(.claude/settings.json) blocks",
+)
+assert_block(
+    "python3 -c \"import json; json.dump({}, open('.claude/settings.json', 'w'))\"",
+    "/tmp/foo",
+    "python json.dump to settings.json blocks",
+)
+assert_block(
+    "python3 -c \"open('.claude/settings.json', 'w').write('{}')\"",
+    "/tmp/foo",
+    "python open('w').write to settings.json blocks",
+)
+assert_block(
+    "node -e \"require('fs').writeFileSync('.claude/settings.json', '{}')\"",
+    "/tmp/foo",
+    "node writeFileSync to settings.json blocks",
+)
+
+# Bypass works for tier 3 too
+assert_allow(
+    "BYPASS_SHARED_GUARD=1 echo '{}' > .claude/settings.json",
+    "/tmp/foo",
+    "BYPASS_SHARED_GUARD=1 allows settings.json redirect",
+)
+assert_allow(
+    "BYPASS_SHARED_GUARD=1 python3 -c \"Path('.claude/settings.json').write_text('{}')\"",
+    "/tmp/foo",
+    "BYPASS allows scripted write to settings.json",
+)
+
+# Read patterns must NOT block (regression guards)
+assert_allow(
+    "cat .claude/settings.json",
+    "/tmp/foo",
+    "cat settings.json allows (read)",
+)
+assert_allow(
+    "head .claude/settings.json",
+    "/tmp/foo",
+    "head settings.json allows",
+)
+assert_allow(
+    "jq '.permissions' .claude/settings.json",
+    "/tmp/foo",
+    "jq settings.json allows (read)",
+)
+assert_allow(
+    "python3 -c \"import json; print(json.load(open('.claude/settings.json')))\"",
+    "/tmp/foo",
+    "python json.load (read) of settings.json allows",
+)
+assert_allow(
+    "grep -i permission .claude/settings.json",
+    "/tmp/foo",
+    "grep settings.json allows",
+)
+assert_allow(
+    "diff .claude/settings.json /tmp/expected.json",
+    "/tmp/foo",
+    "diff settings.json allows",
+)
+
+# Edge: tee writing to a different file while reading settings.json
+assert_allow(
+    "cat .claude/settings.json | tee /tmp/backup.json",
+    "/tmp/foo",
+    "tee NOT writing to settings.json (settings.json on input side) allows",
+)
+
+# Edge: redirect to a different file while command mentions settings.json
+assert_allow(
+    "echo '.claude/settings.json contents' > /tmp/note.txt",
+    "/tmp/foo",
+    "redirect target != settings.json allows (string just contains the name)",
+)
+
+# Edge: mv FROM settings.json (settings.json as source) is suspicious-but-allowed
+# (we only gate destination-overwrite, not extraction)
+assert_allow(
+    "mv .claude/settings.json /tmp/backup.json",
+    "/tmp/foo",
+    "mv settings.json -> backup (settings.json as SOURCE) allows",
+)
+
+# Edge: python script that mentions settings.json but only reads it
+assert_allow(
+    "python3 -c \"d = open('.claude/settings.json').read(); print(len(d))\"",
+    "/tmp/foo",
+    "python reading settings.json (no write call) allows",
+)
+
+# Edge: VS Code's .vscode/settings.json — different path, allow writes
+assert_allow(
+    "echo '{}' > .vscode/settings.json",
+    "/tmp/foo",
+    ".vscode/settings.json (different tool) allows write",
+)
+
+# Edge: false-positive guard — `git commit -m "..."` with write pattern
+# substrings IN the message body must NOT block. (Regression test for the
+# initial Tier 3 commit, which over-fired on its own commit message.)
+assert_allow(
+    'git commit -m "feat: blocks echo > .claude/settings.json and tee > .claude/settings.local.json"',
+    "/tmp/foo",
+    "git commit -m with literal '> .claude/settings.json' in MESSAGE allows (quoted)",
+)
+assert_allow(
+    'git commit -m "examples: sed -i .claude/settings.json, mv tmp.json .claude/settings.json"',
+    "/tmp/foo",
+    "git commit -m with sed/mv-style examples in message allows",
+)
+
+# Edge: but a real write AFTER the commit (compound command) MUST still block
+assert_block(
+    'git commit -m "ok" && echo "{}" > .claude/settings.json',
+    "/tmp/foo",
+    "compound: commit + actual write-segment to settings.json blocks",
+)
+
+# Edge: heredoc commit message with write pattern strings inside — allowed
+heredoc_commit = '''git commit -m "$(cat <<'EOF'
+feat: docs explain `echo > .claude/settings.json` and `tee .claude/settings.json`
+EOF
+)"'''
+assert_allow(
+    heredoc_commit,
+    "/tmp/foo",
+    "heredoc-form commit message with write-pattern strings allows",
+)
+
+# Edge: echo with literal '> path' inside QUOTES (not a redirect operator)
+assert_allow(
+    "echo '> .claude/settings.json (this is just text)'",
+    "/tmp/foo",
+    "echo of quoted string containing '> path' allows (not a real redirect)",
+)
+
+
 # --- Summary ---------------------------------------------------------------
 
 print(f"\n=== Summary: {PASS} passed, {FAIL} failed ===")

@@ -47,6 +47,39 @@ These are blocked unconditionally; bypass requires explicit `BYPASS_SHARED_GUARD
 
 `rm` without a recursive flag (single-file deletion) is not gated — friction would outweigh the protection.
 
+## Settings.json write gate (Tier 3)
+
+The companion hook `protect-files.sh` is registered only on the `Edit|Write` matcher and cannot observe Bash invocations. Without Tier 3, any of the following would silently bypass it:
+
+```bash
+echo '{...}' > .claude/settings.json
+echo '{...}' >> .claude/settings.json
+echo '{...}' | tee .claude/settings.json
+sed -i 's/foo/bar/' .claude/settings.json
+mv tmp.json .claude/settings.json
+cp template.json .claude/settings.json
+python3 -c "Path('.claude/settings.json').write_text('{}')"
+node -e "require('fs').writeFileSync('.claude/settings.json', '{}')"
+```
+
+Tier 3 detects all five write shapes (stdout redirection, `tee`, `sed -i`, `mv`/`cp` overwrite, scripted write) when the target path matches `.claude/settings.json` or `.claude/settings.local.json`. Reads (`cat`, `head`, `jq`, `grep`, `diff`, `python json.load`) are not blocked.
+
+| Command shape | Detection method |
+|---|---|
+| `> path` / `>> path` | regex match on redirect operator followed by settings path |
+| `tee path` / `tee -a path` | regex match on `tee` invocation with settings path as argument |
+| `sed -i ... path` | per-pipeline-segment match on `sed`+`-i` flag with settings path in segment |
+| `mv X path` / `cp X path` | last positional argument of `mv`/`cp` matches settings path |
+| Scripted write | `python`/`node`/`ruby`/`perl` + settings path + write call (`write_text`, `json.dump`, `open(..., 'w')`, `writeFileSync`, `.write(...)`, etc.) |
+
+Tier 3 is heuristic — Bash is too expressive to classify perfectly. Documented limitations:
+
+- **Indirection.** A Python script that imports a module containing the settings path won't be caught by substring detection. Same for environment-variable indirection where the path is constructed at runtime.
+- **Compound commands.** When a multi-command chain (`A && B`) contains a settings write in any segment, the entire chain is blocked. The hook can't surgically allow parts of a compound command. If you need to preserve the rest, run the safe parts separately.
+- **`.vscode/settings.json` and similar.** Detection anchors on `.claude/settings`, so other tools' settings.json files are not gated.
+
+**Bypass uses the same `BYPASS_SHARED_GUARD=1` env-var prefix.** Legitimate use cases (writing a new hook, modifying permissions, applying a vetted patch) are expected to use it. The workflow's own sync scripts (when shipping hooks across repos) prefix all settings.json writes with the bypass.
+
 ## Shared-storage prefixes
 
 Anchored on canonical macOS cloud-storage mount points; substring matches (e.g., `/tmp/dropbox-clone/`) do *not* trigger the guard:
