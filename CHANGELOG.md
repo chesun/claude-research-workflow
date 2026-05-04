@@ -4,6 +4,31 @@ All notable changes to this fork are documented here. The format follows [Keep a
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **Destructive-action guardrails** — two new hooks + one rule that codify the prose-level "executing actions with care" guidance into deterministic enforcement, motivated by a 2026-04-25 incident where `git filter-repo --invert-paths` silently rewrote a Dropbox-shared repo's working tree and the session falsely narrated "working tree unchanged" without verification.
+  - `.claude/hooks/destructive-action-guard.py` (PreToolUse, matcher `Bash`) — three tiers of detection:
+    - **Tier 1: always-blocked**, regardless of cwd: `git filter-repo`, `filter-branch`, `push --force/-f/+refspec/--force-with-lease`, `rebase` (non-resumption), `reset --hard`, `clean -f...`, `update-ref -d`.
+    - **Tier 2: path-conditional** — `rm -r/-R/-rf/-fr` and `find ... -delete` blocked only when the target path resolves under a canonical macOS cloud-storage mount (`~/Library/CloudStorage/Dropbox*`, `GoogleDrive-*`, `OneDrive-*`, `Box-*`, `~/Library/Mobile Documents/com~apple~CloudDocs`, legacy `~/Dropbox`). Realpath-aware: symlinks into shared storage are caught. Parses leading `cd X && Y` chains for effective-cwd resolution.
+    - **Tier 3: settings.json write gate** — closes the gap where `protect-files.sh` (Edit|Write matcher only) cannot observe Bash file writes. Token-based detection via shlex; the 5 write shapes are stdout redirection, `tee`, `sed -i`, `mv`/`cp` overwrite, scripted writes (python/node/ruby/perl). Reads pass through; quoted argument bodies (commit messages) immune to false positives because shlex preserves them as opaque tokens.
+  - `.claude/hooks/post-rewrite-verify.py` (PostToolUse, matcher `Bash`) — soft-injects an `ls`/`du` verification reminder into the next agent turn after history rewrites. Catches the false-success-narration mode that was the actual root cause of the 2026-04-25 incident.
+  - `.claude/rules/destructive-actions.md` — full rule doc covering motivation, triggers, bypass mechanism, and the post-action verification protocol.
+  - **Bypass:** `BYPASS_SHARED_GUARD=1` env-var prefix on the command. Audit-logged at `.claude/state/destructive-action-guard.log`.
+  - **Tests:** 71 cases at `.claude/hooks/test_destructive_action_guard.py` covering all three tiers, bypass, symlink resolution, mount-point anchoring, resumption-form allowlist, and false-positive regression guards (commit messages, `.vscode/settings.json`).
+
+### Fixed
+
+- **`primary-source-first` hook all-caps filter** — added Filter 1a in `.claude/hooks/primary_source_lib.py` that rejects captured surnames where `len >= 3 and isupper()`. Eliminates false positives on status markers (`COMPLETED (2026)`, `DRAFT (2025)`, `DONE`, `BLOCKED`, `ACTIVE`, `TODO`, `FIXME`, `WIP`, `PENDING`) and acronym corporate authors (`BLS`, `OECD`, `USDA`, `IRS`, `CDC`). Real surnames in academic prose are never written ALL-CAPS; mixed-case surnames (`McGregor`, `DeAngelo`, `O'Brien`) still match. Rule doc updated in `primary-source-first.md` ("four filters" → "five filters"). +17 test assertions.
+- **Markdown math-delimiter convention** — `~/.claude/rules/markdown-macdown-compat.md` made the rule explicit: use `$...$` for inline math and `$$...$$` for display math. MacDown's MathJax does not render `\(...\)` or `\[...\]`. The prior rule documented escape-for-currency but never said which delimiters to USE for math, so Claude defaulted to LaTeX-native forms which silently broke. Sibling `belief_distortion_discrimination/quality_reports/plans/2026-05-01_analysis-upgrade-memo.md` converted accordingly.
+
+### Documented (not yet captured in v0.1.0 release notes; landed 2026-04-29)
+
+- **Universal anti-AI-prose rule + `/humanize` skill** — `.claude/rules/anti-ai-prose.md` with ~35 patterns across 6 categories (lexical, syntactic, structural, rhetorical, content, communication), severity tiers, voice profiles (academic / slide / correspondence / blog / docs), escape comments. `/humanize` is the universal entry point that infers the voice profile from the file path and dispatches to the writer (paper/), storyteller (talks/), or generic-prose mode. Replaces the writer's per-paper humanizer pass. (Shipped post-CHANGELOG-finalize; included in the v0.1.0 release tag.)
+
+---
+
 ## [v0.1.0] — 2026-04-28 (Preview)
 
 First public release. The workflow has been tested internally on multiple research projects across applied micro and behavioral economics, and is now opened up for forking.
