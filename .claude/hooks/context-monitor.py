@@ -43,7 +43,7 @@ THROTTLE_INTERVAL = 60
 # tool call. The Claude Code PreCompact hook silently bypasses when MCP servers
 # are loaded (anthropics/claude-code#14111), so this fallback is the only
 # guarantee that pre-compact-state.json exists before auto-compact fires.
-# 60% gives ~600 tool calls of buffer at MAX_TOOL_CALLS=1500.
+# 60% gives ~400 tool calls of buffer at MAX_TOOL_CALLS=1000.
 SNAPSHOT_FLOOR = 60
 # Throttle snapshot refreshes to avoid filesystem churn — refresh at most
 # once every N seconds while past the floor.
@@ -94,6 +94,11 @@ def estimate_context_percentage() -> float:
     """
     cache = read_cache()
 
+    # Set session_start_time on the first tool call of a session. Preserved
+    # across compactions; reset by session-reset.py on startup|clear.
+    if "session_start_time" not in cache:
+        cache["session_start_time"] = time.time()
+
     # Increment tool call counter
     tool_calls = cache.get("tool_calls", 0) + 1
     cache["tool_calls"] = tool_calls
@@ -102,13 +107,16 @@ def estimate_context_percentage() -> float:
     # Heuristic: tuned for Claude Opus 4.7 with the 1M-context variant.
     # Counter increments on EVERY PostToolUse (matcher is unset in
     # settings.json), so this counts Read/Edit/Write/Grep/Glob/Agent calls
-    # as well as Bash/Task. Prior tuning of 500 was Bash|Task-only and
-    # undercounted by a factor of ~3 in mixed-tool sessions, causing the
-    # 80%/90% warnings (and the PreCompact fallback snapshot) to never fire
-    # before auto-compact. 1500 is the recalibrated all-tools default.
+    # as well as Bash/Task. History of recalibration:
+    #   v1: 500 (Bash|Task-only matcher, undercounted by ~3x in mixed sessions)
+    #   v2: 1500 (recalibrated for widened matcher; turned out to overshoot —
+    #       80%/90% warnings fired AFTER actual compaction in
+    #       belief_distortion_discrimination, where compaction hit at ~1000)
+    #   v3: 1000 (current; empirical-grounded based on 2026-05-04 evidence)
     # Override via CONTEXT_MONITOR_MAX_TOOL_CALLS env var if the heuristic
-    # drifts on a given project.
-    MAX_TOOL_CALLS = int(os.environ.get("CONTEXT_MONITOR_MAX_TOOL_CALLS", "1500"))
+    # drifts on a given project. The compactions.jsonl log accumulates real
+    # compaction events for future calibration.
+    MAX_TOOL_CALLS = int(os.environ.get("CONTEXT_MONITOR_MAX_TOOL_CALLS", "1000"))
 
     percentage = min((tool_calls / MAX_TOOL_CALLS) * 100, 100)
     return percentage
@@ -153,41 +161,76 @@ def mark_threshold_shown(threshold_type: str, value: int | bool = True) -> None:
     save_cache(cache)
 
 
+def _session_age_str(cache: dict) -> str:
+    """Return human-readable elapsed session time, e.g. '~12m', '~1h32m'."""
+    start = cache.get("session_start_time", time.time())
+    elapsed = max(0, time.time() - start)
+    if elapsed < 60:
+        return "<1m"
+    minutes = int(elapsed // 60)
+    if minutes < 60:
+        return f"~{minutes}m"
+    hours = minutes // 60
+    rem = minutes % 60
+    return f"~{hours}h{rem}m" if rem else f"~{hours}h"
+
+
 def format_learn_reminder(percentage: float, threshold: int) -> str:
-    """Format a /learn skill reminder."""
-    return f"""
-{CYAN}💡 Context at {percentage:.0f}%{NC}
-
-Non-obvious discovery or reusable workflow?
-→ Consider using {GREEN}/learn{NC} to capture it as a skill before context compacts.
-
-Skills are saved to {MAGENTA}.claude/skills/{NC} and persist across sessions.
-"""
+    """Terse striking reminder at LEARN thresholds (40/55/65). Plain text — system-reminder block can't render ANSI."""
+    cache = read_cache()
+    tool_calls = cache.get("tool_calls", 0)
+    max_calls = int(os.environ.get("CONTEXT_MONITOR_MAX_TOOL_CALLS", "1000"))
+    age = _session_age_str(cache)
+    return (
+        "💡 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 💡\n"
+        f"   CONTEXT AT {percentage:.0f}% ({tool_calls} / {max_calls} tool calls)\n"
+        f"   Session age: {age}\n"
+        "   → /learn anything reusable now — capture skills before compaction.\n"
+        "💡 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 💡"
+    )
 
 
 def format_warn_80(percentage: float) -> str:
-    """Format the 80% warning message."""
-    return f"""
-{YELLOW}💡 Context at {percentage:.0f}%{NC}
-
-Auto-compact will handle context management automatically.
-No rush — just be aware that context will be summarized soon.
-"""
+    """Striking 80% warning. Terse but visually heavy."""
+    cache = read_cache()
+    tool_calls = cache.get("tool_calls", 0)
+    max_calls = int(os.environ.get("CONTEXT_MONITOR_MAX_TOOL_CALLS", "1000"))
+    age = _session_age_str(cache)
+    last_snap = cache.get("last_snapshot_time", 0)
+    snap_str = (
+        datetime.fromtimestamp(last_snap).strftime("%H:%M:%S")
+        if last_snap else "(none yet)"
+    )
+    return (
+        "🔴 ████████████████████████████████████████ 🔴\n"
+        f"   ⚠️  CONTEXT AT {percentage:.0f}% — auto-compact approaching\n"
+        f"   Tool calls: {tool_calls} / {max_calls}    Session age: {age}\n"
+        f"   Snapshot fallback: ACTIVE (last: {snap_str})\n"
+        "   ▶ Save key decisions to session log\n"
+        "   ▶ Ensure plan status updated\n"
+        "   ▶ Mark completed todos as done\n"
+        "🔴 ████████████████████████████████████████ 🔴"
+    )
 
 
 def format_warn_90(percentage: float) -> str:
-    """Format the 90% critical warning message."""
-    return f"""
-{RED}⚠️  Context at {percentage:.0f}% — auto-compact approaching{NC}
-
-Complete current task with full quality. Do NOT cut corners or skip verification.
-No context is lost — auto-compact preserves important information.
-
-{YELLOW}Actions to consider:{NC}
-  • Save key decisions to the session log
-  • Ensure current plan status is updated
-  • Mark completed todos as done
-"""
+    """Striking 90% critical warning. Heaviest visual weight; compaction is imminent."""
+    cache = read_cache()
+    tool_calls = cache.get("tool_calls", 0)
+    max_calls = int(os.environ.get("CONTEXT_MONITOR_MAX_TOOL_CALLS", "1000"))
+    age = _session_age_str(cache)
+    return (
+        "🚨 ████████████████████████████████████████ 🚨\n"
+        f"   ⛔ CONTEXT AT {percentage:.0f}% — COMPACTION IMMINENT\n"
+        f"   Tool calls: {tool_calls} / {max_calls}    Session age: {age}\n"
+        "   Complete current task with full quality.\n"
+        "   Do NOT cut corners or skip verification.\n"
+        "   No context is lost — snapshot preserves state across compaction.\n"
+        "   ▶ Save key decisions to session log NOW\n"
+        "   ▶ Update plan status\n"
+        "   ▶ Mark completed todos as done\n"
+        "🚨 ████████████████████████████████████████ 🚨"
+    )
 
 
 def capture_precompact_snapshot() -> None:
@@ -216,12 +259,22 @@ def capture_precompact_snapshot() -> None:
 
         plan_info = mod.find_active_plan(project_dir)
         decisions = mod.extract_recent_decisions(project_dir)
+        # Snapshot is enriched with metrics so post-compact-restore can
+        # show "compacted at N tool calls / X%". These fields don't exist
+        # in older snapshots; consumers must default-handle missing keys.
+        cache_now = read_cache()
+        max_calls = int(os.environ.get("CONTEXT_MONITOR_MAX_TOOL_CALLS", "1000"))
+        tool_calls = cache_now.get("tool_calls", 0)
         state = {
             "trigger": "context-monitor-fallback",
             "plan_path": plan_info["plan_path"] if plan_info else None,
             "plan_status": plan_info["status"] if plan_info else None,
             "current_task": plan_info.get("current_task") if plan_info else None,
             "decisions": decisions,
+            "tool_calls": tool_calls,
+            "max_tool_calls": max_calls,
+            "percentage": min((tool_calls / max_calls) * 100, 100) if max_calls else 0,
+            "session_start_time": cache_now.get("session_start_time"),
         }
         mod.save_state(state)
     except Exception:
@@ -258,23 +311,41 @@ def run_context_monitor() -> int:
 
     shown = get_shown_thresholds()
 
+    # Switch from stderr-print to JSON `additionalContext` output —
+    # PostToolUse stderr is unreliably surfaced in current Claude Code; the
+    # JSON channel injects the message as a system-reminder block, which
+    # IS visible. Verified empirically via post-rewrite-verify hook.
+    def _emit_warning(message: str) -> None:
+        payload = {
+            "hookSpecificOutput": {
+                "hookEventName": "PostToolUse",
+                "additionalContext": message,
+            },
+            "suppressOutput": True,
+        }
+        try:
+            sys.stdout.write(json.dumps(payload))
+            sys.stdout.flush()
+        except Exception:
+            pass
+
     # Check /learn thresholds (40%, 55%, 65%)
     for threshold in LEARN_THRESHOLDS:
         if percentage >= threshold and threshold not in shown["learn"]:
-            print(format_learn_reminder(percentage, threshold), file=sys.stderr)
+            _emit_warning(format_learn_reminder(percentage, threshold))
             mark_threshold_shown("learn", threshold)
             return 0  # Only show one message at a time
 
     # Check 90% threshold (critical). Snapshot already refreshed above via
     # SNAPSHOT_FLOOR logic — no need to call capture_precompact_snapshot here.
     if percentage >= THRESHOLD_CRITICAL and not shown["warn_90"]:
-        print(format_warn_90(percentage), file=sys.stderr)
+        _emit_warning(format_warn_90(percentage))
         mark_threshold_shown("warn_90", True)
         return 0  # Non-blocking warning (exit 2 would block Claude)
 
     # Check 80% threshold (info)
     if percentage >= THRESHOLD_WARN and not shown["warn_80"]:
-        print(format_warn_80(percentage), file=sys.stderr)
+        _emit_warning(format_warn_80(percentage))
         mark_threshold_shown("warn_80", True)
         return 0
 

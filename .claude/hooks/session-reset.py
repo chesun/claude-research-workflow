@@ -55,6 +55,13 @@ def reset_cache() -> None:
     data["shown_warn_80"] = False
     data["shown_warn_90"] = False
     data["shown_learn"] = []
+    # session_start_time gets re-initialized by context-monitor on the next
+    # tool call (it's a "set if missing" field). Delete the stale value so
+    # the next session age starts fresh.
+    data.pop("session_start_time", None)
+    # Same for last_snapshot_time — old snapshot from previous session is
+    # not relevant; let the new session re-trigger snapshot logic past 60%.
+    data.pop("last_snapshot_time", None)
 
     try:
         cache_file.write_text(json.dumps(data, indent=2))

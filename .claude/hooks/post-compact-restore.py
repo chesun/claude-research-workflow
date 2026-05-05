@@ -114,42 +114,48 @@ def format_restoration_message(
     plan_info: dict | None,
     session_log: dict | None
 ) -> str:
-    """Format the context restoration message for Claude."""
+    """Striking system-reminder restoration message. Plain text — no ANSI; rendered in a system-reminder block."""
     lines = []
-    lines.append(f"\n{CYAN}[Context Restored After Compaction]{NC}")
-    lines.append("")
+    lines.append("🔄 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 🔄")
+    lines.append("   CONTEXT RESTORED AFTER COMPACTION")
 
     if pre_compact_state:
-        lines.append(f"{GREEN}Pre-Compaction State:{NC}")
+        tool_calls = pre_compact_state.get("tool_calls")
+        max_calls = pre_compact_state.get("max_tool_calls")
+        percentage = pre_compact_state.get("percentage")
+        if tool_calls is not None and max_calls:
+            pct_str = f"{percentage:.0f}%" if percentage is not None else "?"
+            lines.append(f"   Compacted at: {tool_calls} / {max_calls} tool calls ({pct_str})")
+        if pre_compact_state.get("trigger"):
+            lines.append(f"   Trigger: {pre_compact_state['trigger']}")
         if pre_compact_state.get("plan_path"):
-            lines.append(f"  Plan: {pre_compact_state['plan_path']}")
+            lines.append(f"   Plan: {pre_compact_state['plan_path']}")
         if pre_compact_state.get("current_task"):
-            lines.append(f"  Task: {pre_compact_state['current_task']}")
+            ct = pre_compact_state['current_task']
+            if len(ct) > 100:
+                ct = ct[:100] + "…"
+            lines.append(f"   Last task: {ct}")
         if pre_compact_state.get("decisions"):
-            lines.append("  Recent decisions:")
+            lines.append("   Recent decisions:")
             for decision in pre_compact_state["decisions"][-3:]:
-                lines.append(f"    - {decision}")
-        lines.append("")
+                d = decision[:90] + "…" if len(decision) > 90 else decision
+                lines.append(f"     • {d}")
 
     if plan_info:
-        lines.append(f"{GREEN}Active Plan:{NC}")
-        lines.append(f"  File: {plan_info['plan_name']}")
-        lines.append(f"  Status: {plan_info['status']}")
+        lines.append(f"   Active plan now: {plan_info['plan_name']} ({plan_info['status']})")
         if plan_info.get("current_task"):
-            lines.append(f"  Next task: {plan_info['current_task']}")
-        lines.append("")
+            ct = plan_info['current_task']
+            if len(ct) > 100:
+                ct = ct[:100] + "…"
+            lines.append(f"   Next task: {ct}")
 
     if session_log:
-        lines.append(f"{GREEN}Session Log:{NC}")
-        lines.append(f"  {session_log['log_name']}")
-        lines.append("")
+        lines.append(f"   Session log: {session_log['log_name']}")
 
-    lines.append(f"{YELLOW}Recovery Actions:{NC}")
-    lines.append("  1. Read the active plan to understand current objectives")
-    lines.append("  2. Check git status/diff for uncommitted changes")
-    lines.append("  3. Continue from where you left off")
-    lines.append("")
-
+    lines.append("   ▶ Read active plan to confirm objectives")
+    lines.append("   ▶ git status / diff to check uncommitted changes")
+    lines.append("   ▶ Continue from where you left off")
+    lines.append("🔄 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 🔄")
     return "\n".join(lines)
 
 
@@ -175,10 +181,48 @@ def main() -> int:
     plan_info = find_active_plan(project_dir)
     session_log = find_recent_session_log(project_dir)
 
-    # If we have any context to restore, print it
+    # Belt-and-suspenders compaction logging: if pre-compact.py didn't fire
+    # (Claude Code bug #14111: PreCompact bypasses on auto-compact when MCP
+    # servers are present), record the compaction event from the snapshot
+    # data instead. Skipped when there's no snapshot (nothing to record).
+    if pre_compact_state:
+        try:
+            log_file = get_session_dir() / "compactions.jsonl"
+            entry = {
+                "ts": datetime.now().isoformat(),
+                "trigger": pre_compact_state.get("trigger", "unknown") + ":restored",
+                "tool_calls": pre_compact_state.get("tool_calls"),
+                "max_tool_calls": pre_compact_state.get("max_tool_calls"),
+                "percentage": pre_compact_state.get("percentage"),
+                "session_start_time": pre_compact_state.get("session_start_time"),
+                "plan_path": pre_compact_state.get("plan_path"),
+                "plan_status": pre_compact_state.get("plan_status"),
+                "session_source": session_source,
+            }
+            with log_file.open("a") as f:
+                f.write(json.dumps(entry) + "\n")
+        except Exception:
+            pass
+
+    # If we have any context to restore, emit it via JSON additionalContext
+    # so it surfaces as a visible system-reminder block. SessionStart hook
+    # output IS visible per Claude Code docs; the JSON channel is the most
+    # reliable form across UI versions.
     if pre_compact_state or plan_info or session_log:
         message = format_restoration_message(pre_compact_state, plan_info, session_log)
-        print(message)
+        payload = {
+            "hookSpecificOutput": {
+                "hookEventName": "SessionStart",
+                "additionalContext": message,
+            },
+            "suppressOutput": True,
+        }
+        try:
+            sys.stdout.write(json.dumps(payload))
+            sys.stdout.flush()
+        except Exception:
+            # Fallback: plain print
+            print(message)
 
     return 0
 

@@ -125,6 +125,44 @@ def save_state(state: dict) -> None:
         print(f"Warning: Could not save pre-compact state: {e}", file=sys.stderr)
 
 
+def read_context_monitor_cache() -> dict:
+    """Read the context-monitor cache to enrich the snapshot with metrics."""
+    cache_file = get_session_dir() / "context-monitor-cache.json"
+    if not cache_file.exists():
+        return {}
+    try:
+        return json.loads(cache_file.read_text())
+    except (json.JSONDecodeError, IOError):
+        return {}
+
+
+def append_compaction_log(state: dict, trigger: str) -> None:
+    """Append a compaction event to ~/.claude/sessions/<hash>/compactions.jsonl.
+
+    Append-only durable log of every compaction event with metrics. Lets
+    you answer "how many tool calls before compaction" historically across
+    sessions for any project. Used for ongoing MAX_TOOL_CALLS calibration.
+
+    Failure is non-blocking — never break the hook on logging error.
+    """
+    try:
+        log_file = get_session_dir() / "compactions.jsonl"
+        entry = {
+            "ts": datetime.now().isoformat(),
+            "trigger": trigger,
+            "tool_calls": state.get("tool_calls"),
+            "max_tool_calls": state.get("max_tool_calls"),
+            "percentage": state.get("percentage"),
+            "session_start_time": state.get("session_start_time"),
+            "plan_path": state.get("plan_path"),
+            "plan_status": state.get("plan_status"),
+        }
+        with log_file.open("a") as f:
+            f.write(json.dumps(entry) + "\n")
+    except Exception:
+        pass
+
+
 def append_to_session_log(project_dir: str, trigger: str) -> None:
     """Append compaction note to session log."""
     logs_dir = Path(project_dir) / "quality_reports" / "session_logs"
@@ -187,22 +225,42 @@ def main() -> int:
     plan_info = find_active_plan(project_dir)
     decisions = extract_recent_decisions(project_dir)
 
+    # Read context-monitor cache to enrich snapshot with tool-call metrics.
+    # Lets post-compact-restore show "compacted at N tool calls / X%".
+    cm_cache = read_context_monitor_cache()
+    tool_calls = cm_cache.get("tool_calls")
+    max_calls = int(os.environ.get("CONTEXT_MONITOR_MAX_TOOL_CALLS", "1000"))
+    percentage = (
+        min((tool_calls / max_calls) * 100, 100)
+        if tool_calls is not None and max_calls else None
+    )
+
     # Build state object
     state = {
         "trigger": trigger,
         "plan_path": plan_info["plan_path"] if plan_info else None,
         "plan_status": plan_info["status"] if plan_info else None,
         "current_task": plan_info.get("current_task") if plan_info else None,
-        "decisions": decisions
+        "decisions": decisions,
+        "tool_calls": tool_calls,
+        "max_tool_calls": max_calls,
+        "percentage": percentage,
+        "session_start_time": cm_cache.get("session_start_time"),
     }
 
     # Save state for restoration
     save_state(state)
 
+    # Append durable compaction event to ~/.claude/sessions/<hash>/compactions.jsonl
+    # for cross-session metrics (used by future MAX_TOOL_CALLS calibration).
+    append_compaction_log(state, trigger)
+
     # Append note to session log
     append_to_session_log(project_dir, trigger)
 
-    # Print to stderr (PreCompact ignores stdout; stderr is shown to user)
+    # Best-effort stderr print (visibility unreliable per hook docs;
+    # post-compact-restore.py uses JSON additionalContext for the user-facing
+    # restoration message which IS reliably visible).
     print(format_compaction_message(plan_info, decisions), file=sys.stderr)
 
     return 0
