@@ -1,7 +1,7 @@
 ---
 name: tools
-description: Utility commands — commit, compile, validate-bib, journal, context-status, deploy, learn. Replaces individual utility skills.
-argument-hint: "[subcommand: commit | compile | validate-bib | journal | context | deploy | learn] [args]"
+description: Utility commands — commit, compile, validate-bib, journal, context-status, deploy, learn, sync-status. Replaces individual utility skills.
+argument-hint: "[subcommand: commit | compile | validate-bib | journal | context | deploy | learn | sync-status] [args]"
 allowed-tools: Read,Grep,Glob,Write,Edit,Bash,Task
 ---
 
@@ -150,6 +150,77 @@ Extract reusable knowledge from the current session into memory.
 - Two-tier routing:
   - Generic / project-relevant → `MEMORY.md` or auto-memory `.claude/projects/.../memory/`
   - Machine-specific (paths, credentials) → `.claude/state/personal-memory.md` (gitignored)
+
+---
+
+### `/tools sync-status` — Storage Sync Status (LFS + DVC + Backup)
+
+One-shot report of bulk-content storage state for the current repo: Git LFS, DVC, and (if configured) periodic Dropbox backup. Run before declaring a session done to catch a forgotten `dvc push`.
+
+**Step 1: Detect which tiers are active**
+
+- LFS: `[ -f .gitattributes ] && grep -q 'filter=lfs' .gitattributes`
+- DVC: `[ -d .dvc ]`
+- Periodic backup (Class D): check for `~/Dropbox/research-data/<proj>/backup/` or a project-specific manifest
+
+**Step 2: Gather state per tier**
+
+LFS:
+
+```bash
+git lfs ls-files | wc -l                  # tracked file count
+git lfs ls-files | awk '{print $1}' | sort -u | wc -l   # unique blob count
+du -sh .git/lfs/objects 2>/dev/null       # local LFS cache size
+git lfs env 2>/dev/null | grep -E "Endpoint|UploadTransfers|DownloadTransfers"
+# Bandwidth and storage stats: only available via GitHub web UI / API; if
+# `gh` CLI is configured, query the LFS endpoint via `gh api`. Otherwise just
+# point user at `https://github.com/<org>/<repo>/settings/lfs`.
+```
+
+DVC:
+
+```bash
+dvc status                                 # local: any pointers ahead of working tree?
+dvc status -c                              # cloud: any pending pushes / pulls?
+dvc remote list                            # which remote is configured
+ls -lh data/*.dvc data/**/*.dvc 2>/dev/null | wc -l   # pointer count
+du -sh "$(dvc config cache.dir 2>/dev/null || echo .dvc/cache)" 2>/dev/null
+```
+
+Periodic backup (Class D): `du -sh ~/Dropbox/research-data/$(basename $PWD)/backup 2>/dev/null` and `stat -f %m` on its newest file.
+
+**Step 3: Format output**
+
+```
+=== Git LFS ===
+Tracked patterns:    [list from .gitattributes]
+LFS files in repo:   N files, M MB local cache
+Endpoint:            <url>
+GitHub usage:        <link to repo settings → LFS for storage/bandwidth>
+
+=== DVC ===
+Remote:              <path>
+Pending uploads:     N files (run: dvc push)
+Pending downloads:   N files (run: dvc pull)
+Pointer count:       M files
+Cache size:          X MB
+
+=== Periodic Dropbox backup (Class D) ===
+Last run:            YYYY-MM-DD HH:MM (or "never")
+Mirror size:         X GB
+```
+
+**Step 4: Flag actionable items**
+
+If any are non-zero / stale, surface as a numbered action list at the bottom:
+
+- "Run `dvc push` — N files pending upload"
+- "Run `git lfs pull` — local LFS cache is empty"
+- "Backup is N days stale — run `bin/sync-backup.sh`"
+
+If everything is clean: print "All storage tiers in sync."
+
+Reference: `.claude/rules/data-version-control.md`.
 
 ---
 
