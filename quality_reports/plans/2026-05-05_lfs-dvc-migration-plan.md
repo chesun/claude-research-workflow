@@ -19,14 +19,15 @@ These were open in the explainer; this plan locks proposed answers and flags whi
 |---|---|---|---|
 | D1 | LFS pricing tier | Start on GitHub free tier (1 GB storage + 1 GB/mo bandwidth). Self-host only if pilot exceeds free tier within 30 days. | No — reversible |
 | D2 | Pilot project | `belief_distortion_discrimination` (PRIVATE; PDFs gitignored; no coauthors blocking) | No — explainer already proposed this |
-| D3 | History migration of pre-existing committed PDFs | Skip `git lfs migrate import`. Fresh-start: new PDFs from migration date go to LFS; any PDFs already in normal git history stay there. Migrate history only if a specific repo's `.git/` becomes problematically large. | **[USER]** — coauthor history-rewrite implications |
+<!-- primary-source-ok: resolved_2026 -->
+| D3 | History migration of pre-existing committed PDFs | Resolved on 2026-05-05 — skip `git lfs migrate import`. Fresh-start: new PDFs from migration date go to LFS; any PDFs already in normal git history stay there. Migrate history only if a specific repo's `.git/` becomes problematically large. | Resolved ✓ |
 | D4 | Workflow integration scope | Add `data/MANIFEST.md` + `data/PROVENANCE.md` + `data/CHANGELOG.md` templates. Add new rule `data-version-control.md`. Add `/tools sync-status` skill (replaces idea of `/tools sync-dropbox`; reports LFS + DVC + Dropbox state in one view). Defer `/tools data-status` until after pilot. | No — reversible |
 | D5 (NEW) | Per-repo LFS opt-in | Workflow template ships with PDFs gitignored by default (repo-bloat reasons; not all forks have LFS configured). Each project decides per-repo whether to enable LFS. No public/private distinction in the policy. | No — design choice |
 | D6 (NEW) | Pilot exit criteria | After 7 days of pilot use, decide go / no-go for bulk migration based on: (i) zero hook regressions, (ii) zero `dvc push` failures, (iii) workflow disruption felt as "low" by Christina, (iv) GitHub LFS bandwidth consumption < 200 MB/wk. | No |
 | D7 (NEW) | DVC remote location | Local Dropbox folder (`~/Dropbox/research-data/<proj>/dvc-cache/`). Reuses existing Dropbox plan, no new cloud account. | No — change later if needed |
-| D8 (NEW) | Coauthor onboarding policy | For repos with active coauthors, notify before migration with a one-paragraph email + a setup-machine.sh script they run once. No silent rewrites. | **[USER]** — per-project list |
+| D8 (NEW) | Coauthor onboarding policy | Resolved on 2026-05-05 — no active coauthors in any in-scope repo. Coauthor coordination steps (§6.1, §8.3, §9) become no-ops; can still tag pre-migration commits as a personal-safety net. | Resolved ✓ |
 
-The two **[USER]** decisions are flagged in §13. Everything else proceeds on Christina's go-ahead.
+All **[USER]** decisions resolved as of 2026-05-05; pilot can proceed once §7 workflow-template work lands.
 
 ---
 
@@ -643,14 +644,16 @@ Total: ~3-4 weeks calendar time, ~10-15 hours of focused work.
 
 ---
 
-## 13. Open questions for user approval **[USER]**
+## 13. Open questions
 
-Two items need explicit yes/no before §6 begins:
+<!-- primary-source-ok: resolved_2026 -->
 
-1. **D3 — History migration.** Confirm: skip `git lfs migrate import`; live with whatever PDFs are in normal git history pre-migration. Yes / No.
-2. **D8 — Coauthor list.** Confirm which repos have active coauthors who need notification. List per repo. (Plan will not migrate any repo with active coauthors until you confirm notification is sent.)
+### Resolved on 2026-05-05
 
-Three additional items become relevant only at pilot exit (D6) — not blocking now:
+1. **D3 — History migration.** Confirmed: skip `git lfs migrate import` — fresh-start.
+2. **D8 — Coauthor list.** Confirmed: no active coauthors in any in-scope repo; coauthor coordination is a no-op.
+
+### Deferred to pilot exit (D6) — not blocking now
 
 3. Pilot exit decision — go / no-go for bulk migration, based on the five metrics in §6.6.
 4. Bulk migration order — which repo first after pilot.

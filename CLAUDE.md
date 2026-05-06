@@ -81,6 +81,30 @@
 
 ---
 
+## Bulk Content Storage
+
+This template ships with three storage tiers for content that doesn't fit plain git well:
+
+- **Plain git** — code, LaTeX, ADRs, plans, reading notes (markdown), data documentation
+- **Git LFS** (opt-in) — paper PDFs (`master_supporting_docs/literature/papers/*.pdf`), large generated figures
+- **DVC** (opt-in) — data files (`data/raw/`, `data/cleaned/`); pointers in git, blobs in a private remote (Dropbox is the default)
+
+Default state for a fresh fork: PDFs gitignored, no LFS, no DVC. Each project decides whether to enable LFS / DVC based on whether it has a substantial paper library and / or evolving data that needs versioning.
+
+**Setup on a new machine** (after `git clone`):
+
+```bash
+brew install git-lfs dvc        # one-time per machine
+git lfs install                 # registers LFS hooks
+./bin/setup-machine.sh          # if present; else: git lfs pull && dvc pull
+```
+
+**Daily workflow:** LFS is filesystem-transparent (use normal git commands). DVC is two-step (`git push` + `dvc push` after committing data changes). Before declaring a session done, run `/tools sync-status` to verify everything is pushed.
+
+For full architecture, enabling instructions, and rollback: see `.claude/rules/data-version-control.md` and `quality_reports/plans/*lfs-dvc-migration-plan.md`.
+
+---
+
 ## Commands
 
 ```bash
