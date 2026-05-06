@@ -1,15 +1,15 @@
-# `master_supporting_docs/literature/papers/` — PDFs go here (locally)
+# `master_supporting_docs/literature/papers/` — PDFs go here
 
 This directory is for academic paper PDFs that ground citations in your project's load-bearing artifacts (decisions, plans, reviews, session logs, manuscripts).
 
-## PDFs are NOT distributed in this repo
+## PDFs are gitignored by default
 
-`*.pdf` files in this directory are gitignored. Reasons:
+`*.pdf` files in this directory are gitignored in the workflow template, because:
 
-- **Copyright.** Most academic publications are under publisher copyright (Elsevier, Cambridge UP, Wiley, etc.). Distributing copies in a public repo is not permitted under standard publisher terms.
-- **Repo size.** PDF libraries grow quickly; tracking them bloats the repo for forkers who don't need someone else's collection.
+- **Repo size.** PDF libraries grow quickly; tracking them in normal git bloats the repo for forkers who don't need someone else's collection. PDFs don't diff well, so every revision adds full size to history.
+- **Per-project decision.** Each fork decides whether the project's PDFs are load-bearing enough to track. If they are, enable Git LFS (see `.claude/rules/data-version-control.md`); the gitignore lines come out and PDFs are tracked via LFS pointers.
 
-If you fork the workflow, you populate this directory with your own legally-obtained PDFs.
+If you fork the workflow, populate this directory with PDFs you've collected for the project.
 
 ## Naming convention
 
