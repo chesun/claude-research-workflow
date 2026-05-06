@@ -4,7 +4,7 @@
 
 # Dropbox Symlink Setup — Explainer
 **Date:** 2026-05-01
-**Status:** Active (explanatory; pre-decision)
+**Status:** Superseded by `quality_reports/plans/2026-05-05_lfs-dvc-migration-plan.md`
 **Supersedes:** —
 
 Reference doc explaining the proposed Dropbox-symlink setup for managing gitignored bulk content (paper PDFs, raw data) across multiple research repos. Pre-decision — written so the user can evaluate before committing.
