@@ -104,3 +104,95 @@ Three loosely-related threads across the day:
 - [ ] User decides whether to commit today's `claude-code-my-workflow` changes (or hold for further iteration).
 - [ ] Sync `~/.claude/settings.json` ↔ `claude-config/settings.json` (separate small task).
 - [ ] After plan approval: §7 (workflow-template updates) before §6 (pilot in `belief_distortion_discrimination`).
+
+---
+
+# Continued — 2026-05-06
+
+## Day 2 status
+
+- Phase 1 (§7 workflow-template updates) **done** on `main` — 4 commits.
+- Phase 2 (§6 pilot in `belief_distortion_discrimination`) **paused mid-flight** — 2 BDD commits landed locally, 3 more queued, no pushes yet. User actively running their own analysis tasks in BDD.
+- Side-tracks: behavioral-branch worktree spun up for parallel feature work; context-monitor proxy mismatch diagnosed and a token-based v2 design proposed.
+
+## Day 2 changes (committed)
+
+`claude-code-my-workflow` (`main`):
+
+| SHA | Title |
+|---|---|
+| `9cbbdac` | templates: LFS gitattributes + setup-machine.sh + data doc templates (5 files) |
+| `c48096a` | rules: data-version-control — three-tier storage architecture |
+| `ad63028` | skills: add /tools sync-status — LFS + DVC + backup state report |
+| `6910e84` | docs: CLAUDE.md gets bulk-content storage section; plan records D3/D8 resolved |
+
+`belief_distortion_discrimination` (`main`, **unpushed**):
+
+| SHA | Title |
+|---|---|
+| `ec8d2e8` | chore: enable Git LFS for paper PDFs |
+| `c2c41f0` | chore: initialize DVC; remote = Dropbox |
+
+Working tree in BDD has uncommitted: `data_local.dvc` (DVC pointer), `.gitignore` (DVC's `/data_local` line), 60 PDFs showing modified (LFS smudge filter — bytes unchanged on disk).
+
+## Day 2 design decisions
+
+| Decision | Rationale |
+|---|---|
+| Skip `git lfs migrate import` (D3 resolved) | User confirmed; no history rewrite needed, no force-push risk |
+| No coauthor coordination (D8 resolved) | User confirmed: no active coauthors in any in-scope repo |
+| **Soft-migrate** the 60 already-committed PDFs to LFS pointers | After `git lfs track`, working-tree PDFs show as forever-modified; soft-migrate (`git add --renormalize`) makes the next commit go forward with LFS pointers while leaving history untouched. Consistent with D3's letter (no `migrate import`, no force-push) and avoids the dirty-status footgun. |
+| BDD as the LFS+DVC pilot, with `data_local/` as the DVC scope (not `data/`) | BDD's data convention is `data_local/`; the rule and templates assume `data/` but the per-project path adjusts cleanly. |
+| Parallel worktree for behavioral branch at `~/github_repos/claude-code-my-workflow-behavioral` | User wanted to work on behavioral features while waiting; worktree shares `.git/objects/`, isolates working tree. Branch is at `576c1f0`, 4 commits behind today's `main`. Plan: bake on main, merge to behavioral once stable. |
+| Token-based context-monitor v2 (hybrid: cheap proxy on every fire, real check when nearing threshold) | Current MAX_TOOL_CALLS=1000 proxy mis-fires for read-heavy projects: BDD at 84% real context but hook thinks 31.5%. Real solution: parse `message.usage` from the active session transcript (each assistant message has `input_tokens + cache_creation_input_tokens + cache_read_input_tokens`, sum is the real context size). Hybrid keeps performance while gaining accuracy. |
+
+## Day 2 incremental log
+
+**13:00 UTC:** Started Phase 1 (§7 workflow-template updates) on `main`. Five new template files (gitattributes-lfs, setup-machine.sh, three data doc templates), then a new ~250-line rule `.claude/rules/data-version-control.md`, then `/tools sync-status` subcommand in the existing tools SKILL.md, then a "Bulk Content Storage" section in CLAUDE.md template. 4 commits. Pre-existing primary-source-first hook caught a false positive on the bracketed-year syntax `[Resolved 2026-05-05]`; resolved with a `<!-- primary-source-ok: resolved_2026 -->` comment.
+
+**18:00 UTC:** User confirmed D3 and D8. D5 (public/private LFS policy) had collapsed earlier when copyright was stripped from the workflow.
+
+**19:00 UTC:** Phase 2 pre-flight in BDD: confirmed git-lfs installed, dvc not yet → installed via `brew install dvc`. Backup repo to `~/backups/...20260506` (3.1 GB). Tag `pre-lfs-dvc-migration-2026-05-06`.
+
+**19:30 UTC:** Discovery: BDD already had 60 PDFs tracked in plain git (no PDF-gitignore line, unlike workflow template). `.git/` at 481 MB, partially due to that. Surfaced to user: literal D3 ("do nothing") leaves git status forever-dirty due to the LFS smudge filter; soft-migrate (renormalize) is the cleaner reading. User approved soft-migrate.
+
+**20:00 UTC:** Ran `git lfs track` + commit `.gitattributes` (`ec8d2e8`). Ran `dvc init` + remote config to Dropbox path + commit (`c2c41f0`). Ran `dvc add data_local/` — 1.1 GB hashed into `.dvc/cache/` in 4 seconds; created `data_local.dvc` pointer (uncommitted).
+
+**21:00 UTC:** User said "wait up, I am running tasks in BDD rn." Paused mid-pilot. Surfaced uncommitted state to user with warnings against `git add .`. Tracker shows tasks #5-#8 ready; #9-#12 blocked on user go-ahead.
+
+**21:30 UTC:** User asked for a parallel worktree for the behavioral branch. Created `git worktree add ~/github_repos/claude-code-my-workflow-behavioral behavioral`. Strategy: bake on main, merge to behavioral once features are proven through pilot.
+
+**22:00 UTC:** Set up TaskCreate-backed live status tracker (12 tasks) replacing informal status reports.
+
+**22:30 UTC:** User noted BDD session at 840.9k tokens with no context warnings. Investigated: hook uses `MAX_TOOL_CALLS=1000` proxy. BDD has 315 tool calls = 31.5% by proxy but ~84% real context (verified by parsing transcript JSONL `message.usage` blocks). Designed token-based v2 of context-monitor with hybrid throttling. Implementation pending user approval.
+
+## Day 2 verification
+
+| Check | Result |
+|---|---|
+| Phase 1 commits land cleanly on `main` | PASS — 4 commits, no test failures, no hook regressions |
+| `data-version-control.md` rule file written and committed | PASS — 314 lines, cross-references intact |
+| `/tools sync-status` SKILL.md update + frontmatter description sync | PASS |
+| BDD backup created and tagged | PASS — `~/backups/...20260506` (3.1 GB), tag visible in `git tag --list` |
+| BDD LFS enabled with `.gitattributes` LFS patterns | PASS — `git lfs env` shows endpoint resolved |
+| BDD DVC initialized with Dropbox remote configured | PASS — `dvc remote list` shows correct path |
+| `dvc add data_local/` creates pointer + caches data | PASS — `data_local.dvc` 114 bytes; `.dvc/cache/` populated |
+| Worktree created at sibling path on behavioral branch | PASS — `git worktree list` shows both checkouts |
+| Token-count parser finds correct usage block in BDD transcript | PASS — parsed `message.usage` matches user's reported 840.9k figure |
+
+## Day 2 open questions / blockers
+
+- [ ] **BDD pilot paused** — user actively running tasks in BDD. Resume on user's "resume" signal. Tracker tasks #5-#11 pending; #12 (7-day pilot run) follows validation.
+- [ ] **Soft-migrate consequences for next push** — when push eventually fires, ~120 MB of LFS blobs upload to GitHub (60 PDFs × ~2 MB). Within free tier (1 GB) but worth noting.
+- [ ] **Token-based context-monitor v2** — design proposed, awaiting user go-ahead on implementation. Would replace the current proxy-based heuristic with a transcript-parsed accurate reading.
+- [ ] **`Resolved` false positive in primary-source-first** — bracketed-year text `[Resolved 2026]` triggered the citation regex. Hit twice today. Worth adding `Resolved` (and similar status markers like `Pending`, `Deferred`, `Open`) to the `NEVER_SURNAMES` blocklist. Small follow-up.
+- [ ] **Overlay-branch sync** for §7 workflow-template changes — applied-micro and behavioral branches still need today's main-branch updates. Per user's plan, they'll cherry-pick / merge once features bake. Not blocking.
+- [ ] **Math-span fix in BDD `analysis-upgrade-memo`** appears already committed in BDD's history (commit `699db4f` mentions MacDown delimiters). Worked-tree clean. No action needed unless our intra-session edits got lost — verify via diff against pre-migration tag.
+
+## Day 2 next steps
+
+- [ ] Wait for user "resume" → execute tasks #5-#8 (soft-migrate + DVC pointer commit + data doc contract + checkpoint).
+- [ ] After user explicit "go" at #8: tasks #9 + #10 (`git push` + `dvc push`).
+- [ ] Then #11 validation (LFS state + DVC state + hook compatibility checks).
+- [ ] Then 7-day pilot run (#12) with metric tracking per §6.6 of the migration plan.
+- [ ] If user approves token-based context-monitor v2: implement (~120 lines, hybrid design); commit on main.
