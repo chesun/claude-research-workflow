@@ -352,47 +352,27 @@ def main():
 
 ### 4.3 SKILL.md addition (under existing `## Subcommands` heading)
 
-```markdown
-### `/tools propagate <pattern>... [--dry-run] [--force-initial] [--only <paths>]` — Workflow Propagation
+The new section to insert in `.claude/skills/tools/SKILL.md` (rendered below in plain prose to avoid nested code-fence ambiguity):
 
-Sync selected files from this workflow source to all configured consumer repos
-(listed in `.claude/state/consumers.toml`).
-
-**Step 1: identity check**
-Run `python3 .claude/skills/tools/propagate.py --check-identity` first.
-If this repo is a consumer or has no propagation context, exit with the
-helpful message and stop.
-
-**Step 2: invoke**
-```bash
-python3 .claude/skills/tools/propagate.py [--dry-run] [--force-initial] \
-    [--only path1,path2] -- <pattern> [<pattern>...]
-```
-
-Patterns are repo-relative paths or globs:
-- `.claude/hooks/context-monitor.py`
-- `.claude/rules/*.md`
-- `templates/data-*.md`
-
-**Step 3: review output**
-- Per-consumer: files copied / skipped (in-sync) / skipped (divergent).
-- Aggregate: total commits made, source commit hash.
-
-**Step 4: handle divergent files (if any)**
-For each consumer where a file was skipped due to divergence, the user
-must manually reconcile by either:
-- Accepting the workflow version (overwrite + recommit in that consumer)
-- Keeping consumer's local version (update its workflow-sync.json record manually)
-- Three-way merge (manual)
-
-**Common patterns:**
-- New hook on workflow → `/tools propagate .claude/hooks/<file>.py`
-- Big rules update → `/tools propagate .claude/rules/*.md`
-- New skill → `/tools propagate .claude/skills/<name>/SKILL.md`
-- Template change → `/tools propagate templates/<file>`
-
-**Reference:** `.claude/state/consumers.toml` for the registry; per-consumer `.claude/state/workflow-sync.json` for sync state.
-```
+> ### `/tools propagate <pattern>... [--dry-run] [--force-initial] [--only <paths>]` — Workflow Propagation
+>
+> Sync selected files from this workflow source to all configured consumer repos (listed in `.claude/state/consumers.toml`).
+>
+> **Step 1: identity check.** Run `python3 .claude/skills/tools/propagate.py --check-identity` first. If this repo is a consumer or has no propagation context, exit with the helpful message and stop.
+>
+> **Step 2: invoke.** Shell:
+>
+> `python3 .claude/skills/tools/propagate.py [--dry-run] [--force-initial] [--only path1,path2] -- <pattern> [<pattern>...]`
+>
+> Patterns are repo-relative paths or globs: `.claude/hooks/context-monitor.py`, `.claude/rules/*.md`, `templates/data-*.md`.
+>
+> **Step 3: review output.** Per-consumer: files copied / skipped (in-sync) / skipped (divergent). Aggregate: total commits made, source commit hash.
+>
+> **Step 4: handle divergent files (if any).** For each consumer where a file was skipped due to divergence, the user must manually reconcile by either: accepting the workflow version (overwrite + recommit in that consumer), keeping consumer's local version (update its workflow-sync.json record manually), or doing a three-way merge by hand.
+>
+> **Common patterns:** new hook on workflow → `/tools propagate .claude/hooks/<file>.py`; big rules update → `/tools propagate .claude/rules/*.md`; new skill → `/tools propagate .claude/skills/<name>/SKILL.md`; template change → `/tools propagate templates/<file>`.
+>
+> **Reference:** `.claude/state/consumers.toml` for the registry; per-consumer `.claude/state/workflow-sync.json` for sync state.
 
 Plus a sub-section `### /tools list-consumers` for read-only listing — handy.
 
