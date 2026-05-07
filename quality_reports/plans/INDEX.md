@@ -8,7 +8,8 @@ When creating a new plan, consult this index first. If an `Active` entry covers 
 
 ## 2026-05
 
-- [2026-05-05_lfs-dvc-migration-plan.md](2026-05-05_lfs-dvc-migration-plan.md) — concrete plan: Git LFS for PDFs + DVC for data + periodic Dropbox backup; supersedes Dropbox-symlink approach; awaiting user approval at three [USER] decision points
+- [2026-05-06_tools-propagate-plan.md](2026-05-06_tools-propagate-plan.md) — `/tools propagate` skill: registry-driven feature propagation from workflow source to consumer repos; pending user approval at five [USER] decision points
+- [2026-05-05_lfs-dvc-migration-plan.md](2026-05-05_lfs-dvc-migration-plan.md) — concrete plan: Git LFS for PDFs + DVC for data + periodic Dropbox backup; supersedes Dropbox-symlink approach; D3 + D8 resolved 2026-05-05; pilot paused mid-execution
 - [2026-05-05_lfs-vs-dvc-explainer.md](2026-05-05_lfs-vs-dvc-explainer.md) — concept-level explainer for Git LFS and DVC (companion to migration plan)
 - [2026-05-01_v0.2-tutorial-scope.md](2026-05-01_v0.2-tutorial-scope.md) — v0.2.x tutorial track: function-by-function demos, behavioral overlay priority, orchestrator de-emphasized
 - ~~[2026-05-01_dropbox-symlink-setup-explainer.md]~~ — superseded by 2026-05-05 LFS+DVC migration plan; archived to `archive/`
