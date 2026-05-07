@@ -1,6 +1,6 @@
 # TODO — claude-code-my-workflow
 
-Last updated: 2026-05-06
+Last updated: 2026-05-07
 
 Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracker tasks (TaskCreate) are working memory; this file is the persistent cross-session record.
 
@@ -10,7 +10,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracke
 
 ## Up Next
 
-- [ ] **Write comprehensive propagation plan** — universal vs overlay file taxonomy; how `propagate.py` routes per file class; how `main → overlay` itself stays in sync. Save to `quality_reports/plans/2026-05-NN_comprehensive-propagation-plan.md`. Will supersede the partial `2026-05-06_tools-propagate-plan.md`. (Identified 2026-05-06 evening when cherry-pick attempt surfaced parallel-history complexity in overlays.)
+- [ ] **Review the comprehensive propagation plan** at `quality_reports/plans/2026-05-07_comprehensive-propagation-plan.md` (DRAFT). 10 [USER] decisions to confirm/amend. Once approved, implementation breaks into Phase A (manifest) → Phase B (propagate.py routing) → Phase C (sync-overlays skill) → Phase D (bootstrap) → Phase E (docs cleanup). Total estimate ~5-6 hours over 1-2 sessions.
 - [ ] **After comprehensive plan lands**: bootstrap `workflow-sync.json` across the 7 consumers via the now-correct propagate routing; verify idempotency with a re-run.
 - [ ] **Resume BDD pilot** — wait for user "resume" signal. Tasks #5–#12 in tracker; first action is soft-migrate 60 existing PDFs to LFS pointers (already approved 2026-05-06).
 
@@ -22,7 +22,10 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracke
 ## Backlog
 
 - [ ] **`~/.claude/settings.json` drift** — diverged ~50 days from `claude-config/settings.json` (193 vs 81 bytes). Per `sync-global-config.md`, the live file should be copied to the repo and committed. Small task; ~10 min.
-- [ ] **Add `Resolved` / `Pending` / `Deferred` / `Open` to `NEVER_SURNAMES` blocklist** in `.claude/hooks/primary_source_lib.py`. Caught as a false-positive twice today on bracketed-year text like `[Resolved 2026-05-05]`. ~5 lines + test.
+- [ ] **Extend `NEVER_SURNAMES` blocklist** in `.claude/hooks/primary_source_lib.py` with two clusters of false positives encountered in real session-log writing: (a) status words `Resolved` / `Pending` / `Deferred` / `Open` (bracketed-year like `[Resolved 2026-05-05]`); (b) common changes-table verbs `Added` / `New` / `Fixed` / `Removed` / `Inserted` / `Replaced` / `Changed` / `Extended` / `Deleted` / `Dropped` / `Copied` / `Merged` / `Patched` (table-cell-start verbs followed by date-like strings). ~10 lines + tests.
+- [ ] **Land user's draft proposal at `quality_reports/plans/proposals/2026-05-07_primary-source-hook-unicode-fix.md`** — copied from BDD repo. Addresses a unicode handling gap in the primary-source regex. Distinct from the blocklist-extension TODO above; both should land together for a coherent regex hardening pass.
+- [ ] **Stata skill: changelog mention when next docs pass happens** — release-note item: "New `.claude/skills/stata/` (migrated from global `claude-config/skills/stata/`). Workflow now mandates `stata17` invocation via `.claude/rules/stata-code-conventions.md`; never call `/Applications/Stata/...` directly."
+- [ ] **Manually copy stata skill to BDD** if the Stata-14 invocation bug recurs before the comprehensive propagation plan's Phase D bootstrap runs. The skill landed on workflow main today but does not yet propagate (Class A routing ships with the comprehensive plan).
 - [ ] **Overlay-branch sync** — applied-micro and behavioral lag main on today's universal-infrastructure commits. Cherry-pick attempt aborted 2026-05-06 due to parallel-history conflicts on `INDEX.md`, `CLAUDE.md`, `tools/SKILL.md`, etc. Properly addressed by the comprehensive propagation plan (above).
 - [ ] **Possibly: `/tools sync-overlays` skill** — automate cherry-picking from main onto overlays once the universal-vs-overlay framework is in place. Out of scope until the comprehensive plan settles.
 - [ ] **Replication of LFS migration to other research repos** — once BDD pilot exits successfully (D6), bulk-migrate the other research repos: `belief_distortion_discrimination_audit`, `bdm_bic`, `tx_peer_effects_local`, `va_consolidated`, etc. Per `2026-05-05_lfs-dvc-migration-plan.md` §8.
@@ -31,6 +34,8 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracke
 
 ## Done (recent)
 
+- [x] 2026-05-07 — comprehensive propagation plan drafted (DRAFT, pending user review): `2026-05-07_comprehensive-propagation-plan.md`; INDEX + v1 plan status updated
+- [x] 2026-05-07 — stata skill migrated from `claude-config` to workflow with Stata 14 dropped + `stata17` mandated; `.claude/rules/stata-code-conventions.md` updated with Invocation section; doc_lookup.md scoped to Stata 17 with portable paths
 - [x] 2026-05-06 — propagate.py implemented (`e0425b3`); SKILL.md updated with `/tools propagate` and `/tools list-consumers` subcommands; consumers.toml created with 7 entries (gitignored)
 - [x] 2026-05-06 — context-monitor.py v2 with token-based real measurement (`ad6c547`); propagated to 7 consumer repos manually; tested against BDD's transcript (matched 840.9k figure)
 - [x] 2026-05-06 — comprehensive `/tools propagate` design plan written (`8a995bc`), revised to fix code-fence pairing (`4dad002`) and tx_peer_effects_paper scope (`47164b2`)
