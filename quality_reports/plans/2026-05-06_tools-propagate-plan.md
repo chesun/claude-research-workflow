@@ -73,13 +73,9 @@ path = "~/github_repos/belief_distortion_discrimination_audit"
 overlay = "behavioral"
 
 [[consumer]]
-path = "~/github_repos/tx_peer_effects_paper"
-overlay = "applied-micro"
-note = "TX peer effects (private — has data)"
-
-[[consumer]]
 path = "~/github_repos/tx_peer_effects_local"
 overlay = "applied-micro"
+note = "TX peer effects analysis repo. (Note: ~/github_repos/tx_peer_effects_paper is the Overleaf-sync paper/slides repo and has no .claude/ — not a workflow consumer; do not add it.)"
 
 [[consumer]]
 path = "~/github_repos/csac"

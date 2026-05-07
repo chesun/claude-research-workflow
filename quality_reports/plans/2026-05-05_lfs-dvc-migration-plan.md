@@ -454,18 +454,18 @@ Research repos likely needing migration (from `~/github_repos/`):
 
 | Repo | Has PDFs? | Has data? | Coauthors? | LFS migrate | DVC init |
 |---|---|---|---|---|---|
-| `belief_distortion_discrimination` | Yes | Yes | TBD | Yes (pilot) | Yes (pilot) |
-| `tx_peer_effects_paper` | Yes | Yes | Yes (3) | Yes | Yes |
-| `tx_peer_effects_local` | TBD | TBD | TBD | TBD | TBD |
+| `belief_distortion_discrimination` | Yes | Yes (`data_local/`) | None | Yes (pilot) | Yes (pilot) |
+| `tx_peer_effects_local` | TBD | TBD | None | TBD | TBD |
 | `bdm_bic` / `bdm_bic_paper` | TBD | TBD | TBD | TBD | TBD |
 | `belief_distortion` | TBD | TBD | TBD | TBD | TBD |
 | `csac` / `csac_2024` / `csac2025` | TBD | TBD | TBD | TBD | TBD |
 | `jmp_paper_overleaf` | TBD (LaTeX-only?) | No | TBD | TBD | No |
 | `va_paper_clone` / `va_consolidated` / `cde_va_project_fork` | TBD | TBD | TBD | TBD | TBD |
 
-Repos confirmed to skip (no load-bearing PDFs / no project data):
+Repos confirmed to skip (no load-bearing PDFs / no project data / no `.claude/` infrastructure):
 
 - `claude-code-my-workflow` (template — no own PDFs)
+- `tx_peer_effects_paper` (Overleaf-sync paper/slides repo; LaTeX-only, no `.claude/`, no `data/`)
 - `chesun.github.io` (Jekyll site — no academic content)
 - `latex_templates`, `dissertation_template`, `replications`, `stata-binscatter2` (utility / template repos)
 
