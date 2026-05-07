@@ -1,7 +1,7 @@
-# `/tools propagate` — Detailed Plan
+# `/tools propagate` — Detailed Plan (v1)
 
 **Date:** 2026-05-06
-**Status:** Active (DRAFT — pending user approval before implementation)
+**Status:** Extended by [2026-05-07_comprehensive-propagation-plan.md](2026-05-07_comprehensive-propagation-plan.md) — implementation (`propagate.py`, `consumers.toml`, identity trinary, divergence-skip) is preserved and still load-bearing; the v2 plan adds the file-class taxonomy + overlay-sync layer that this plan deferred.
 **Supersedes:** —
 **Authors:** Christina + Claude
 
