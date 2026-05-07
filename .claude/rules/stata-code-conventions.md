@@ -5,6 +5,12 @@
 ## Version
 - Server may use Stata 18 with older package versions — flag compatibility concerns
 
+## Invocation (local machine)
+- **Always invoke as `stata17` from the command line** — `stata17 -b do file.do` for batch runs.
+- **Never call binaries inside `/Applications/Stata/StataMP.app/...` directly.** That path is the older Stata MP 14 install on this machine; both versions ship a binary literally named `StataMP` / `stata-mp` inside their respective `.app` bundles, so a direct path call to `/Applications/Stata/...` silently picks Stata 14.
+- `stata17` is the version-pinned alias on PATH (typically `~/.local/bin/stata17 → ~/Documents/stata/StataMP.app/Contents/MacOS/stata-mp`). The unqualified `stata-mp` resolves to the same binary on this machine but is ambiguous in principle; prefer `stata17`.
+- See `.claude/skills/stata/SKILL.md` for full Stata reference, including documentation lookup, language essentials, and common pitfalls.
+
 ## Project Structure
 - **Master file:** `mainscript.do` or `main.do` — runs all do files via `do ./do/filename.do`
 - **Settings:** `settings.do` — globals for paths, machine-specific via `c(hostname)` branching
