@@ -196,3 +196,99 @@ Working tree in BDD has uncommitted: `data_local.dvc` (DVC pointer), `.gitignore
 - [ ] Then #11 validation (LFS state + DVC state + hook compatibility checks).
 - [ ] Then 7-day pilot run (#12) with metric tracking per §6.6 of the migration plan.
 - [ ] If user approves token-based context-monitor v2: implement (~120 lines, hybrid design); commit on main.
+
+---
+
+## Day 2 evening — context-monitor v2, propagation skill, overlay-sync detour
+
+### Evening events (continued from afternoon)
+
+**22:00 UTC:** User approved token-based context-monitor v2 with performance + memory budget caveats. Implemented hybrid design (cheap proxy on every fire + real token reading internally cached for 10 calls / 2 min) in `ad6c547`. Validated against BDD transcript: parsed 839,854 tokens (matched user's 840.9k figure). Performance: 0.6 ms uncached read, 1.2 μs cached. MAX_TOOL_CALLS lowered from 1000 → 400 default. Hook fired correctly later in this very session at the real 41% threshold.
+
+**22:15 UTC:** User authorized propagation of new hook to other consumer repos. Identified 9 repos with `.claude/hooks/context-monitor.py`. Skipped workflow itself + the behavioral worktree (will get update via eventual main→behavioral merge). Manually `cp`-then-commit-per-repo to the remaining 7: BDD (`edda972`), BDD-audit (`82619c7`), bdm_bic (`873de29`), csac (`3aae0af`), csac2025 (`528d77d`), tx_peer_effects_local (`2210cd0`), va_consolidated (`173404e`).
+
+**22:30 UTC:** User raised the broader feature-propagation problem: "we will not only need to propagate hooks, but new skills, agents, rules etc." Discussed three architectures (registry+copy, git remote+merge, hybrid). Recommended Option A (registry+copy via a `/tools propagate` skill).
+
+**22:45 UTC:** User flagged the new-project / fork concern: how does the propagate-skill behave when forked into a fresh project? Resolved via the .gitignore mechanism — registry (`consumers.toml`) and per-consumer state (`workflow-sync.json`) are both under `.claude/state/*` (gitignored), so they don't propagate to forks. Forks get the skill but no consumer list → script exits cleanly with hint.
+
+**23:00 UTC:** Looked at how `/new-project` actually works. It's a research-pipeline orchestrator (Discovery → Submission), NOT a fork-creator. The fork happens manually before `/new-project` is invoked. Confirms the .gitignore mechanism cleanly handles the fork-vs-source-vs-consumer trinary.
+
+**23:15 UTC:** Wrote detailed plan for `/tools propagate` to `quality_reports/plans/2026-05-06_tools-propagate-plan.md` (`8a995bc`). 14 sections, 5 [USER] decisions, all-stdlib Python helper script proposed. Fixed an unclosed-code-block formatting issue (`4dad002`). Corrected `tx_peer_effects_paper` scope after user noted it's an Overleaf-sync repo with no `.claude/` (`47164b2`).
+
+**23:45 UTC:** Implemented `propagate.py` (~350 LOC, stdlib-only, Python 3.11+) per the plan (`e0425b3`). SKILL.md updated with `/tools propagate` and `/tools list-consumers` subcommands. Smoke tests pass: identity-mode "none" hint correct, `--check-identity` reporting works.
+
+**00:15 UTC (next day, 2026-05-06):** Created `consumers.toml` with the 7 verified consumer entries. Identity check now reports source mode with 7 consumers. First dry-run revealed an architectural surprise:
+
+- 2 of 7 consumers (csac, csac2025) reported "in-sync" — their overlay is `main`, content matches.
+- 5 of 7 (BDD, BDD-audit, bdm_bic, tx_peer_effects_local, va_consolidated) reported "ambiguous" — the script reads from their overlay branch (`behavioral` or `applied-micro`) where the v1 hook still lives, but the consumer has the v2 hook (manually copied from main earlier today). Mismatch → ambiguous.
+
+**00:30 UTC:** Investigated branch divergence. Discovery: overlay branches don't just lag main — they're **parallel histories**. Same-day commits (e.g., 2026-05-04 log) appear on all three branches with **3 different SHAs**. The user's historical pattern has been manual cherry-picking from main onto overlays, which produces these parallel SHAs.
+
+**00:45 UTC:** User chose Path 2 — bring overlays current first via cherry-pick, then revisit propagation comprehensively. Created applied-micro worktree (`~/github_repos/claude-code-my-workflow-applied-micro`). Behavioral worktree already existed.
+
+**01:00 UTC:** Attempted `git cherry-pick -x b6b759a^..e0425b3` on behavioral worktree. First commit hit conflicts on `INDEX.md` (parallel-history) and a rename/delete on the archived Dropbox-symlink plan (file never existed on behavioral). Aborted cleanly.
+
+**01:15 UTC:** Course-corrected: surfaced honest assessment of the cherry-pick complexity to user. Two classes of commits:
+- pure-additive (templates, new rules, propagate.py, hook v2) — low conflict risk
+- modify-shared (INDEX.md, CLAUDE.md, tools/SKILL.md, .gitignore) — every cherry-pick generates conflicts requiring hand-merge with judgment about overlay-flavored content
+
+**01:30 UTC:** User decided to roll the whole overlay sync into the comprehensive propagation plan rather than partial cherry-pick tonight. Tracker cleaned: tasks #17-#22 marked deleted; new task #23 created for the comprehensive plan. Today's stopping point is clean — implementation done for the simple case, design-question identified for the harder case, no half-done state in any repo.
+
+### Day 2 evening — additional changes committed
+
+| SHA | Title |
+|---|---|
+| `47164b2` | fix(plans): tx_peer_effects_paper is Overleaf-only, not a workflow consumer |
+| `4dad002` | fix(plans): close unclosed code block in /tools propagate plan |
+| `8a995bc` | plans: /tools propagate — registry-driven feature propagation design |
+| `e0425b3` | skills(/tools propagate): registry-driven feature propagation |
+| `ad6c547` | hooks(context-monitor): real token-based measurement, proxy as fallback |
+
+In consumer repos (one commit each, 7 total):
+
+| Repo | SHA |
+|---|---|
+| BDD | `edda972` |
+| BDD-audit | `82619c7` |
+| bdm_bic | `873de29` |
+| csac | `3aae0af` |
+| csac2025 | `528d77d` |
+| tx_peer_effects_local | `2210cd0` |
+| va_consolidated | `173404e` |
+
+### Day 2 evening — design decisions
+
+| Decision | Rationale |
+|---|---|
+| Token-based context-monitor v2 with hybrid throttle | Proxy mis-fired for read-heavy projects (BDD at 84% real, hook thought 31.5%). Real measurement parses `message.usage` from transcript JSONL; cached internally for 10 calls / 2 min so cost is bounded. Proxy retained as fallback for early-session window when transcript may not yet have usage blocks. |
+| MAX_TOOL_CALLS default 1000 → 400 | With token-based primary, the proxy is now just an early-session fallback. Tighter default reduces silent over-firing. |
+| Propagation registry (`consumers.toml`) is gitignored | Christina-specific; doesn't propagate to forks. Skill itself does propagate (it's tracked) but is inert in forks (no registry → exits with hint). Same gitignore pattern handles per-consumer `workflow-sync.json` state. |
+| Identity detection trinary: source / consumer / none | Three repo states get three behaviors. Source-only repo runs propagation. Consumer prints "run from source" hint. Neither prints setup instructions. Avoids accidental cross-propagation. |
+| Detect-and-skip on local divergence (not silent overwrite) | Preserves consumer customizations. User reconciles divergent files manually; never lose work. |
+| Cherry-pick attempt aborted; defer overlay sync to comprehensive plan | Parallel histories generate conflict on every commit touching INDEX.md and other shared files. Mechanical cherry-pick over-runs the user's manual judgment. The right design needs a universal-vs-overlay file taxonomy. |
+| Worktrees for applied-micro and behavioral kept live | Useful for future overlay work (manual feature dev, eventual comprehensive-plan implementation). Low cost: shared `.git/objects/`. Behavioral worktree has user's untracked work file — protected by cherry-pick abort. |
+
+### Day 2 evening — verification
+
+| Check | Result |
+|---|---|
+| context-monitor v2 parses BDD transcript correctly | PASS — 839,854 tokens (matches user-reported 840.9k) |
+| context-monitor v2 model max detection | PASS — Opus 4.7 returns 1M via heuristic (`real_tokens > 200k`) |
+| context-monitor v2 performance | PASS — 0.6 ms uncached, 1.2 μs cached, full hook ~30 ms |
+| 7 consumer repos sync to canonical hook | PASS — all 7 diff-clean against workflow's canonical |
+| propagate.py syntax + smoke tests | PASS — identity "none" hint correct, `--check-identity` works |
+| Cherry-pick attempt reversible | PASS — aborted cleanly, behavioral worktree restored to pre-attempt state |
+
+### Day 2 evening — open questions (for next session)
+
+- [ ] **Comprehensive propagation plan** — needs a universal-vs-overlay file taxonomy (which class is each file in?), a routing rule (universal → main, overlay-specific → overlay branch), and a main → overlay sync mechanism (cherry-pick automation? two-tier sync? other?).
+- [ ] **Overlay-branch divergence** — applied-micro and behavioral have ~10+ commits each that aren't on main, plus they lag main by today's universal commits. Tonight's cherry-pick aborted; comprehensive plan addresses.
+- [ ] **`workflow-sync.json` bootstrap** — when comprehensive plan settles routing, run `propagate.py --force-initial` against consumers to populate sync state. Until then, the script reports "ambiguous" for 5 of 7 consumers (where overlay branches lag).
+
+### Day 2 evening — next steps
+
+(See updated `TODO.md` at project root for the persistent cross-session view.)
+
+- [ ] **In a fresh-context session**: write the comprehensive propagation plan. This is the unblocker for both: (a) overlay sync; (b) consumer sync via the new propagate skill.
+- [ ] **When user signals**: resume BDD pilot at task #5 (soft-migrate 60 PDFs). Tag `pre-lfs-dvc-migration-2026-05-06` is the rollback target.
+- [ ] **Small follow-ups (anytime)**: `~/.claude/settings.json` drift sync; add `Resolved`/`Pending`/`Deferred`/`Open` to `NEVER_SURNAMES` blocklist (caught as false positive twice today).
