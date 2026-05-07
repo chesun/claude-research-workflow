@@ -1,7 +1,7 @@
 ---
 name: tools
-description: Utility commands — commit, compile, validate-bib, journal, context-status, deploy, learn, sync-status. Replaces individual utility skills.
-argument-hint: "[subcommand: commit | compile | validate-bib | journal | context | deploy | learn | sync-status] [args]"
+description: Utility commands — commit, compile, validate-bib, journal, context-status, deploy, learn, sync-status, propagate, list-consumers. Replaces individual utility skills.
+argument-hint: "[subcommand: commit | compile | validate-bib | journal | context | deploy | learn | sync-status | propagate | list-consumers] [args]"
 allowed-tools: Read,Grep,Glob,Write,Edit,Bash,Task
 ---
 
@@ -221,6 +221,66 @@ If any are non-zero / stale, surface as a numbered action list at the bottom:
 If everything is clean: print "All storage tiers in sync."
 
 Reference: `.claude/rules/data-version-control.md`.
+
+---
+
+### `/tools propagate <pattern>... [--dry-run] [--force-initial] [--only PATHS]` — Workflow Propagation
+
+Sync selected files from this workflow source repo to all configured consumer repos. Implementation: `python3 .claude/skills/tools/propagate.py` (~350 LOC, stdlib-only, requires Python 3.11+).
+
+**Step 1: identity check.** Run `python3 .claude/skills/tools/propagate.py --check-identity` first. The script's three identity modes:
+
+- **source** — has `.claude/state/consumers.toml` → propagation runs.
+- **consumer** — has `.claude/state/workflow-sync.json` → exits with "run from source" hint.
+- **none** — neither file exists → exits with setup instructions.
+
+**Step 2: invoke.** From the workflow source repo:
+
+`python3 .claude/skills/tools/propagate.py [--dry-run] [--force-initial] [--only PATH1,PATH2] PATTERN [PATTERN...]`
+
+Patterns are repo-relative paths or globs:
+
+- `.claude/hooks/context-monitor.py` — single file
+- `.claude/rules/*.md` — all rules
+- `templates/data-*.md` — globbed templates
+- `.claude/skills/tools/SKILL.md` — a single skill file
+
+**Step 3: review output.** Per-consumer report:
+
+- `copied` — files written and committed in this consumer
+- `in-sync` — already matched workflow's current version (no action)
+- `DIVERGENT` — consumer has local edits since last sync; **skipped** to preserve them. User reconciles manually.
+- `NOT-ON-OVERLAY` — file doesn't exist on consumer's overlay branch in workflow's git data; skipped.
+- `AMBIGUOUS` — file present in consumer but no sync record; skipped unless `--force-initial`.
+
+Aggregate totals at the bottom.
+
+**Step 4: handle divergent files (if any).** For each consumer where a file was skipped due to divergence, the user must manually reconcile by either accepting the workflow version (overwrite + recommit in that consumer), keeping the consumer's local version (update its `workflow-sync.json` record manually), or three-way merging by hand.
+
+**Common patterns:**
+
+- New hook on workflow → `/tools propagate .claude/hooks/<file>.py`
+- Rules sweep → `/tools propagate .claude/rules/*.md`
+- New skill → `/tools propagate .claude/skills/<name>/SKILL.md`
+- Template change → `/tools propagate templates/<file>`
+
+**Architecture:** registry at `.claude/state/consumers.toml` (TOML, gitignored, hand-maintained); per-consumer state at `.claude/state/workflow-sync.json` (JSON, gitignored, written by the script). Both files are gitignored by the universal `.claude/state/*` rule, so they don't propagate to fresh forks of the workflow.
+
+Plan: `quality_reports/plans/2026-05-06_tools-propagate-plan.md` (full design doc).
+
+---
+
+### `/tools list-consumers` — List Configured Consumer Repos
+
+Read-only. Prints the workflow's consumer registry plus each consumer's last-sync state.
+
+```bash
+python3 .claude/skills/tools/propagate.py --check-identity
+```
+
+Same script, identity-only mode. Useful for quick inspection before a propagate run.
+
+If invoked from a consumer repo, prints that consumer's sync state. From a fresh fork (neither source nor consumer), prints the setup hint.
 
 ---
 
