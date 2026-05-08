@@ -6,13 +6,11 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracke
 
 ## Active (doing now)
 
-- [ ] **Phase B — propagate.py routing change.** Add `Manifest` class + `resolve_source_branch()` function. Modify `propagate_one_consumer` to use class-based routing per `.claude/file-classes.toml`. Add class metadata to `workflow-sync.json` schema. Update SKILL.md to document the new routing behavior. ~1 hour.
+- [ ] **Phase D — bootstrap execution.** Pre-flight: behavioral worktree has uncommitted changes (likely from yesterday's pilot work) — commit or stash before sync-overlays will run. Then dry-run sync-overlays; commit applied-micro and behavioral catch-ups (use `--force` for the 5 stale-of-main files identified in Phase A). Then `/tools propagate --force-initial '.claude/**' 'templates/**' '.gitignore' 'LICENSE'` against the 7 consumers; populates each consumer's `workflow-sync.json`. Tag `bootstrap-2026-05-NN`. ~1 hour user-time.
 
 ## Up Next
-- [ ] **Phase C — `/tools sync-overlays` skill.** Write `sync_overlays.py` (~150 LOC). Pulls Class A updates from main → applied-micro and behavioral worktrees. Add to `tools/SKILL.md`. ~1 hour.
-- [ ] **Phase D — bootstrap execution.** Run sync-overlays for first time; review per-overlay diffs. Run propagate `--force-initial` against the 7 consumers. Tag `bootstrap-2026-05-NN`. ~1 hour user-time.
-- [ ] **Phase E — docs cleanup.** Update CLAUDE.md (Class B, edit per overlay); update changelog with new stata skill; close out related TODOs. ~30 min.
-- [ ] **After comprehensive plan lands**: bootstrap `workflow-sync.json` across the 7 consumers via the now-correct propagate routing; verify idempotency with a re-run.
+
+- [ ] **Phase E — docs cleanup.** Update CLAUDE.md (Class B, edit per overlay) with reference to the file-class taxonomy + sync-overlays skill; update changelog with new stata skill + comprehensive propagation infrastructure; close out related TODOs. ~30 min.
 - [ ] **Resume BDD pilot** — wait for user "resume" signal. Tasks #5–#12 in tracker; first action is soft-migrate 60 existing PDFs to LFS pointers (already approved 2026-05-06).
 
 ## Waiting On
@@ -35,6 +33,8 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracke
 
 ## Done (recent)
 
+- [x] 2026-05-07 — Phase C: `/tools sync-overlays` skill (`sync_overlays.py` + SKILL.md update); dry-run validates Phase A classification — applied-micro shows exactly the 5 stale-of-main files identified during the audit; behavioral pre-flight surfaced uncommitted-state blocker for Phase D
+- [x] 2026-05-07 — Phase B: propagate.py class-aware routing (Manifest class + resolve_source_branch); 433 → 580 LOC; smoke-tested across all 4 routing cases (A/B/C/D) on multiple consumers; SKILL.md updated
 - [x] 2026-05-07 — Phase A: `bootstrap_manifest.py` audit ran (240 paths, 118 A / 0 B / 34 C / 77 D / 16 ambiguous); user-reviewed the 16 ambiguous paths; final split = 118 A / 11 B / 34 C / 77 D; `.claude/file-classes.toml` committed; sanity-check PASS
 - [x] 2026-05-07 — comprehensive propagation plan APPROVED (`9bbaeea` drafted, walked through section-by-section, all 9 reviewable decisions signed off — D5 + D7 resolved by bootstrap audit)
 - [x] 2026-05-07 — comprehensive propagation plan drafted: `2026-05-07_comprehensive-propagation-plan.md`; INDEX + v1 plan status updated

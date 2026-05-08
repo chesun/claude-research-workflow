@@ -289,6 +289,61 @@ Plans:
 
 ---
 
+### `/tools sync-overlays [--dry-run] [--force]` — Pull Class A Updates from Main to Overlay Branches
+
+Push Universal-class file updates from `main` into the `applied-micro` and `behavioral` overlay worktrees. Solves the parallel-history conflict that blocks naive cherry-picking. Implementation: `python3 .claude/skills/tools/sync_overlays.py` (~250 LOC, stdlib-only, requires Python 3.11+).
+
+**Scope.** Only Class A (Universal) files are touched. Class B (overlay-customized) and Class C (overlay-only) files are NEVER overwritten — those live on the overlay by design. The class lookup uses the same `.claude/file-classes.toml` manifest as `/tools propagate`.
+
+**Worktree assumption.**
+
+```
+~/github_repos/claude-code-my-workflow                          (main)
+~/github_repos/claude-code-my-workflow-applied-micro            (applied-micro worktree)
+~/github_repos/claude-code-my-workflow-behavioral               (behavioral worktree)
+```
+
+If a worktree is missing, the script prints the `git worktree add` command to create it.
+
+**Behavior per file (per overlay).**
+
+| Overlay state | Default (no `--force`) | `--force` |
+|---|---|---|
+| File absent | Copy from main, stage as new | Same |
+| File matches main | No-op | No-op |
+| File differs from main | **Skip + warn** (preserves intentional out-of-band edits) | Overwrite + stage as updated |
+
+The default behavior preserves any out-of-band edits the user has made directly on an overlay. Pass `--force` only when you know the overlay version is stale-of-main (e.g., during the Phase D bootstrap, where the bootstrap audit identified the exact files to overwrite).
+
+**Pre-flight.** sync-overlays refuses to run on a worktree with uncommitted changes. Commit or stash before invoking.
+
+**Step 1: dry-run.** From the main worktree:
+
+```bash
+python3 .claude/skills/tools/sync_overlays.py --dry-run
+```
+
+Reports proposed changes per overlay: counts of new files, in-sync files, and divergent files (which would be skipped without `--force`). No commits made.
+
+**Step 2: apply.** Once the dry-run looks right:
+
+```bash
+python3 .claude/skills/tools/sync_overlays.py            # safe mode
+python3 .claude/skills/tools/sync_overlays.py --force    # overwrite divergent files (use sparingly)
+```
+
+One commit per overlay listing the propagated Class A files. No git push — user pushes overlay branches separately when ready.
+
+**Output annotations.**
+
+- `+` — new file added to overlay
+- `~` — overwrote a stale-of-main file (only with `--force`)
+- `!` — divergent, skipped (use `--force` to overwrite, or accept the overlay's version as intentional)
+
+Plan: `quality_reports/plans/2026-05-07_comprehensive-propagation-plan.md` §5.
+
+---
+
 ### `/tools list-consumers` — List Configured Consumer Repos
 
 Read-only. Prints the workflow's consumer registry plus each consumer's last-sync state.
