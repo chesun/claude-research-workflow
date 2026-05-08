@@ -93,13 +93,30 @@ def list_worktrees(repo: pathlib.Path) -> dict[str, pathlib.Path]:
     return result
 
 
-def worktree_is_clean(worktree: pathlib.Path) -> bool:
-    """True if the worktree has no uncommitted changes (staged or unstaged)."""
+def worktree_class_a_dirty(
+    worktree: pathlib.Path, manifest: dict
+) -> list[str]:
+    """List paths with uncommitted state that classify to Class A (Universal).
+
+    Untracked files / modified files outside Class A are irrelevant to sync-overlays
+    (it never touches them), so don't let them block the run.
+    """
     out = subprocess.run(
         ["git", "-C", str(worktree), "status", "--porcelain"],
         check=True, capture_output=True, text=True,
     ).stdout
-    return out.strip() == ""
+    dirty: list[str] = []
+    for line in out.splitlines():
+        if not line:
+            continue
+        # porcelain format: XY <path>  (where XY is two status chars)
+        path = line[3:].strip()
+        # Handle rename "from -> to" — take the new path
+        if " -> " in path:
+            path = path.split(" -> ", 1)[1]
+        if classify(path, manifest) == "universal":
+            dirty.append(path)
+    return dirty
 
 
 # ----- manifest -------------------------------------------------------------
@@ -149,6 +166,7 @@ def sync_one_overlay(
     overlay: str,
     overlay_worktree: pathlib.Path,
     class_a_paths: list[str],
+    manifest: dict,
     dry_run: bool,
     force: bool,
 ) -> dict:
@@ -158,10 +176,14 @@ def sync_one_overlay(
     in_sync: list[str] = []        # already matches
     skipped_divergent: list[str] = []  # differs and not --force
 
-    if not worktree_is_clean(overlay_worktree):
+    dirty_a = worktree_class_a_dirty(overlay_worktree, manifest)
+    if dirty_a:
         return {
             "overlay": overlay, "worktree": str(overlay_worktree),
-            "error": "worktree has uncommitted changes; commit or stash before syncing",
+            "error": (
+                "worktree has uncommitted changes in Class A paths; commit or stash "
+                f"before syncing. Dirty Class A paths: {dirty_a}"
+            ),
             "new_files": new_files, "updated": updated, "in_sync": in_sync,
             "skipped_divergent": skipped_divergent, "commit_sha": None,
         }
@@ -318,7 +340,7 @@ def main() -> int:
     summary = []
     for overlay in OVERLAY_BRANCHES:
         result = sync_one_overlay(
-            main_repo, overlay, worktrees[overlay], class_a_paths,
+            main_repo, overlay, worktrees[overlay], class_a_paths, manifest,
             args.dry_run, args.force,
         )
         summary.append(result)
