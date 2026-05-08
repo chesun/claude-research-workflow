@@ -226,7 +226,16 @@ Reference: `.claude/rules/data-version-control.md`.
 
 ### `/tools propagate <pattern>... [--dry-run] [--force-initial] [--only PATHS]` — Workflow Propagation
 
-Sync selected files from this workflow source repo to all configured consumer repos. Implementation: `python3 .claude/skills/tools/propagate.py` (~350 LOC, stdlib-only, requires Python 3.11+).
+Sync selected files from this workflow source repo to all configured consumer repos, routed per the file-class manifest. Implementation: `python3 .claude/skills/tools/propagate.py` (~580 LOC, stdlib-only, requires Python 3.11+).
+
+**Class-aware routing.** Every file is read from the branch its class declares as authoritative:
+
+- **Class A — Universal** (default): read from `main`. Hooks, most rules, templates.
+- **Class B — Overlay-customized**: read from consumer's overlay branch (`applied-micro` or `behavioral`). E.g., `CLAUDE.md`, `orchestrator.md`, `quality.md`.
+- **Class C — Overlay-only**: read from the consumer's overlay if the consumer is on a matching branch; otherwise skipped as "not-applicable". E.g., `strategist.md` (applied-micro) or `designer.md` (behavioral).
+- **Class D — Excluded**: never propagates. Project-state files like `quality_reports/`, `MEMORY.md`, `data/`.
+
+The manifest lives at `.claude/file-classes.toml` on `main` (itself Class A so it propagates to overlay worktrees via `/tools sync-overlays`). Default for unlisted files = Class A.
 
 **Step 1: identity check.** Run `python3 .claude/skills/tools/propagate.py --check-identity` first. The script's three identity modes:
 
@@ -245,13 +254,15 @@ Patterns are repo-relative paths or globs:
 - `templates/data-*.md` — globbed templates
 - `.claude/skills/tools/SKILL.md` — a single skill file
 
-**Step 3: review output.** Per-consumer report:
+**Step 3: review output.** Per-consumer report annotates each file with its source branch + class:
 
-- `copied` — files written and committed in this consumer
-- `in-sync` — already matched workflow's current version (no action)
+- `copied` — files written and committed in this consumer (showing `← branch  [class]`)
+- `in-sync` — already matched the source branch's current version (no action)
 - `DIVERGENT` — consumer has local edits since last sync; **skipped** to preserve them. User reconciles manually.
-- `NOT-ON-OVERLAY` — file doesn't exist on consumer's overlay branch in workflow's git data; skipped.
+- `MISSING-ON-SOURCE` — file's class says read from a branch where the file doesn't exist (anomaly; user investigates).
 - `AMBIGUOUS` — file present in consumer but no sync record; skipped unless `--force-initial`.
+- `NOT-APPLICABLE` — Class C file for a branch the consumer is not on; correctly skipped.
+- `EXCLUDED` — manifest `[exclude]` match; correctly skipped (silent in totals).
 
 Aggregate totals at the bottom.
 
@@ -264,9 +275,17 @@ Aggregate totals at the bottom.
 - New skill → `/tools propagate .claude/skills/<name>/SKILL.md`
 - Template change → `/tools propagate templates/<file>`
 
-**Architecture:** registry at `.claude/state/consumers.toml` (TOML, gitignored, hand-maintained); per-consumer state at `.claude/state/workflow-sync.json` (JSON, gitignored, written by the script). Both files are gitignored by the universal `.claude/state/*` rule, so they don't propagate to fresh forks of the workflow.
+**Architecture:**
 
-Plan: `quality_reports/plans/2026-05-06_tools-propagate-plan.md` (full design doc).
+- Registry at `.claude/state/consumers.toml` (TOML, gitignored, hand-maintained).
+- Per-consumer state at `.claude/state/workflow-sync.json` (JSON, gitignored, written by the script). Each file's record now carries `class` and `source_branch` fields for traceability.
+- File-class manifest at `.claude/file-classes.toml` (tracked, on main, itself Class A).
+- All `.claude/state/*` files are gitignored by the universal rule, so they don't propagate to fresh forks of the workflow.
+
+Plans:
+
+- v1 (registry, identity, divergence-skip): `quality_reports/plans/2026-05-06_tools-propagate-plan.md`
+- v2 (class-aware routing, manifest, sync-overlays): `quality_reports/plans/2026-05-07_comprehensive-propagation-plan.md`
 
 ---
 
