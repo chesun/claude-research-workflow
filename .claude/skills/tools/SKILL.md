@@ -1,7 +1,7 @@
 ---
 name: tools
-description: Utility commands — commit, compile, validate-bib, journal, context-status, deploy, learn. Replaces individual utility skills.
-argument-hint: "[subcommand: commit | compile | validate-bib | journal | context | deploy | learn] [args]"
+description: Utility commands — commit, compile, validate-bib, journal, context-status, deploy, learn, sync-status, propagate, list-consumers. Replaces individual utility skills.
+argument-hint: "[subcommand: commit | compile | validate-bib | journal | context | deploy | learn | sync-status | propagate | list-consumers] [args]"
 allowed-tools: Read,Grep,Glob,Write,Edit,Bash,Task
 ---
 
@@ -150,6 +150,211 @@ Extract reusable knowledge from the current session into memory.
 - Two-tier routing:
   - Generic / project-relevant → `MEMORY.md` or auto-memory `.claude/projects/.../memory/`
   - Machine-specific (paths, credentials) → `.claude/state/personal-memory.md` (gitignored)
+
+---
+
+### `/tools sync-status` — Storage Sync Status (LFS + DVC + Backup)
+
+One-shot report of bulk-content storage state for the current repo: Git LFS, DVC, and (if configured) periodic Dropbox backup. Run before declaring a session done to catch a forgotten `dvc push`.
+
+**Step 1: Detect which tiers are active**
+
+- LFS: `[ -f .gitattributes ] && grep -q 'filter=lfs' .gitattributes`
+- DVC: `[ -d .dvc ]`
+- Periodic backup (Class D): check for `~/Dropbox/research-data/<proj>/backup/` or a project-specific manifest
+
+**Step 2: Gather state per tier**
+
+LFS:
+
+```bash
+git lfs ls-files | wc -l                  # tracked file count
+git lfs ls-files | awk '{print $1}' | sort -u | wc -l   # unique blob count
+du -sh .git/lfs/objects 2>/dev/null       # local LFS cache size
+git lfs env 2>/dev/null | grep -E "Endpoint|UploadTransfers|DownloadTransfers"
+# Bandwidth and storage stats: only available via GitHub web UI / API; if
+# `gh` CLI is configured, query the LFS endpoint via `gh api`. Otherwise just
+# point user at `https://github.com/<org>/<repo>/settings/lfs`.
+```
+
+DVC:
+
+```bash
+dvc status                                 # local: any pointers ahead of working tree?
+dvc status -c                              # cloud: any pending pushes / pulls?
+dvc remote list                            # which remote is configured
+ls -lh data/*.dvc data/**/*.dvc 2>/dev/null | wc -l   # pointer count
+du -sh "$(dvc config cache.dir 2>/dev/null || echo .dvc/cache)" 2>/dev/null
+```
+
+Periodic backup (Class D): `du -sh ~/Dropbox/research-data/$(basename $PWD)/backup 2>/dev/null` and `stat -f %m` on its newest file.
+
+**Step 3: Format output**
+
+```
+=== Git LFS ===
+Tracked patterns:    [list from .gitattributes]
+LFS files in repo:   N files, M MB local cache
+Endpoint:            <url>
+GitHub usage:        <link to repo settings → LFS for storage/bandwidth>
+
+=== DVC ===
+Remote:              <path>
+Pending uploads:     N files (run: dvc push)
+Pending downloads:   N files (run: dvc pull)
+Pointer count:       M files
+Cache size:          X MB
+
+=== Periodic Dropbox backup (Class D) ===
+Last run:            YYYY-MM-DD HH:MM (or "never")
+Mirror size:         X GB
+```
+
+**Step 4: Flag actionable items**
+
+If any are non-zero / stale, surface as a numbered action list at the bottom:
+
+- "Run `dvc push` — N files pending upload"
+- "Run `git lfs pull` — local LFS cache is empty"
+- "Backup is N days stale — run `bin/sync-backup.sh`"
+
+If everything is clean: print "All storage tiers in sync."
+
+Reference: `.claude/rules/data-version-control.md`.
+
+---
+
+### `/tools propagate <pattern>... [--dry-run] [--force-initial] [--only PATHS]` — Workflow Propagation
+
+Sync selected files from this workflow source repo to all configured consumer repos, routed per the file-class manifest. Implementation: `python3 .claude/skills/tools/propagate.py` (~580 LOC, stdlib-only, requires Python 3.11+).
+
+**Class-aware routing.** Every file is read from the branch its class declares as authoritative:
+
+- **Class A — Universal** (default): read from `main`. Hooks, most rules, templates.
+- **Class B — Overlay-customized**: read from consumer's overlay branch (`applied-micro` or `behavioral`). E.g., `CLAUDE.md`, `orchestrator.md`, `quality.md`.
+- **Class C — Overlay-only**: read from the consumer's overlay if the consumer is on a matching branch; otherwise skipped as "not-applicable". E.g., `strategist.md` (applied-micro) or `designer.md` (behavioral).
+- **Class D — Excluded**: never propagates. Project-state files like `quality_reports/`, `MEMORY.md`, `data/`.
+
+The manifest lives at `.claude/file-classes.toml` on `main` (itself Class A so it propagates to overlay worktrees via `/tools sync-overlays`). Default for unlisted files = Class A.
+
+**Step 1: identity check.** Run `python3 .claude/skills/tools/propagate.py --check-identity` first. The script's three identity modes:
+
+- **source** — has `.claude/state/consumers.toml` → propagation runs.
+- **consumer** — has `.claude/state/workflow-sync.json` → exits with "run from source" hint.
+- **none** — neither file exists → exits with setup instructions.
+
+**Step 2: invoke.** From the workflow source repo:
+
+`python3 .claude/skills/tools/propagate.py [--dry-run] [--force-initial] [--only PATH1,PATH2] PATTERN [PATTERN...]`
+
+Patterns are repo-relative paths or globs:
+
+- `.claude/hooks/context-monitor.py` — single file
+- `.claude/rules/*.md` — all rules
+- `templates/data-*.md` — globbed templates
+- `.claude/skills/tools/SKILL.md` — a single skill file
+
+**Step 3: review output.** Per-consumer report annotates each file with its source branch + class:
+
+- `copied` — files written and committed in this consumer (showing `← branch  [class]`)
+- `in-sync` — already matched the source branch's current version (no action)
+- `DIVERGENT` — consumer has local edits since last sync; **skipped** to preserve them. User reconciles manually.
+- `MISSING-ON-SOURCE` — file's class says read from a branch where the file doesn't exist (anomaly; user investigates).
+- `AMBIGUOUS` — file present in consumer but no sync record; skipped unless `--force-initial`.
+- `NOT-APPLICABLE` — Class C file for a branch the consumer is not on; correctly skipped.
+- `EXCLUDED` — manifest `[exclude]` match; correctly skipped (silent in totals).
+
+Aggregate totals at the bottom.
+
+**Step 4: handle divergent files (if any).** For each consumer where a file was skipped due to divergence, the user must manually reconcile by either accepting the workflow version (overwrite + recommit in that consumer), keeping the consumer's local version (update its `workflow-sync.json` record manually), or three-way merging by hand.
+
+**Common patterns:**
+
+- New hook on workflow → `/tools propagate .claude/hooks/<file>.py`
+- Rules sweep → `/tools propagate .claude/rules/*.md`
+- New skill → `/tools propagate .claude/skills/<name>/SKILL.md`
+- Template change → `/tools propagate templates/<file>`
+
+**Architecture:**
+
+- Registry at `.claude/state/consumers.toml` (TOML, gitignored, hand-maintained).
+- Per-consumer state at `.claude/state/workflow-sync.json` (JSON, gitignored, written by the script). Each file's record now carries `class` and `source_branch` fields for traceability.
+- File-class manifest at `.claude/file-classes.toml` (tracked, on main, itself Class A).
+- All `.claude/state/*` files are gitignored by the universal rule, so they don't propagate to fresh forks of the workflow.
+
+Plans:
+
+- v1 (registry, identity, divergence-skip): `quality_reports/plans/2026-05-06_tools-propagate-plan.md`
+- v2 (class-aware routing, manifest, sync-overlays): `quality_reports/plans/2026-05-07_comprehensive-propagation-plan.md`
+
+---
+
+### `/tools sync-overlays [--dry-run] [--force]` — Pull Class A Updates from Main to Overlay Branches
+
+Push Universal-class file updates from `main` into the `applied-micro` and `behavioral` overlay worktrees. Solves the parallel-history conflict that blocks naive cherry-picking. Implementation: `python3 .claude/skills/tools/sync_overlays.py` (~250 LOC, stdlib-only, requires Python 3.11+).
+
+**Scope.** Only Class A (Universal) files are touched. Class B (overlay-customized) and Class C (overlay-only) files are NEVER overwritten — those live on the overlay by design. The class lookup uses the same `.claude/file-classes.toml` manifest as `/tools propagate`.
+
+**Worktree assumption.**
+
+```
+~/github_repos/claude-code-my-workflow                          (main)
+~/github_repos/claude-code-my-workflow-applied-micro            (applied-micro worktree)
+~/github_repos/claude-code-my-workflow-behavioral               (behavioral worktree)
+```
+
+If a worktree is missing, the script prints the `git worktree add` command to create it.
+
+**Behavior per file (per overlay).**
+
+| Overlay state | Default (no `--force`) | `--force` |
+|---|---|---|
+| File absent | Copy from main, stage as new | Same |
+| File matches main | No-op | No-op |
+| File differs from main | **Skip + warn** (preserves intentional out-of-band edits) | Overwrite + stage as updated |
+
+The default behavior preserves any out-of-band edits the user has made directly on an overlay. Pass `--force` only when you know the overlay version is stale-of-main (e.g., during the Phase D bootstrap, where the bootstrap audit identified the exact files to overwrite).
+
+**Pre-flight.** sync-overlays refuses to run on a worktree with uncommitted changes. Commit or stash before invoking.
+
+**Step 1: dry-run.** From the main worktree:
+
+```bash
+python3 .claude/skills/tools/sync_overlays.py --dry-run
+```
+
+Reports proposed changes per overlay: counts of new files, in-sync files, and divergent files (which would be skipped without `--force`). No commits made.
+
+**Step 2: apply.** Once the dry-run looks right:
+
+```bash
+python3 .claude/skills/tools/sync_overlays.py            # safe mode
+python3 .claude/skills/tools/sync_overlays.py --force    # overwrite divergent files (use sparingly)
+```
+
+One commit per overlay listing the propagated Class A files. No git push — user pushes overlay branches separately when ready.
+
+**Output annotations.**
+
+- `+` — new file added to overlay
+- `~` — overwrote a stale-of-main file (only with `--force`)
+- `!` — divergent, skipped (use `--force` to overwrite, or accept the overlay's version as intentional)
+
+Plan: `quality_reports/plans/2026-05-07_comprehensive-propagation-plan.md` §5.
+
+---
+
+### `/tools list-consumers` — List Configured Consumer Repos
+
+Read-only. Prints the workflow's consumer registry plus each consumer's last-sync state.
+
+```bash
+python3 .claude/skills/tools/propagate.py --check-identity
+```
+
+Same script, identity-only mode. Useful for quick inspection before a propagate run.
+
+If invoked from a consumer repo, prints that consumer's sync state. From a fresh fork (neither source nor consumer), prints the setup hint.
 
 ---
 
