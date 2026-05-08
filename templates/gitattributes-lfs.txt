@@ -1,0 +1,40 @@
+# =============================================================================
+# Git LFS routing — copy this content into .gitattributes when enabling LFS
+# =============================================================================
+#
+# Usage: when a project decides paper PDFs are load-bearing enough to track,
+# enable Git LFS:
+#
+#   1. Comment out the PDF lines in .gitignore (the pair under "Academic PDFs")
+#   2. Copy this file's content (without this header block) into .gitattributes
+#      at the project root:
+#         cp templates/gitattributes-lfs.txt .gitattributes
+#         # then edit out this header block
+#   3. Run:
+#         brew install git-lfs       # if not already installed
+#         git lfs install            # one-time per machine
+#         git add .gitattributes
+#         git commit -m "Enable Git LFS for paper PDFs"
+#         git add master_supporting_docs/literature/papers/
+#         git commit -m "Add paper PDFs to LFS"
+#         git push
+#
+# After enabling, every PDF added to master_supporting_docs/literature/papers/
+# automatically routes to LFS. Coauthors clone the repo + run `git lfs pull`
+# (or just `git clone`, which fetches LFS blobs by default) to get the PDFs.
+#
+# Reference: .claude/rules/data-version-control.md
+#
+# =============================================================================
+
+# Git LFS routing — paper PDFs
+master_supporting_docs/literature/papers/*.pdf filter=lfs diff=lfs merge=lfs -text
+master_supporting_docs/literature/papers/**/*.pdf filter=lfs diff=lfs merge=lfs -text
+
+# Optional: large generated figures (uncomment per project as needed)
+# figures/**/*.pdf filter=lfs diff=lfs merge=lfs -text
+# figures/**/*.png filter=lfs diff=lfs merge=lfs -text
+
+# Optional: compiled paper / talk PDFs (uncomment if you track these)
+# paper/**/*.pdf filter=lfs diff=lfs merge=lfs -text
+# talks/**/*.pdf filter=lfs diff=lfs merge=lfs -text

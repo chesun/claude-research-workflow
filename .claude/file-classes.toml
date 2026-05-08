@@ -1,0 +1,158 @@
+# .claude/file-classes.toml
+# Workflow propagation manifest — classifies tracked paths into propagation classes.
+#
+# Design and rationale: quality_reports/plans/2026-05-07_comprehensive-propagation-plan.md
+# Bootstrap audit:      quality_reports/plans/proposals/proposed-file-classes-2026-05-07.toml
+# Approved:             2026-05-07 (Christina + Claude)
+#
+# CLASS DEFINITIONS
+#   A — Universal:           byte-identical on every branch where it exists; source = main.
+#                            Default for any path not listed in [overlay-customized] or [overlay-only].
+#   B — Overlay-customized:  exists on multiple branches with genuinely different content;
+#                            source = consumer's overlay branch.
+#                            sync-overlays does NOT touch these.
+#   C — Overlay-only:        exists on exactly one (or both) overlay branch(es);
+#                            source = the overlay branch where it lives.
+#   D — Excluded:             never propagates (project-state files).
+#
+# PRECEDENCE (when a path matches multiple sections):
+#   exclude > overlay-only > overlay-customized > universal (default)
+
+
+# CLASS A — Universal: byte-identical on every branch; source-of-truth = main.
+# Default for unlisted paths. The patterns below are explicit only where the path
+# falls in a directory shared with overlay-customized or overlay-only files
+# (handled via precedence). Any path not listed in this file is treated as Class A.
+[universal]
+patterns = [
+  ".claude/hooks/*.py",
+  ".claude/rules/*.md",
+  ".claude/agents/*.md",
+  ".claude/skills/*/SKILL.md",
+  ".claude/skills/tools/*.py",
+  ".claude/skills/stata/references/*.md",
+  ".claude/file-classes.toml",
+  ".claude/state/.gitkeep",
+  "templates/*",
+  "templates/**",
+  "master_supporting_docs/literature/papers/README.md",
+  "master_supporting_docs/literature/reading_notes/README.md",
+  ".gitignore",
+  ".gitattributes",
+  "LICENSE",
+  "README.md",
+  "CHANGELOG.md",
+]
+
+
+# CLASS B — Overlay-customized: differs per branch by intent.
+# Source-of-truth = consumer's overlay. sync-overlays does NOT touch these.
+# When the universal portion of a Class B file changes, edit each overlay branch manually.
+[overlay-customized]
+patterns = [
+  "CLAUDE.md",                                      # overlay-specific Skills Quick Reference rows
+  ".claude/agents/orchestrator.md",                 # behavioral has Behavioral/Experimental Pipeline section
+  ".claude/agents/verifier.md",                     # overlay-specific verification logic
+  ".claude/agents/writer.md",                       # behavioral references domain-profile-behavioral; different examples
+  ".claude/rules/quality.md",                       # overlay-specific component weights (theory 15%, design 25%, qualtrics 7%)
+  ".claude/rules/workflow.md",                      # overlay-specific phase + dispatch tables (theory/design/qualtrics/otree)
+  ".claude/skills/analyze/SKILL.md",                # behavioral defaults to Stata 17 + behavioral domain-profile
+  ".claude/skills/discover/SKILL.md",               # overlay-flavored discovery pipeline
+  ".claude/skills/new-project/SKILL.md",            # overlay-pipeline-specific
+  ".claude/skills/review/SKILL.md",                 # overlay-flavored review routing
+  ".claude/skills/submit/SKILL.md",                 # overlay-specific journal/replication standards
+]
+
+
+# CLASS C — Overlay-only: file exists on exactly one (or both) overlay(s).
+# Source-of-truth = the overlay branch where it lives.
+
+[[overlay-only]]
+branches = ["applied-micro"]
+patterns = [
+  ".claude/agents/strategist.md",
+  ".claude/agents/strategist-critic.md",
+  ".claude/references/domain-profile-applied-micro.md",
+  ".claude/references/identification-checklists.md",
+  ".claude/references/journal-profiles-applied-micro.md",
+  ".claude/rules/air-gapped-workflow.md",
+  ".claude/skills/balance/SKILL.md",
+  ".claude/skills/event-study/SKILL.md",
+  ".claude/skills/strategize/SKILL.md",
+]
+
+[[overlay-only]]
+branches = ["behavioral"]
+patterns = [
+  ".claude/agents/designer.md",
+  ".claude/agents/designer-critic.md",
+  ".claude/agents/theorist.md",
+  ".claude/agents/theorist-critic.md",
+  ".claude/agents/otree-specialist.md",
+  ".claude/agents/qualtrics-specialist.md",
+  ".claude/references/domain-profile-behavioral.md",
+  ".claude/references/inference-first-checklist.md",
+  ".claude/references/qualtrics-patterns.md",
+  ".claude/references/seminal-papers-by-subfield.md",
+  ".claude/rules/experiment-design-principles.md",
+  ".claude/skills/design/SKILL.md",
+  ".claude/skills/otree/SKILL.md",
+  ".claude/skills/preregister/SKILL.md",
+  ".claude/skills/qualtrics/SKILL.md",
+  ".claude/skills/theory/SKILL.md",
+  "experiments/comprehension/.gitkeep",
+  "experiments/designs/.gitkeep",
+  "experiments/instructions/.gitkeep",
+  "experiments/oTree/.gitkeep",
+  "experiments/pilots/.gitkeep",
+  "experiments/protocols/.gitkeep",
+  "experiments/qualtrics/.gitkeep",
+  "theory/.gitkeep",
+  "theory/proofs/.gitkeep",
+]
+
+
+# CLASS D — Excluded: never propagates. Project-state files maintained per-instance.
+[exclude]
+patterns = [
+  # Workflow project state — each consumer has their own
+  "quality_reports/*",
+  "quality_reports/**",
+  "decisions/*",
+  "decisions/**",
+  "MEMORY.md",
+  "SESSION_REPORT.md",
+  "TODO.md",
+
+  # Literature — per-project library
+  "master_supporting_docs/literature/papers/*.pdf",
+  "master_supporting_docs/literature/papers/**/*.pdf",
+  "master_supporting_docs/literature/reading_notes/*.md",
+  "master_supporting_docs/literature/reading_notes/**/*.md",
+
+  # Local state
+  ".claude/state/*",
+  ".claude/state/**",
+
+  # Data and analysis (per-project)
+  ".dvc/*",
+  ".dvc/**",
+  "data/*",
+  "data/**",
+  "scripts/*",
+  "scripts/**",
+  "paper/*",
+  "paper/**",
+  "talks/*",
+  "talks/**",
+  "figures/*",
+  "figures/**",
+  "tables/*",
+  "tables/**",
+  "explorations/*",
+  "explorations/**",
+  "replication/*",
+  "replication/**",
+  "preambles/*",
+  "preambles/**",
+]

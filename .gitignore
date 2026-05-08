@@ -83,6 +83,11 @@ CLAUDE.local.md
 # *.rds
 # output/**/*.rds
 
-# --- Academic PDFs (copyright; users add their own locally) ---
+# --- Academic PDFs ---
+# Default: gitignored to keep the template repo small (PDFs don't diff well
+# and bloat git history). In a fork where paper PDFs are load-bearing,
+# enable Git LFS and comment these lines out — see
+# .claude/rules/data-version-control.md (when present) or
+# quality_reports/plans/*lfs-dvc-migration-plan.md.
 master_supporting_docs/literature/papers/*.pdf
 master_supporting_docs/literature/papers/**/*.pdf

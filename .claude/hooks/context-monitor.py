@@ -10,8 +10,20 @@ Monitors context usage and provides progressive warnings:
 Hook Event: PostToolUse (on common tools)
 Throttles to 60-second intervals when below warning threshold.
 
-Note: Since direct context % isn't available, this uses a heuristic based on
-conversation file size and tool call count.
+Measurement: hybrid token-based + tool-call proxy.
+
+  Primary: parse `message.usage` from the most recent assistant message in
+  the active session transcript JSONL (`transcript_path` from hook stdin).
+  Sums input + cache_creation + cache_read for the real context size.
+  Internally cached for REAL_CHECK_TIME_INTERVAL / REAL_CHECK_TOOL_CALL_INTERVAL
+  to avoid disk churn — typical cost is ~5ms once per ~10 tool calls.
+
+  Fallback: when transcript is missing, unreadable, or has no usage blocks
+  yet (very early session), the legacy tool-call counter proxy is used.
+  MAX_TOOL_CALLS=400 default after recalibration on 2026-05-06.
+
+  See get_model_max_context() for context-window detection (env override,
+  model-field [1m] marker, heuristic from observed token counts).
 """
 
 from __future__ import annotations
@@ -43,11 +55,18 @@ THROTTLE_INTERVAL = 60
 # tool call. The Claude Code PreCompact hook silently bypasses when MCP servers
 # are loaded (anthropics/claude-code#14111), so this fallback is the only
 # guarantee that pre-compact-state.json exists before auto-compact fires.
-# 60% gives ~400 tool calls of buffer at MAX_TOOL_CALLS=1000.
 SNAPSHOT_FLOOR = 60
 # Throttle snapshot refreshes to avoid filesystem churn — refresh at most
 # once every N seconds while past the floor.
 SNAPSHOT_REFRESH_INTERVAL = 30
+
+# Token-based real-context-reading cache. The transcript is parsed at most
+# once per N tool calls or M seconds — whichever fires first. Reads at most
+# the last 50 KB of the transcript file (tail-backward), so disk I/O is
+# bounded regardless of session length.
+REAL_CHECK_TOOL_CALL_INTERVAL = 10
+REAL_CHECK_TIME_INTERVAL = 120
+TRANSCRIPT_TAIL_BYTES = 50_000
 
 
 def get_session_dir() -> Path:
@@ -104,22 +123,132 @@ def estimate_context_percentage() -> float:
     cache["tool_calls"] = tool_calls
     save_cache(cache)
 
-    # Heuristic: tuned for Claude Opus 4.7 with the 1M-context variant.
-    # Counter increments on EVERY PostToolUse (matcher is unset in
-    # settings.json), so this counts Read/Edit/Write/Grep/Glob/Agent calls
-    # as well as Bash/Task. History of recalibration:
-    #   v1: 500 (Bash|Task-only matcher, undercounted by ~3x in mixed sessions)
-    #   v2: 1500 (recalibrated for widened matcher; turned out to overshoot —
-    #       80%/90% warnings fired AFTER actual compaction in
-    #       belief_distortion_discrimination, where compaction hit at ~1000)
-    #   v3: 1000 (current; empirical-grounded based on 2026-05-04 evidence)
-    # Override via CONTEXT_MONITOR_MAX_TOOL_CALLS env var if the heuristic
-    # drifts on a given project. The compactions.jsonl log accumulates real
-    # compaction events for future calibration.
-    MAX_TOOL_CALLS = int(os.environ.get("CONTEXT_MONITOR_MAX_TOOL_CALLS", "1000"))
+    # Proxy fallback. Used only when token-based reading is unavailable
+    # (very early session, transcript missing, parse error). Recalibration
+    # history:
+    #   v1: 500 (Bash|Task-only matcher, undercounted by ~3x)
+    #   v2: 1500 (widened matcher, overshot — fired AFTER compaction)
+    #   v3: 1000 (2026-05-04 evidence)
+    #   v4: 400 (2026-05-06 — token-based primary added, proxy is now just
+    #            a low-floor fallback; tighter default helps in the early
+    #            session window where transcript may not yet have usage
+    #            blocks. Override via CONTEXT_MONITOR_MAX_TOOL_CALLS.)
+    MAX_TOOL_CALLS = int(os.environ.get("CONTEXT_MONITOR_MAX_TOOL_CALLS", "400"))
 
     percentage = min((tool_calls / MAX_TOOL_CALLS) * 100, 100)
     return percentage
+
+
+def read_real_token_usage(transcript_path: str | None) -> tuple[int | None, str | None]:
+    """Parse the most recent assistant message's usage block from the transcript.
+
+    Reads at most TRANSCRIPT_TAIL_BYTES from the end of the file (tail-backward),
+    walks the last few lines in reverse looking for an assistant message with
+    a `usage` block, and returns the summed real context size in tokens
+    along with the model name (or (None, None) if unavailable).
+
+    Tolerates partial-write at end-of-file (per-line JSONDecodeError → skip).
+    """
+    if not transcript_path:
+        return None, None
+    try:
+        path = Path(transcript_path)
+        if not path.exists():
+            return None, None
+        size = path.stat().st_size
+        if size == 0:
+            return None, None
+        read_n = min(size, TRANSCRIPT_TAIL_BYTES)
+        with path.open("rb") as f:
+            f.seek(size - read_n)
+            tail = f.read(read_n)
+        # Drop any partial UTF-8 sequence at the start; full lines tail down.
+        text = tail.decode("utf-8", errors="ignore")
+        lines = text.splitlines()
+        for line in reversed(lines):
+            line = line.strip()
+            if not line.startswith("{"):
+                continue
+            try:
+                rec = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            msg = rec.get("message")
+            if not isinstance(msg, dict) or msg.get("role") != "assistant":
+                continue
+            usage = msg.get("usage")
+            if not isinstance(usage, dict):
+                continue
+            inp = int(usage.get("input_tokens", 0) or 0)
+            cache_create = int(usage.get("cache_creation_input_tokens", 0) or 0)
+            cache_read = int(usage.get("cache_read_input_tokens", 0) or 0)
+            total = inp + cache_create + cache_read
+            if total <= 0:
+                continue
+            return total, msg.get("model")
+    except Exception:
+        # Fail open — never break the hook on transcript read issues.
+        return None, None
+    return None, None
+
+
+def get_model_max_context(model: str | None, real_tokens: int) -> int:
+    """Determine the model's max context window in tokens.
+
+    Resolution priority:
+      1. CONTEXT_MAX_TOKENS env var (explicit override, integer in tokens)
+      2. `[1m]` marker in the model field → 1,000,000
+      3. Heuristic: observed real_tokens > 200_000 → must be 1M tier
+      4. Opus 4.x family → default to 1,000,000 (Christina's setup)
+      5. Fallback: 200,000 (Sonnet/Haiku default)
+    """
+    env_max = os.environ.get("CONTEXT_MAX_TOKENS")
+    if env_max:
+        try:
+            v = int(env_max)
+            if v > 0:
+                return v
+        except ValueError:
+            pass
+    if model and "[1m]" in model:
+        return 1_000_000
+    if real_tokens > 200_000:
+        return 1_000_000
+    if model and "opus-4" in model:
+        return 1_000_000
+    return 200_000
+
+
+def compute_real_percentage(transcript_path: str | None, cache: dict, tool_calls: int) -> float | None:
+    """Return real % of context used (token-based), or None if unavailable.
+
+    Cached for REAL_CHECK_TIME_INTERVAL seconds AND
+    REAL_CHECK_TOOL_CALL_INTERVAL tool calls — whichever expires first.
+    """
+    if not transcript_path:
+        return None
+    now = time.time()
+    cached_pct = cache.get("last_real_percentage")
+    if cached_pct is not None:
+        last_time = cache.get("last_real_check_time", 0)
+        last_calls = cache.get("last_real_check_tool_calls", 0)
+        time_ok = (now - last_time) < REAL_CHECK_TIME_INTERVAL
+        calls_ok = (tool_calls - last_calls) < REAL_CHECK_TOOL_CALL_INTERVAL
+        if time_ok and calls_ok:
+            return cached_pct
+    real_tokens, model = read_real_token_usage(transcript_path)
+    if real_tokens is None:
+        return None
+    max_ctx = get_model_max_context(model, real_tokens)
+    pct = min((real_tokens / max_ctx) * 100, 100)
+    cache["last_real_percentage"] = pct
+    cache["last_real_tokens"] = real_tokens
+    cache["last_real_max_ctx"] = max_ctx
+    cache["last_real_model"] = model or ""
+    cache["last_real_check_time"] = now
+    cache["last_real_check_tool_calls"] = tool_calls
+    save_cache(cache)
+    return pct
 
 
 def is_throttled(percentage: float) -> bool:
@@ -175,15 +304,32 @@ def _session_age_str(cache: dict) -> str:
     return f"~{hours}h{rem}m" if rem else f"~{hours}h"
 
 
+def _format_usage_line(cache: dict) -> str:
+    """Single-line context-usage display. Prefers real token info when available,
+    falls back to the tool-call proxy.
+    """
+    real_tokens = cache.get("last_real_tokens")
+    real_max = cache.get("last_real_max_ctx")
+    tool_calls = cache.get("tool_calls", 0)
+    max_calls = int(os.environ.get("CONTEXT_MONITOR_MAX_TOOL_CALLS", "400"))
+    if isinstance(real_tokens, int) and isinstance(real_max, int) and real_max > 0:
+        # Real reading available — primary display
+        return (
+            f"   Real: {real_tokens / 1000:.1f}k / {real_max // 1000}k tokens"
+            f"   |   Tool calls: {tool_calls}"
+        )
+    # Proxy only
+    return f"   Tool calls (proxy): {tool_calls} / {max_calls}"
+
+
 def format_learn_reminder(percentage: float, threshold: int) -> str:
     """Terse striking reminder at LEARN thresholds (40/55/65). Plain text — system-reminder block can't render ANSI."""
     cache = read_cache()
-    tool_calls = cache.get("tool_calls", 0)
-    max_calls = int(os.environ.get("CONTEXT_MONITOR_MAX_TOOL_CALLS", "1000"))
     age = _session_age_str(cache)
     return (
         "💡 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 💡\n"
-        f"   CONTEXT AT {percentage:.0f}% ({tool_calls} / {max_calls} tool calls)\n"
+        f"   CONTEXT AT {percentage:.0f}%\n"
+        f"{_format_usage_line(cache)}\n"
         f"   Session age: {age}\n"
         "   → /learn anything reusable now — capture skills before compaction.\n"
         "💡 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 💡"
@@ -193,8 +339,6 @@ def format_learn_reminder(percentage: float, threshold: int) -> str:
 def format_warn_80(percentage: float) -> str:
     """Striking 80% warning. Terse but visually heavy."""
     cache = read_cache()
-    tool_calls = cache.get("tool_calls", 0)
-    max_calls = int(os.environ.get("CONTEXT_MONITOR_MAX_TOOL_CALLS", "1000"))
     age = _session_age_str(cache)
     last_snap = cache.get("last_snapshot_time", 0)
     snap_str = (
@@ -204,7 +348,7 @@ def format_warn_80(percentage: float) -> str:
     return (
         "🔴 ████████████████████████████████████████ 🔴\n"
         f"   ⚠️  CONTEXT AT {percentage:.0f}% — auto-compact approaching\n"
-        f"   Tool calls: {tool_calls} / {max_calls}    Session age: {age}\n"
+        f"{_format_usage_line(cache)}    Session age: {age}\n"
         f"   Snapshot fallback: ACTIVE (last: {snap_str})\n"
         "   ▶ Save key decisions to session log\n"
         "   ▶ Ensure plan status updated\n"
@@ -216,13 +360,11 @@ def format_warn_80(percentage: float) -> str:
 def format_warn_90(percentage: float) -> str:
     """Striking 90% critical warning. Heaviest visual weight; compaction is imminent."""
     cache = read_cache()
-    tool_calls = cache.get("tool_calls", 0)
-    max_calls = int(os.environ.get("CONTEXT_MONITOR_MAX_TOOL_CALLS", "1000"))
     age = _session_age_str(cache)
     return (
         "🚨 ████████████████████████████████████████ 🚨\n"
         f"   ⛔ CONTEXT AT {percentage:.0f}% — COMPACTION IMMINENT\n"
-        f"   Tool calls: {tool_calls} / {max_calls}    Session age: {age}\n"
+        f"{_format_usage_line(cache)}    Session age: {age}\n"
         "   Complete current task with full quality.\n"
         "   Do NOT cut corners or skip verification.\n"
         "   No context is lost — snapshot preserves state across compaction.\n"
@@ -260,11 +402,18 @@ def capture_precompact_snapshot() -> None:
         plan_info = mod.find_active_plan(project_dir)
         decisions = mod.extract_recent_decisions(project_dir)
         # Snapshot is enriched with metrics so post-compact-restore can
-        # show "compacted at N tool calls / X%". These fields don't exist
-        # in older snapshots; consumers must default-handle missing keys.
+        # show "compacted at N tokens / X%". These fields don't exist in
+        # older snapshots; consumers must default-handle missing keys.
+        # Prefer real token info when available; fall back to proxy.
         cache_now = read_cache()
-        max_calls = int(os.environ.get("CONTEXT_MONITOR_MAX_TOOL_CALLS", "1000"))
+        max_calls = int(os.environ.get("CONTEXT_MONITOR_MAX_TOOL_CALLS", "400"))
         tool_calls = cache_now.get("tool_calls", 0)
+        real_tokens = cache_now.get("last_real_tokens")
+        real_max = cache_now.get("last_real_max_ctx")
+        if isinstance(real_tokens, int) and isinstance(real_max, int) and real_max > 0:
+            percentage = min((real_tokens / real_max) * 100, 100)
+        else:
+            percentage = min((tool_calls / max_calls) * 100, 100) if max_calls else 0
         state = {
             "trigger": "context-monitor-fallback",
             "plan_path": plan_info["plan_path"] if plan_info else None,
@@ -273,7 +422,9 @@ def capture_precompact_snapshot() -> None:
             "decisions": decisions,
             "tool_calls": tool_calls,
             "max_tool_calls": max_calls,
-            "percentage": min((tool_calls / max_calls) * 100, 100) if max_calls else 0,
+            "real_tokens": real_tokens,
+            "real_max_ctx": real_max,
+            "percentage": percentage,
             "session_start_time": cache_now.get("session_start_time"),
         }
         mod.save_state(state)
@@ -290,8 +441,19 @@ def run_context_monitor() -> int:
     except (json.JSONDecodeError, IOError):
         hook_input = {}
 
-    # Estimate current context usage
-    percentage = estimate_context_percentage()
+    transcript_path = hook_input.get("transcript_path") if isinstance(hook_input, dict) else None
+
+    # Always increment the proxy counter and get its (fallback) %.
+    proxy_percentage = estimate_context_percentage()
+
+    # Try the real, token-based reading. Internally cached, so the transcript
+    # is parsed at most once per ~10 tool calls or 2 minutes (whichever first).
+    cache = read_cache()
+    tool_calls = cache.get("tool_calls", 0)
+    real_percentage = compute_real_percentage(transcript_path, cache, tool_calls)
+
+    # Effective % drives all threshold checks: real if available, else proxy.
+    percentage = real_percentage if real_percentage is not None else proxy_percentage
 
     # Refresh the PreCompact fallback snapshot continuously past SNAPSHOT_FLOOR.
     # This runs BEFORE the throttle check so a fresh snapshot is guaranteed
