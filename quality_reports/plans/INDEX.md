@@ -8,7 +8,7 @@ When creating a new plan, consult this index first. If an `Active` entry covers 
 
 ## 2026-05
 
-- [2026-05-07_comprehensive-propagation-plan.md](2026-05-07_comprehensive-propagation-plan.md) — DRAFT: extends v1 propagate plan with three-class file taxonomy (universal / overlay-customized / overlay-only), `.claude/file-classes.toml` manifest, modified routing in propagate.py, new `/tools sync-overlays` skill for main → overlay sync; pending user approval at ten [USER] decision points
+- [2026-05-07_comprehensive-propagation-plan.md](2026-05-07_comprehensive-propagation-plan.md) — APPROVED 2026-05-07: extends v1 propagate plan with three-class file taxonomy (universal / overlay-customized / overlay-only), `.claude/file-classes.toml` manifest, modified routing in propagate.py, new `/tools sync-overlays` skill for main → overlay sync; in execution, Phase A starting
 - [2026-05-06_tools-propagate-plan.md](2026-05-06_tools-propagate-plan.md) — v1 `/tools propagate` skill: registry-driven feature propagation; **extended by 2026-05-07 plan**; v1 implementation (propagate.py, consumers.toml, divergence-skip) preserved and still load-bearing
 - [2026-05-05_lfs-dvc-migration-plan.md](2026-05-05_lfs-dvc-migration-plan.md) — concrete plan: Git LFS for PDFs + DVC for data + periodic Dropbox backup; supersedes Dropbox-symlink approach; D3 + D8 resolved 2026-05-05; pilot paused mid-execution
 - [2026-05-05_lfs-vs-dvc-explainer.md](2026-05-05_lfs-vs-dvc-explainer.md) — concept-level explainer for Git LFS and DVC (companion to migration plan)

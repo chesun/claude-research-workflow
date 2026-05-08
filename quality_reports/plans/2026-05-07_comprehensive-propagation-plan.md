@@ -1,7 +1,7 @@
 # Comprehensive Propagation Plan: File Taxonomy, Routing, and Overlay Sync
 
 **Date:** 2026-05-07
-**Status:** Active (DRAFT — pending user approval before implementation)
+**Status:** Active (APPROVED 2026-05-07; in execution)
 **Extends:** `2026-05-06_tools-propagate-plan.md` (v1 plan; propagate.py implementation stays — this plan adds the file-class layer on top)
 **Authors:** Christina + Claude
 

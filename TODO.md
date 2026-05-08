@@ -6,11 +6,12 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracke
 
 ## Active (doing now)
 
-- *(nothing actively being worked on — BDD pilot paused on user; comprehensive propagation plan deferred to fresh-context session)*
+- [ ] **Phase B — propagate.py routing change.** Add `Manifest` class + `resolve_source_branch()` function. Modify `propagate_one_consumer` to use class-based routing per `.claude/file-classes.toml`. Add class metadata to `workflow-sync.json` schema. Update SKILL.md to document the new routing behavior. ~1 hour.
 
 ## Up Next
-
-- [ ] **Review the comprehensive propagation plan** at `quality_reports/plans/2026-05-07_comprehensive-propagation-plan.md` (DRAFT). 10 [USER] decisions to confirm/amend. Once approved, implementation breaks into Phase A (manifest) → Phase B (propagate.py routing) → Phase C (sync-overlays skill) → Phase D (bootstrap) → Phase E (docs cleanup). Total estimate ~5-6 hours over 1-2 sessions.
+- [ ] **Phase C — `/tools sync-overlays` skill.** Write `sync_overlays.py` (~150 LOC). Pulls Class A updates from main → applied-micro and behavioral worktrees. Add to `tools/SKILL.md`. ~1 hour.
+- [ ] **Phase D — bootstrap execution.** Run sync-overlays for first time; review per-overlay diffs. Run propagate `--force-initial` against the 7 consumers. Tag `bootstrap-2026-05-NN`. ~1 hour user-time.
+- [ ] **Phase E — docs cleanup.** Update CLAUDE.md (Class B, edit per overlay); update changelog with new stata skill; close out related TODOs. ~30 min.
 - [ ] **After comprehensive plan lands**: bootstrap `workflow-sync.json` across the 7 consumers via the now-correct propagate routing; verify idempotency with a re-run.
 - [ ] **Resume BDD pilot** — wait for user "resume" signal. Tasks #5–#12 in tracker; first action is soft-migrate 60 existing PDFs to LFS pointers (already approved 2026-05-06).
 
@@ -34,7 +35,9 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracke
 
 ## Done (recent)
 
-- [x] 2026-05-07 — comprehensive propagation plan drafted (DRAFT, pending user review): `2026-05-07_comprehensive-propagation-plan.md`; INDEX + v1 plan status updated
+- [x] 2026-05-07 — Phase A: `bootstrap_manifest.py` audit ran (240 paths, 118 A / 0 B / 34 C / 77 D / 16 ambiguous); user-reviewed the 16 ambiguous paths; final split = 118 A / 11 B / 34 C / 77 D; `.claude/file-classes.toml` committed; sanity-check PASS
+- [x] 2026-05-07 — comprehensive propagation plan APPROVED (`9bbaeea` drafted, walked through section-by-section, all 9 reviewable decisions signed off — D5 + D7 resolved by bootstrap audit)
+- [x] 2026-05-07 — comprehensive propagation plan drafted: `2026-05-07_comprehensive-propagation-plan.md`; INDEX + v1 plan status updated
 - [x] 2026-05-07 — stata skill migrated from `claude-config` to workflow with Stata 14 dropped + `stata17` mandated; `.claude/rules/stata-code-conventions.md` updated with Invocation section; doc_lookup.md scoped to Stata 17 with portable paths
 - [x] 2026-05-06 — propagate.py implemented (`e0425b3`); SKILL.md updated with `/tools propagate` and `/tools list-consumers` subcommands; consumers.toml created with 7 entries (gitignored)
 - [x] 2026-05-06 — context-monitor.py v2 with token-based real measurement (`ad6c547`); propagated to 7 consumer repos manually; tested against BDD's transcript (matched 840.9k figure)
