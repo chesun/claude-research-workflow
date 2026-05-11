@@ -6,13 +6,9 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracke
 
 ## Active (doing now)
 
-- [ ] **Push the 7 consumer commits** from D2. Each is one local commit pending push:
-  - BDD `1417c23`, BDD-audit `2b865de`, bdm_bic `535b71c`, csac `10d6073`, csac2025 `cab0b7d`, tx_peer_effects_local `5a92a04`, va_consolidated `287b8df`.
-  - Push touches remotes; some repos have coauthors. User decides per-repo when to push.
+- [ ] **Phase E — docs cleanup.** Update CLAUDE.md (Class B, edit per overlay) with reference to the file-class taxonomy + sync-overlays skill; update changelog (or CHANGELOG.md) with new stata skill + comprehensive propagation infrastructure; close out related TODOs. ~30 min.
 
 ## Up Next
-
-- [ ] **Phase E — docs cleanup.** Update CLAUDE.md (Class B, edit per overlay) with reference to the file-class taxonomy + sync-overlays skill; update changelog with new stata skill + comprehensive propagation infrastructure; close out related TODOs. ~30 min.
 - [ ] **Resume BDD pilot** — wait for user "resume" signal. Tasks #5–#12 in tracker; first action is soft-migrate 60 existing PDFs to LFS pointers (already approved 2026-05-06).
 
 ## Waiting On
@@ -35,6 +31,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracke
 
 ## Done (recent)
 
+- [x] 2026-05-10 — Phase D complete + all 7 consumers pushed to origin (1417c23 / 2b865de / 535b71c / 10d6073 / cab0b7d / 5a92a04 / 287b8df). Workflow main + both overlays + tag `bootstrap-2026-05-10` all pushed. Universe consistent.
 - [x] 2026-05-10 — Phase D: bootstrap complete. sync-overlays --force on applied-micro (`0def252`) + behavioral (`4f260b1`); propagate --force-initial on 7 consumers (193 file copies, 0 errors); catch-up sync-overlays --force after the resolve_patterns fix (`67b7437` / `f32f49e`). Idempotency PASS on both. Tag `bootstrap-2026-05-10` (commit `c10e276`).
 - [x] 2026-05-07 — Phase C: `/tools sync-overlays` skill (`sync_overlays.py` + SKILL.md update); dry-run validates Phase A classification — applied-micro shows exactly the 5 stale-of-main files identified during the audit; behavioral pre-flight surfaced uncommitted-state blocker for Phase D
 - [x] 2026-05-07 — Phase B: propagate.py class-aware routing (Manifest class + resolve_source_branch); 433 → 580 LOC; smoke-tested across all 4 routing cases (A/B/C/D) on multiple consumers; SKILL.md updated
