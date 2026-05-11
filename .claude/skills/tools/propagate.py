@@ -247,11 +247,24 @@ def write_file_bytes(path: pathlib.Path, content: bytes) -> None:
 
 
 def resolve_patterns(workflow_root: pathlib.Path, patterns: list[str]) -> list[str]:
-    out = set()
+    """Resolve glob patterns to tracked files on the workflow's HEAD.
+
+    Filtered to git-tracked paths so untracked working-tree artifacts (pyc
+    caches, machine-local settings, etc.) don't accidentally propagate.
+    """
+    tracked = set(
+        subprocess.run(
+            ["git", "-C", str(workflow_root), "ls-files"],
+            check=True, capture_output=True, text=True,
+        ).stdout.splitlines()
+    )
+    out: set[str] = set()
     for pattern in patterns:
         for match in workflow_root.glob(pattern):
             if match.is_file():
-                out.add(str(match.relative_to(workflow_root)))
+                rel = str(match.relative_to(workflow_root))
+                if rel in tracked:
+                    out.add(rel)
     return sorted(out)
 
 
