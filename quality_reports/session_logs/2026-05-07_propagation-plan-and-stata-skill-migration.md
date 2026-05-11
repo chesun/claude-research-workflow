@@ -116,3 +116,63 @@ Patched all three: top-of-file note + warning, `os.path.expanduser` wrap on the 
 - User reviews the comprehensive propagation plan; confirms or amends the 10 [USER] decisions.
 - Implementation phases A–E, in dependency order, in 1–2 follow-up sessions.
 - Until then: when committing routine workflow updates, manual cherry-picks onto overlays remain off-limits (parallel-history conflicts); manual file copies to specific consumers remain on-limits but should be tracked in a session log.
+
+---
+
+## Day 2 — 2026-05-10 — Plan review and Phase A-D bootstrap execution
+
+### Day 2 events
+
+**Plan walk-through.** Resumed after a couple of days. User picked "option 3" (concept-first then decisions), then signed off on 9 of the 10 [USER] decisions in one pass; D5 and D7 deferred to the bootstrap audit. Plan flipped DRAFT → APPROVED (in execution).
+
+**Phase A — manifest.** Wrote `bootstrap_manifest.py` (throwaway, ~270 LOC) that walks every tracked path across `main` / `applied-micro` / `behavioral` and proposes a classification. Audit ran clean: 240 paths, auto-classified into 113 A / 0 B / 34 C / 77 D + 16 AMBIGUOUS. Spot-checked the 16 ambiguous paths via per-file diffs:
+- 11 confirmed genuine Class B: orchestrator/verifier/writer agents, quality/workflow rules, analyze/discover/new-project/review/submit skills, CLAUDE.md.
+- 5 reclassified to Class A (stale-of-main, will be caught up via sync-overlays): context-monitor.py, stata-code-conventions.md, tools/SKILL.md, .gitignore, papers/README.md.
+Final split: 118 A / 11 B / 34 C / 77 D. `.claude/file-classes.toml` committed at `9e8fc92`. Audit output preserved at `quality_reports/plans/proposals/proposed-file-classes-2026-05-07.toml`.
+
+**Phase B — propagate.py routing.** Inserted `Manifest` class + `resolve_source_branch()` function. Modified `propagate_one_consumer` to look up source branch per file class (was: hardcoded to consumer's overlay). New skip categories: `excluded`, `not_applicable`. New per-file annotations in output: `← branch [class]`. `workflow-sync.json` schema gained `class` + `source_branch` fields. LOC: 433 → 580. Smoke-tested across all four routing cases (A/B/C/D) on multiple consumers. Committed at `c074ce6`.
+
+**Phase C — sync-overlays.** Wrote `sync_overlays.py` (~270 LOC). Pulls Class A updates from main to overlay worktrees. Never touches Class B/C. Pre-flight refuses if any Class A path is dirty on the overlay worktree (refined mid-Phase from a too-broad "any dirty path blocks" check, after the behavioral worktree's untracked Class D plan doc blocked the first run). Committed at `5fb6e8b` + refinement at `b52e93b`.
+
+**Phase D — bootstrap.** Two sub-steps:
+- D1 (workflow-internal): `sync-overlays --force` on both overlay worktrees. applied-micro `0def252`, behavioral `4f260b1`. 12 new + 5 overwrites per overlay. Pushed both branches.
+- D2 (consumer-side): `propagate --force-initial '.claude/**/*' 'templates/**/*' '.gitignore' 'LICENSE' 'README.md' 'CLAUDE.md' 'master_supporting_docs/literature/papers/README.md' 'master_supporting_docs/literature/reading_notes/README.md'`. 193 file copies, 0 errors. One commit per consumer:
+    - BDD: 1417c23
+    - BDD-audit: 2b865de
+    - bdm_bic: 535b71c
+    - csac: 10d6073
+    - csac2025: cab0b7d
+    - tx_peer_effects_local: 5a92a04
+    - va_consolidated: 287b8df
+- Fix mid-Phase: `resolve_patterns` was walking the working tree (caught .pyc and settings.local.json). Filtered to `git ls-files` only. Patched on main as `c10e276`, then caught up on overlays via a second `sync-overlays --force` (applied-micro `67b7437`, behavioral `f32f49e`).
+- All 7 consumer commits pushed to origin per user "push all" call.
+- Tag `bootstrap-2026-05-10` marks the workflow main state at completion (commit `c10e276`).
+
+### Day 2 — verification
+
+| Check | Result |
+|---|---|
+| Bootstrap audit classifies all 240 paths | PASS |
+| Final manifest validates against bootstrap audit | PASS (manual spot-checks on 12 representative paths) |
+| Propagate routing: A → main, B → overlay, C → overlay-if-applicable, D → skip | PASS (smoke-tested per case) |
+| sync-overlays dry-run flags the 5 stale-of-main files for `--force` | PASS |
+| sync-overlays pre-flight ignores Class D dirty state | PASS (after dirty-check refinement) |
+| Propagate `--force-initial` lands 193 copies across 7 consumers, 0 errors | PASS |
+| Idempotency: re-running propagate → 0 copies, 721 in-sync, 0 errors | PASS |
+| Idempotency: re-running sync-overlays → 0 new, 0 updated, 242 in-sync | PASS |
+| Tag `bootstrap-2026-05-10` pushed to origin | PASS |
+| All 7 consumer commits pushed to their respective origin remotes | PASS |
+| Behavioral / applied-micro overlay branches pushed | PASS |
+
+### Day 2 — learnings
+
+- **[LEARN:propagation]** The 5 reclassified files (context-monitor.py, stata-code-conventions.md, tools/SKILL.md, .gitignore, papers/README.md) all came from edits made on main between manual-cherry-pick cycles. The pattern: any time we improve a Class A file on main and forget to sync overlays, the overlay version becomes stale. sync-overlays' default-skip-divergent behavior catches these on the next run; `--force` resolves them when we know they're stale.
+- **[LEARN:globbing]** Python's `pathlib.Path.glob("**")` does NOT recurse into files; need `**/*` for recursive file matches. Hit this on the first propagate dry-run when `.claude/**` and `templates/**` matched zero files. Documented for future reference.
+- **[LEARN:resolve-patterns]** Glob-based pattern resolution against a working tree picks up untracked files (pyc caches, machine-local settings). Filter by `git ls-files` so only tracked paths can propagate. Critical for `--force-initial` — otherwise consumers would receive workflow's local artifacts.
+- **[LEARN:sync-overlays]** The clean-worktree pre-flight should classify each dirty path against the manifest, not refuse on any dirty state. Class B / C / D dirty files are out of scope for sync-overlays and shouldn't block it. The first iteration blocked on a Class D plan doc that sync-overlays would never touch.
+
+### Day 2 — open questions
+
+- [ ] **Phase E — docs cleanup.** Not yet executed. CLAUDE.md is Class B so requires edits on all 3 branches (main + applied-micro + behavioral worktrees) before another propagate cycle pushes to consumers. CHANGELOG entry separate. ~30 min total.
+- [ ] **The two related primary-source-hook TODOs** — extend `NEVER_SURNAMES` blocklist with status-words + changes-table verbs (caught false-positives 3× while writing session logs today); land user's draft unicode-fix proposal at `proposals/2026-05-07_primary-source-hook-unicode-fix.md`. Sister fixes; should land together for a coherent regex hardening pass.
+- [ ] **bootstrap_manifest.py is throwaway.** Plan §6.1 says delete after Phase D. Slated for next Phase E or follow-up commit.
