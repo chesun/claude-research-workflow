@@ -143,7 +143,7 @@ See `quality.md` for behavioral scoring weights (design 25%, paper 20%, theory 1
 | `/revise [report]` | R&R cycle: classify + route referee comments |
 | `/talk [mode] [format]` | Create, audit, or compile Beamer presentations |
 | `/submit [mode]` | Journal targeting → package → audit → final gate |
-| `/tools [subcommand]` | Utilities: commit, compile, validate-bib, context-status, etc. |
+| `/tools [subcommand]` | Utilities: commit, compile, validate-bib, context-status, learn, sync-status, propagate, sync-overlays, list-consumers |
 
 ---
 
