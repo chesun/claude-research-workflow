@@ -118,7 +118,7 @@ See `quality.md` for weighted aggregation formula.
 | `/balance [treatment]` | Generate balance tables (Stata/R) |
 | `/event-study [spec]` | Event study plots with pre-trends and CIs |
 | `/compile-latex [file]` | 3-pass pdflatex + bibtex (papers and talks) |
-| `/tools [subcommand]` | Utilities: commit, validate-bib, context-status, learn, etc. |
+| `/tools [subcommand]` | Utilities: commit, compile, validate-bib, context-status, learn, sync-status, propagate, sync-overlays, list-consumers |
 
 ---
 
