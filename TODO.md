@@ -1,12 +1,12 @@
 # TODO — claude-code-my-workflow
 
-Last updated: 2026-05-10
+Last updated: 2026-05-11
 
 Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracker tasks (TaskCreate) are working memory; this file is the persistent cross-session record.
 
 ## Active (doing now)
 
-- [ ] **Phase E — docs cleanup.** Update CLAUDE.md (Class B, edit per overlay) with reference to the file-class taxonomy + sync-overlays skill; update changelog (or CHANGELOG.md) with new stata skill + comprehensive propagation infrastructure; close out related TODOs. ~30 min.
+- *(nothing actively in flight — comprehensive propagation plan fully executed and documented; ready for next initiative)*
 
 ## Up Next
 - [ ] **Resume BDD pilot** — wait for user "resume" signal. Tasks #5–#12 in tracker; first action is soft-migrate 60 existing PDFs to LFS pointers (already approved 2026-05-06).
@@ -21,8 +21,6 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracke
 - [ ] **`~/.claude/settings.json` drift** — diverged ~50 days from `claude-config/settings.json` (193 vs 81 bytes). Per `sync-global-config.md`, the live file should be copied to the repo and committed. Small task; ~10 min.
 - [ ] **Extend `NEVER_SURNAMES` blocklist** in `.claude/hooks/primary_source_lib.py` with two clusters of false positives encountered in real session-log writing: (a) status words `Resolved` / `Pending` / `Deferred` / `Open` (bracketed-year like `[Resolved 2026-05-05]`); (b) common changes-table verbs `Added` / `New` / `Fixed` / `Removed` / `Inserted` / `Replaced` / `Changed` / `Extended` / `Deleted` / `Dropped` / `Copied` / `Merged` / `Patched` (table-cell-start verbs followed by date-like strings). ~10 lines + tests.
 - [ ] **Land user's draft proposal at `quality_reports/plans/proposals/2026-05-07_primary-source-hook-unicode-fix.md`** — copied from BDD repo. Addresses a unicode handling gap in the primary-source regex. Distinct from the blocklist-extension TODO above; both should land together for a coherent regex hardening pass.
-- [ ] **Stata skill: changelog mention when next docs pass happens** — release-note item: "New `.claude/skills/stata/` (migrated from global `claude-config/skills/stata/`). Workflow now mandates `stata17` invocation via `.claude/rules/stata-code-conventions.md`; never call `/Applications/Stata/...` directly."
-- [ ] **Manually copy stata skill to BDD** if the Stata-14 invocation bug recurs before the comprehensive propagation plan's Phase D bootstrap runs. The skill landed on workflow main today but does not yet propagate (Class A routing ships with the comprehensive plan).
 - [ ] **Overlay-branch sync** — applied-micro and behavioral lag main on today's universal-infrastructure commits. Cherry-pick attempt aborted 2026-05-06 due to parallel-history conflicts on `INDEX.md`, `CLAUDE.md`, `tools/SKILL.md`, etc. Properly addressed by the comprehensive propagation plan (above).
 - [ ] **Possibly: `/tools sync-overlays` skill** — automate cherry-picking from main onto overlays once the universal-vs-overlay framework is in place. Out of scope until the comprehensive plan settles.
 - [ ] **Replication of LFS migration to other research repos** — once BDD pilot exits successfully (D6), bulk-migrate the other research repos: `belief_distortion_discrimination_audit`, `bdm_bic`, `tx_peer_effects_local`, `va_consolidated`, etc. Per `2026-05-05_lfs-dvc-migration-plan.md` §8.
@@ -31,6 +29,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracke
 
 ## Done (recent)
 
+- [x] 2026-05-11 — Phase E: CLAUDE.md updated across all 3 branches (Skills Quick Reference row + Cross-Repo Propagation section on main); CHANGELOG entry under [Unreleased] for the comprehensive propagation infrastructure + stata skill migration; bootstrap_manifest.py deleted (throwaway per plan §6.1); related TODOs closed.
 - [x] 2026-05-10 — Phase D complete + all 7 consumers pushed to origin (1417c23 / 2b865de / 535b71c / 10d6073 / cab0b7d / 5a92a04 / 287b8df). Workflow main + both overlays + tag `bootstrap-2026-05-10` all pushed. Universe consistent.
 - [x] 2026-05-10 — Phase D: bootstrap complete. sync-overlays --force on applied-micro (`0def252`) + behavioral (`4f260b1`); propagate --force-initial on 7 consumers (193 file copies, 0 errors); catch-up sync-overlays --force after the resolve_patterns fix (`67b7437` / `f32f49e`). Idempotency PASS on both. Tag `bootstrap-2026-05-10` (commit `c10e276`).
 - [x] 2026-05-07 — Phase C: `/tools sync-overlays` skill (`sync_overlays.py` + SKILL.md update); dry-run validates Phase A classification — applied-micro shows exactly the 5 stale-of-main files identified during the audit; behavioral pre-flight surfaced uncommitted-state blocker for Phase D

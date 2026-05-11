@@ -105,6 +105,19 @@ For full architecture, enabling instructions, and rollback: see `.claude/rules/d
 
 ---
 
+## Cross-Repo Propagation
+
+When the workflow source repo (this repo) is also the upstream for multiple research projects, two skills keep everyone in sync without manual copy-paste loops. Both are workflow-source-only: forks that aren't acting as the upstream simply don't have a consumer registry and the skills become inert.
+
+- **`/tools propagate <pattern>...`** — sync selected files from this workflow to all configured consumer repos. Routing is class-aware: Class A (Universal) files read from `main`, Class B (Overlay-customized) files read from the consumer's overlay branch, Class C (Overlay-only) files read from the overlay if the consumer is on a matching branch.
+- **`/tools sync-overlays`** — push Class A updates from `main` to the `applied-micro` and `behavioral` overlay worktrees. Never touches Class B / C files (those live on the overlay by design).
+
+The file-class manifest lives at `.claude/file-classes.toml` (tracked on `main`, itself Class A so it propagates to overlays). Default for unlisted paths = Class A.
+
+For full design rationale, file-class definitions, and the bootstrap workflow: see `quality_reports/plans/2026-05-07_comprehensive-propagation-plan.md` and `.claude/skills/tools/SKILL.md`.
+
+---
+
 ## Commands
 
 ```bash
@@ -146,7 +159,7 @@ See `quality.md` for weighted aggregation formula and per-target deduction table
 | `/talk [mode] [format]` | Create, audit, or compile Beamer presentations |
 | `/submit [mode]` | Journal targeting → package → audit → final gate |
 | `/challenge [file --mode]` | Devil's advocate: `--paper`, `--fresh`, etc. |
-| `/tools [subcommand]` | Utilities: commit, compile, validate-bib, context-status, learn |
+| `/tools [subcommand]` | Utilities: commit, compile, validate-bib, context-status, learn, sync-status, propagate, sync-overlays, list-consumers |
 
 Overlay branches add paradigm-specific skills: `applied-micro` adds `/strategize`, `/balance`, `/event-study`; `behavioral` adds `/design`, `/theory`, `/otree`, `/qualtrics`, `/preregister`.
 
