@@ -176,3 +176,58 @@ Final split: 118 A / 11 B / 34 C / 77 D. `.claude/file-classes.toml` committed a
 - [ ] **Phase E — docs cleanup.** Not yet executed. CLAUDE.md is Class B so requires edits on all 3 branches (main + applied-micro + behavioral worktrees) before another propagate cycle pushes to consumers. CHANGELOG entry separate. ~30 min total.
 - [ ] **The two related primary-source-hook TODOs** — extend `NEVER_SURNAMES` blocklist with status-words + changes-table verbs (caught false-positives 3× while writing session logs today); land user's draft unicode-fix proposal at `proposals/2026-05-07_primary-source-hook-unicode-fix.md`. Sister fixes; should land together for a coherent regex hardening pass.
 - [ ] **bootstrap_manifest.py is throwaway.** Plan §6.1 says delete after Phase D. Slated for next Phase E or follow-up commit.
+
+---
+
+## Day 3 — 2026-05-12: tooling portability + agent skill-loading
+
+### Day 3 — context
+
+User is preparing to initialize DVC on `belief_distortion_discrimination`. Two issues surfaced from the conversation that are workflow-level (not project-level), so they got fixed here:
+
+1. **`/tools sync-status` hardcoded `data/` in its DVC pointer-count glob.** Underreports pointer counts on projects that use a non-default data directory — `belief_distortion_discrimination` uses `data_local/` (PII-isolated layout where the dir is mostly gitignored to keep data off GitHub, while DVC pointer files live in committed subpaths).
+2. **`coder` and `coder-critic` agents don't load the `stata` skill.** They reference `.claude/rules/stata-code-conventions.md` (Class A rule) but never the more comprehensive `.claude/skills/stata/SKILL.md`. Instruction-level fix only; not hook-enforced.
+
+### Day 3 — changes
+
+**Tooling portability — `/tools sync-status`.** Replaced the hardcoded glob with a `find`-based pointer count that ignores `.git/` and `.dvc/` internals:
+
+```diff
+-ls -lh data/*.dvc data/**/*.dvc 2>/dev/null | wc -l   # pointer count
++find . -name '*.dvc' -not -path './.git/*' -not -path './.dvc/*' | wc -l  # pointer count (path-agnostic)
+```
+
+File: `.claude/skills/tools/SKILL.md:186`. Commit `2b60507` on main. Pushed to origin. Propagated to all 7 consumers via `/tools propagate .claude/skills/tools/SKILL.md` — 7 copies, 0 divergence. Consumer commits: BDD `21dd854`, BDD-audit `86fcced`, bdm_bic `0e9412b`, csac `973d2d5`, csac2025 `162a846`, tx_peer_effects_local `820ca8f`, va_consolidated `166505a`. Consumer commits remain local (not pushed to consumer origins).
+
+**Agent skill-loading directive — coder + coder-critic.** Added a "Required Skill Loading" subsection right after "## Your Task" in both agents:
+
+- `coder.md`: directive to Read `.claude/skills/stata/SKILL.md` when the project's analysis language is Stata or when writing/editing `.do` / `.doh` files.
+- `coder-critic.md`: directive to Read the same skill when reviewing `.do` / `.doh` scripts.
+
+Placed prominently in the preamble so it's read early in the agent's execution. Both files are Class A (Universal) per `.claude/file-classes.toml`. **Not yet committed or propagated.**
+
+### Day 3 — DVC scaffolding for `belief_distortion_discrimination` (context, not implemented here)
+
+Reviewed the BDD repo's state from this workflow worktree:
+
+- All workflow infrastructure present: `.claude/rules/data-version-control.md`, the 4 LFS/DVC templates, `/tools sync-status`.
+- `dvc 3.67.1` installed on the machine; not yet initialized in BDD (no `.dvc/` dir).
+- BDD has no `data/` dir — it uses `data_local/` as its conventional name (PII concern).
+- BDD has uncommitted changes (.gitignore + ~10 modified PDFs in `master_supporting_docs/literature/papers/`); user is cleaning those up before DVC init.
+
+Two snags flagged for the BDD-side session:
+
+1. **Wholesale-ignored `data_local/` would break DVC.** DVC needs the per-file `.dvc` pointer files to be committed to git. If root `.gitignore` blanket-ignores `data_local/`, the pointers themselves are invisible to git — `dvc pull` on a coauthor machine has nothing to act on. Fix: un-blanket the ignore; let DVC manage per-subdir `.gitignore` files for content exclusion.
+2. **Templates and tooling assume `data/`.** Tooling fix landed (above). Templates (`data-MANIFEST.md`, `data-PROVENANCE.md`) still use `data/raw/` in examples — adapt paths when filling them in for BDD.
+
+### Day 3 — learnings
+
+- **[LEARN:portability]** When a workflow tool greps for paths, prefer `find -name 'pattern'` over `ls dir/*pattern*` so non-default project layouts don't silently underreport. The cost is small (a find traverses the repo); the gain is tools that work on every project regardless of dir-name convention. Sister principle: templates can use `data/` in examples (pedagogical), but tooling should be path-agnostic (correctness).
+- **[LEARN:dvc-gitignore]** The DVC pointer-vs-content split has a gotcha: pointers (`*.dvc`, ~200 bytes each) MUST be visible to git; content MUST NOT be. A root-level `.gitignore` entry like `data_local/` blanket-ignores both, breaking DVC entirely. The right pattern is to let DVC manage per-subdir `.gitignore` files at file granularity, which it does automatically on `dvc add`. Worth a callout in the data-version-control rule (currently uses `data/` throughout and doesn't address the renamed-dir case explicitly).
+- **[LEARN:agent-skill-loading]** Instruction-level skill loading (agent file Reads the skill's SKILL.md early in its execution) mirrors the existing rules-loading pattern. Hook-enforced loading (PreToolUse gate on edit/write to language-specific files) would be stronger but is a bigger lift. The instruction-level fix is the right starting point; escalate to a hook only if the agent demonstrably skips skill loads in practice.
+
+### Day 3 — open questions
+
+- [ ] **Commit + push + propagate the coder/coder-critic skill-loading directives.** Class A files, same pipeline as today's sync-status fix. User asked to batch this question against future agent-file edits — pending decision.
+- [ ] **Consider a DVC dir-rename callout in `data-version-control.md`.** The rule currently uses `data/` throughout. A short subsection on "renaming the data directory" (don't blanket-ignore the renamed dir; DVC manages per-subdir ignores) would prevent the BDD-class snag for future forks.
+- [ ] **Templates parameterization.** `data-MANIFEST.md` and `data-PROVENANCE.md` hardcode `data/raw/` and `data/cleaned/` in their example rows. Could replace with placeholder syntax (`<DATA-DIR>/raw/`) or just note in the template header that the dir name is project-specific. Low-priority cosmetic.
