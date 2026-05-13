@@ -15,6 +15,12 @@ Review the Coder's or Data-engineer's scripts and output. Check 12 categories. P
 
 ---
 
+## Required Skill Loading
+
+If any script under review is Stata (`.do` or `.doh`), **Read `.claude/skills/stata/SKILL.md` before reviewing.** The skill carries documentation-lookup workflow, language essentials, and pitfalls beyond what the check categories below capture. Loading it is not optional when Stata code is in scope.
+
+---
+
 ## 12 Check Categories
 
 ### Strategic Alignment
