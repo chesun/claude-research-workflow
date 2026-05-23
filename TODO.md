@@ -1,14 +1,15 @@
 # TODO — claude-code-my-workflow
 
-Last updated: 2026-05-11
+Last updated: 2026-05-23
 
 Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracker tasks (TaskCreate) are working memory; this file is the persistent cross-session record.
 
 ## Active (doing now)
 
-- *(nothing actively in flight — comprehensive propagation plan fully executed and documented; ready for next initiative)*
+- *(nothing actively in flight — Stata block-comment-bug universal-fix plan written + revised x2, awaiting execution pacing decision)*
 
 ## Up Next
+- [ ] **Execute Stata block-comment-bug universal fix** — APPROVED plan at `quality_reports/plans/2026-05-17_stata-comment-bug-universal-fix.md` (revised 2026-05-23 post-fleet inspection). 3 atomic commits (docs + lib/sweep + hook), 14 files, ~1,600 LOC. Pacing decision pending: atomic vs gated per commit. Validation already done (fleet preview report + top-3 inspection report in `quality_reports/reviews/2026-05-23_stata-comment-bug-*.md`).
 - [ ] **Resume BDD pilot** — wait for user "resume" signal. Tasks #5–#12 in tracker; first action is soft-migrate 60 existing PDFs to LFS pointers (already approved 2026-05-06).
 
 ## Waiting On
