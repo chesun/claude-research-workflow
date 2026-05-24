@@ -1,15 +1,14 @@
 # TODO — claude-code-my-workflow
 
-Last updated: 2026-05-23
+Last updated: 2026-05-24
 
 Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracker tasks (TaskCreate) are working memory; this file is the persistent cross-session record.
 
 ## Active (doing now)
 
-- *(nothing actively in flight — Stata block-comment-bug universal-fix plan written + revised x2, awaiting execution pacing decision)*
+- *(nothing actively in flight)*
 
 ## Up Next
-- [ ] **Execute Stata block-comment-bug universal fix** — APPROVED plan at `quality_reports/plans/2026-05-17_stata-comment-bug-universal-fix.md` (revised 2026-05-23 post-fleet inspection). 3 atomic commits (docs + lib/sweep + hook), 14 files, ~1,600 LOC. Pacing decision pending: atomic vs gated per commit. Validation already done (fleet preview report + top-3 inspection report in `quality_reports/reviews/2026-05-23_stata-comment-bug-*.md`).
 - [ ] **Resume BDD pilot** — wait for user "resume" signal. Tasks #5–#12 in tracker; first action is soft-migrate 60 existing PDFs to LFS pointers (already approved 2026-05-06).
 
 ## Waiting On
@@ -36,6 +35,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracke
 
 ## Done (recent)
 
+- [x] 2026-05-24 — **Stata block-comment-bug universal fix executed** (3 commits + 1 follow-up fix). Workflow main: `bff2daa` (Commit 1 — rules + critic + skill + field-guide refs + banner-discipline advisory folded in), `2e0851a` (Commit 2 — stata_comment_lib.py + stata_sweep.py + 6 fixtures + test_stata_comment_lib.py + pre-commit template + SKILL.md `/tools stata-sweep` subcommand), `ad8fc61` (Commit 3 — PreToolUse hook stata-comment-balance-check.py + settings.json activation, matcher extended to Edit|Write|MultiEdit), `26cb40c` (follow-up — exclude `.claude` from sweep walk defaults so propagated fixtures don't surface as issues). All 7 consumers + 2 overlays (applied-micro `774224b`/`f08731c`/`9cda7bd` and behavioral `cfc4b63`/`79b265f`/`bcf86fb`) propagated and pushed. Verification: lib unit tests + 5 fixture round-trips PASS, sweep on va_consolidated (129 files) 0 issues idempotent, sweep on BDD (134 files) 0 issues (V7 false positives correctly excluded), sweep on tx_peer_effects_local (297 files) 33 AUTO-FIXABLE + 8 MANUAL-ATTENTION (including `8A_Texas_Heatmaps.do` correctly MA per plan prediction), hook smoke battery 13/13 PASS (V1/V2/V3/V8 block; V7/clean/balanced/legacy-AF/legacy-MA allow). Banner-discipline TODO closed as part of Commit 1 (folded into stata SKILL.md + coder-critic deductions + Comment Safety rule).
 - [x] 2026-05-11 — Phase E: CLAUDE.md updated across all 3 branches (Skills Quick Reference row + Cross-Repo Propagation section on main); CHANGELOG entry under [Unreleased] for the comprehensive propagation infrastructure + stata skill migration; bootstrap_manifest.py deleted (throwaway per plan §6.1); related TODOs closed.
 - [x] 2026-05-10 — Phase D complete + all 7 consumers pushed to origin (1417c23 / 2b865de / 535b71c / 10d6073 / cab0b7d / 5a92a04 / 287b8df). Workflow main + both overlays + tag `bootstrap-2026-05-10` all pushed. Universe consistent.
 - [x] 2026-05-10 — Phase D: bootstrap complete. sync-overlays --force on applied-micro (`0def252`) + behavioral (`4f260b1`); propagate --force-initial on 7 consumers (193 file copies, 0 errors); catch-up sync-overlays --force after the resolve_patterns fix (`67b7437` / `f32f49e`). Idempotency PASS on both. Tag `bootstrap-2026-05-10` (commit `c10e276`).
