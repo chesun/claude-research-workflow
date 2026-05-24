@@ -119,8 +119,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--exclude",
         action="append",
-        default=["_archive"],
-        help="Path component to exclude (repeatable; default _archive).",
+        default=["_archive", ".claude"],
+        help=(
+            "Path component to exclude (repeatable; defaults: _archive, "
+            ".claude). The .claude default skips workflow infrastructure "
+            "including test fixtures that are intentionally buggy."
+        ),
     )
     parser.add_argument(
         "--diff",
