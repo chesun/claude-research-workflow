@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Pre-commit hook: block commits that introduce Stata greedy-/* bugs.
+#
+# Runs the state-machine sweep on every staged .do/.doh file (NOT a naive
+# `grep -c '/\*'` vs `grep -c '\*/'` check — that inflates on V7 banners and
+# string-literal /* digraphs). See:
+#   .claude/skills/tools/stata_sweep.py
+#   master_supporting_docs/stata-block-comment-bug-field-guide.md
+#
+# To install (opt-in per repo):
+#
+#   cp templates/git-hooks/pre-commit-stata-balance .git/hooks/pre-commit
+#   chmod +x .git/hooks/pre-commit
+#
+# Bypass for a single commit: `git commit --no-verify` (use sparingly).
+
+set -e
+
+SWEEP="$(git rev-parse --show-toplevel)/.claude/skills/tools/stata_sweep.py"
+
+if [ ! -x "$SWEEP" ] && [ ! -f "$SWEEP" ]; then
+    echo "pre-commit-stata-balance: sweep tool not found at $SWEEP"
+    echo "(propagate from workflow source or skip this hook)"
+    exit 0
+fi
+
+# Collect staged .do/.doh files.
+files=$(git diff --cached --name-only --diff-filter=AM | grep -E '\.(do|doh)$' || true)
+
+if [ -z "$files" ]; then
+    exit 0
+fi
+
+# Run sweep --check on each file. Exit codes:
+#   0 CLEAN, 1 AUTO-FIXABLE, 2 MANUAL-ATTENTION, 3 error.
+rc=0
+for f in $files; do
+    out=$(python3 "$SWEEP" --check "$f" 2>&1 || true)
+    fc=$?
+    if [ $fc -gt 0 ]; then
+        echo "pre-commit-stata-balance: issues in $f"
+        echo "$out" | tail -10
+        rc=$fc
+    fi
+done
+
+if [ $rc -ne 0 ]; then
+    echo ""
+    echo "Commit blocked. Run:"
+    echo "  python3 $SWEEP --fix"
+    echo "to auto-fix AUTO-FIXABLE files. MANUAL-ATTENTION files require manual review."
+    echo "See master_supporting_docs/stata-block-comment-bug-field-guide.md for context."
+    exit 1
+fi
+
+exit 0
