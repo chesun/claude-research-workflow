@@ -183,7 +183,7 @@ DVC:
 dvc status                                 # local: any pointers ahead of working tree?
 dvc status -c                              # cloud: any pending pushes / pulls?
 dvc remote list                            # which remote is configured
-ls -lh data/*.dvc data/**/*.dvc 2>/dev/null | wc -l   # pointer count
+find . -name '*.dvc' -not -path './.git/*' -not -path './.dvc/*' | wc -l  # pointer count (path-agnostic)
 du -sh "$(dvc config cache.dir 2>/dev/null || echo .dvc/cache)" 2>/dev/null
 ```
 

@@ -15,6 +15,12 @@ Given an approved strategy memo (strategist-critic score >= 80), implement the f
 
 ---
 
+## Required Skill Loading
+
+If the project's analysis language is Stata, or if the task involves writing or editing any `.do` or `.doh` file, **Read `.claude/skills/stata/SKILL.md` before proceeding.** The skill carries documentation-lookup workflow, language essentials, and pitfalls beyond what this agent file covers. Loading it is not optional when Stata code is in scope.
+
+---
+
 ## Stage 0: Data Cleaning and Preparation
 
 Before the main specification, always start with data preparation:
