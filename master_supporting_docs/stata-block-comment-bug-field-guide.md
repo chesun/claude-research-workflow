@@ -685,7 +685,9 @@ The lesson: **balance counts alone are necessary but not sufficient.** Variant 4
 
 ### Reference implementation
 
-- `py/sweep_comments_and_logdirs.py` in this project — full Python implementation of the three-pass algorithm. Approximately 700 lines including extensive docstrings documenting the design rationale and round-1/round-2/round-3 fix history.
+- `.claude/skills/tools/stata_sweep.py` — full Python implementation of the three-pass algorithm. The workflow port starts at Round 3 from day one (no replay of round-1 narrow-regex or round-2 over-flatten bugs). Path-glob-aware in both the depth-counted matcher and the inner rewriter, and uses a state-machine balance check (not naive grep) to avoid Variant 7 / string-literal false positives. Sweep `--fix` includes a MANUAL-ATTENTION classification so unfixable files (missing-close `/*` with no `*/` anywhere) are reported rather than silently mutated.
+- The shared state-machine library lives at `.claude/hooks/stata_comment_lib.py` and is reused by the PreToolUse hook `.claude/hooks/stata-comment-balance-check.py`.
+- Historical reference: `py/sweep_comments_and_logdirs.py` in the va_consolidated project (≈700 lines) was the prototype this port derives from. Its commit history records the three-round evolution that produced the path-glob-aware algorithm.
 
 ### Convention rules
 

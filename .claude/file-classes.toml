@@ -35,6 +35,7 @@ patterns = [
   ".claude/state/.gitkeep",
   "templates/*",
   "templates/**",
+  "master_supporting_docs/*.md",
   "master_supporting_docs/literature/papers/README.md",
   "master_supporting_docs/literature/reading_notes/README.md",
   ".gitignore",

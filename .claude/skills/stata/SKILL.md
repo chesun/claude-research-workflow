@@ -158,6 +158,21 @@ estpost tabstat varlist, stat(N mean) by(group) columns(statistics)
 esttab . using "table.rtf", cells("count(fmt(%9.0f)) mean(fmt(a3))") replace
 ```
 
+### Greedy `/*` parser bug (8 variants — silent failure mode)
+
+Stata's parser counts `/*` opens greedily regardless of comment context. A path-glob like `prepare/*` inside a `/* ... */` header, a `*`-prefixed line, or a `//`-prefixed line silently opens a runaway block comment that swallows downstream code. Symptoms: "end of do-file" reached with no errors but zero output files. The 8-variant taxonomy (including Variant 4 "fake nested comment" and Variant 8 "over-flatten fix-tool trap") is documented at `master_supporting_docs/stata-block-comment-bug-field-guide.md`.
+
+Use `<x>` (not `*`) as the path-glob placeholder inside any comment:
+
+```stata
+* Process every file in prepare/<x> and save to $datadir   // good
+* Process every file in prepare/* and save to $datadir     // SILENT BUG
+```
+
+For banner-style section dividers, use `* ----------------------------------------`, `// ----------------------------------------`, or `*****************************************` — avoid `//*****` (parser-safe but trips grep-balance and adds noise). See `.claude/rules/stata-code-conventions.md` § Comment Safety for the full rule set.
+
+Detection and fix at scale: `python3 .claude/skills/tools/stata_sweep.py --check --root <project>` (state-machine balance, exit 0 = clean, 1 = auto-fixable, 2 = manual-attention, 3 = error). `--fix` mutates auto-fixable files; MANUAL-ATTENTION files (missing-close `/*` with no `*/` anywhere) are reported but not mutated.
+
 ## Instructions
 
 When helping with Stata:

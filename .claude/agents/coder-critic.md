@@ -83,7 +83,13 @@ If any script under review is Stata (`.do` or `.doh`), **Read `.claude/skills/st
 #### 10. Comment Quality
 - Comments explain WHY, not WHAT
 - No dead code (commented-out blocks)
-- Stata: `//---` section dividers for major sections
+- Stata: `//---` section dividers for major sections; for decorative banners use `* ---`, `// ---`, or `*****` (never `//*****` — parser-safe but trips grep-balance and adds noise; see `.claude/rules/stata-code-conventions.md` § Comment Safety, Rule 2)
+
+#### 10b. Stata Comment Safety (greedy `/*` parser bug)
+- Verify state-machine balance via `python3 .claude/skills/tools/stata_sweep.py --check` (NOT naive grep `/\*` vs `\*/` — that inflates on V7 banners and string-literal `/*` digraphs)
+- No path-glob `*` inside any comment context (`/* ... */`, `*`-line, `//`-line) — use `<x>` placeholder
+- No Variant-8 over-flatten artifacts: `grep -rnE '^-+<x>$'` and `grep -rnE '^[[:space:]]*<x>[[:space:]]*$'` both return 0
+- Reference: `master_supporting_docs/stata-block-comment-bug-field-guide.md` (8 variants)
 
 #### 11. Error Handling
 **R:** Simulation results checked for NA/NaN/Inf; parallel backend cleanup
@@ -125,6 +131,10 @@ If any script under review is Stata (`.do` or `.doh`), **Read `.claude/skills/st
 | Console output pollution | -3 | Code Quality |
 | Poor comment quality | -3 | Code Quality |
 | Inconsistent style | -2 | Code Quality |
+| Stata: unbalanced `/*` vs `*/` via state-machine check (greedy parser bug) | -25 | Code Quality |
+| Stata: Variant-8 over-flatten artifacts present (`^-+<x>$` or `^\s*<x>\s*$`) | -25 | Code Quality |
+| Stata: path-glob `*` inside comment context (`/* */`, `*`-line, `//`-line) | -5 per occurrence, cap -25 | Code Quality |
+| Stata: `//*****`-style banner (parser-safe but trips grep-balance, adds noise) | -3 per occurrence, cap -10 | Code Quality |
 
 ## Standalone Mode
 

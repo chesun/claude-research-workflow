@@ -47,3 +47,21 @@ When new package used: save `[LEARN:stata] New package: name — purpose` to MEM
 - `ivreghdfe` for IV with high-dimensional FE
 - `regsave` for saving results to datasets
 - Cluster SEs at appropriate level (document why)
+
+## Comment Safety (greedy `/*` parser bug)
+
+Stata's parser counts `/*` opens **greedily** regardless of comment context. A path-glob like `prepare/*` inside any comment — `/* ... */` block, `*`-prefixed line, or `//`-prefixed line — silently opens a nested block comment that swallows downstream code. Symptoms: scripts log "end of do-file" with zero "file saved" messages; downstream pipelines fail when an expected output is missing. Full diagnosis and 8-variant taxonomy: `master_supporting_docs/stata-block-comment-bug-field-guide.md`.
+
+**Rule 1 — Wildcards in comments.** Inside any comment context, do not use `*` as a path-glob wildcard. Use `<x>` (or `<file>`, `<filename>`) as the placeholder. The sequence `/*` is reserved for legitimate block-comment opens.
+
+| Before (bug) | After (fixed) |
+|---|---|
+| `$logdir/*` | `$logdir/<x>` |
+| `prepare/*` | `prepare/<x>` |
+| `do/**/*.do` | `do/<x>/<x>.do` |
+
+**Rule 2 — Banner discipline.** For decorative section dividers, use `* ----------------------------------------`, `// ----------------------------------------`, or `*****************************************` (no slash before the asterisks). Avoid `//*****...` — Stata parses it correctly (the `//` opens a line comment), but the `/*` substring trips naive grep-balance checks and adds cognitive load when reading the file. The state-machine sweep tool recognizes the V7 banner pattern and treats it as benign, so legacy `//*****` banners do not need to be retroactively rewritten — this rule applies to new code.
+
+**Rule 3 — Commit-time balance check.** For every modified `.do` / `.doh` file: `grep -c '/\*' <file>` must equal `grep -c '\*/' <file>`. Imbalance guarantees the bug. Use `python3 .claude/skills/tools/stata_sweep.py --check` for an accurate state-machine balance (filters Variant-7 banners and string-literal `/*` digraphs that inflate the naive count); see `.claude/skills/tools/SKILL.md` § stata-sweep.
+
+The PreToolUse hook `.claude/hooks/stata-comment-balance-check.py` enforces Rule 1 and Variant-8 detection at edit time. Rule 2 (banner discipline) is advisory — flagged by coder-critic on new code, not blocked by the hook.
