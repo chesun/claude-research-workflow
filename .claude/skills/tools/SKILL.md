@@ -344,6 +344,68 @@ Plan: `quality_reports/plans/2026-05-07_comprehensive-propagation-plan.md` §5.
 
 ---
 
+### `/tools stata-sweep [--check | --fix] [--root PATH] [--diff] [--json] [FILE ...]` — Stata Greedy-`/*` Bug Sweep
+
+Detect and fix the Stata greedy-`/*` parser bug across a codebase. Background: `master_supporting_docs/stata-block-comment-bug-field-guide.md` (8-variant taxonomy). Implementation: `python3 .claude/skills/tools/stata_sweep.py` (~280 LOC, stdlib-only, requires Python 3.11+). Shared state-machine logic in `.claude/hooks/stata_comment_lib.py`.
+
+**Modes.**
+
+- `--check` (default) — walks the tree, classifies each `.do`/`.doh` file, reports counts. No mutations.
+- `--fix` — mutates AUTO-FIXABLE files in place. MANUAL-ATTENTION files are **never** mutated.
+
+**Classification (per file).**
+
+- **CLEAN** — pre-sweep balanced from Stata's perspective AND sweep would make no structural changes (V4 flatten, V5 orphan strip, V1/V2/V3/V6 path-glob rewrites). Pure Variant-7 banner files are CLEAN — the `//*****` form is parser-safe and the sweep would only do cosmetic `// *****` rewrites.
+- **AUTO-FIXABLE** — sweep can safely produce a balanced post-state. The file has V1/V2/V3/V4/V5/V6 issues that the three-pass algorithm resolves.
+- **MANUAL-ATTENTION** — sweep **cannot** safely auto-fix. Two causes: (a) Variant-8 corruption artifacts present (e.g., `^[\\s*=\\-]*[\\-=]{3,}<x>$` patterns from a buggy round-2-equivalent fix tool); (b) unmatched `/*` open with no reachable `*/` anywhere (developer forgot the close). Sweep `--fix` reports these but does NOT mutate.
+
+**Exit codes.**
+
+| Code | Meaning |
+|---|---|
+| 0 | All files CLEAN |
+| 1 | At least one AUTO-FIXABLE file found (`--check`) or fixed (`--fix`) |
+| 2 | At least one MANUAL-ATTENTION file found (subsumes 1) |
+| 3 | Parse / IO error |
+
+**Key invariants.**
+
+- Balance is computed via state-machine walker, **not** naive `grep -c '/\\*'`. The naive grep inflates 7×–14× on real codebases due to V7 banners and string-literal `/*` digraphs.
+- Both the depth-counted matcher and the inner rewriter use path-glob predicates (`is_path_glob_open`, `is_path_glob_close`) — Variant-8 prevention. The workflow port starts at Round 3 from day one (no round-1 narrow-regex or round-2 over-flatten bugs).
+- String literals are preserved verbatim — Stata strings can contain anything.
+- Idempotent by construction: `sweep_text(sweep_text(text)[0])[0] == sweep_text(text)[0]`.
+
+**Examples.**
+
+```bash
+# Walk a project, report counts only (no mutations)
+python3 .claude/skills/tools/stata_sweep.py --check --root ~/github_repos/my_project
+
+# Fix all AUTO-FIXABLE files (MANUAL-ATTENTION skipped)
+python3 .claude/skills/tools/stata_sweep.py --fix --root ~/github_repos/my_project
+
+# Check specific files
+python3 .claude/skills/tools/stata_sweep.py --check scripts/01_clean.do scripts/02_analyze.do
+
+# Machine-readable output for CI
+python3 .claude/skills/tools/stata_sweep.py --check --json --root .
+```
+
+**Opt-in commit-time enforcement.** A reference pre-commit hook ships at `templates/git-hooks/pre-commit-stata-balance`. Install per repo:
+
+```bash
+cp templates/git-hooks/pre-commit-stata-balance .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
+**Rule and convention cross-references.**
+
+- `.claude/rules/stata-code-conventions.md` § Comment Safety — Rule 1 (no `*` glob in comments; use `<x>` placeholder), Rule 2 (banner discipline), Rule 3 (commit-time balance check).
+- `.claude/agents/coder-critic.md` § 10b — deduction rows for unbalanced state-machine balance (-25), V8 artifacts (-25), path-glob in comment (-5/occurrence, cap -25), `//*****`-style banner (-3/occurrence, cap -10).
+- `.claude/hooks/stata-comment-balance-check.py` — PreToolUse hook that uses the same library to block edits introducing the bug going forward.
+
+---
+
 ### `/tools list-consumers` — List Configured Consumer Repos
 
 Read-only. Prints the workflow's consumer registry plus each consumer's last-sync state.
