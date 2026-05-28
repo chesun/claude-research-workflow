@@ -33,7 +33,16 @@ git add <file1> <file2> ...
 
 Do NOT stage `.claude/settings.local.json` or any files containing secrets.
 
-4. **Commit** with a descriptive message:
+4. **Derive-don't-guess pre-flight** — scan staged analysis/paper files for unresolved read paths (per `.claude/rules/derive-dont-guess.md`):
+
+```bash
+STAGED=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(do|doh|R|r|py|tex)$')
+[ -n "$STAGED" ] && python3 .claude/hooks/derive_lib.py --check $STAGED
+```
+
+If it reports unresolved read paths, surface them to the user and confirm before committing — they are likely guessed (fabricated) paths or undefined macros. Advisory, not a hard gate: a legitimately new or runtime-built path can proceed (note it in the commit message or add a `derive-ok` comment in the file).
+
+5. **Commit** with a descriptive message:
 
 If `$ARGUMENTS` is provided, use it as the commit message. Otherwise, analyze the staged changes and write a message that explains *why*, not just *what*.
 
@@ -44,7 +53,7 @@ EOF
 )"
 ```
 
-5. **Push and create PR:**
+6. **Push and create PR:**
 
 ```bash
 git push -u origin <branch-name>
@@ -60,7 +69,7 @@ EOF
 )"
 ```
 
-6. **Merge and clean up:**
+7. **Merge and clean up:**
 
 ```bash
 gh pr merge <pr-number> --merge --delete-branch
@@ -68,7 +77,7 @@ git checkout main
 git pull
 ```
 
-7. **Report** the PR URL and what was merged.
+8. **Report** the PR URL and what was merged.
 
 ## Important
 

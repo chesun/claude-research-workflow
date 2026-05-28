@@ -313,31 +313,22 @@ def resolve_path(
 # ---------------------------------------------------------------------------
 
 
-def analyze(
-    tool_name: str,
-    tool_input: dict,
-    file_path: str,
-    project_root: Path,
+def _scan_text(
+    text: str, language: str, project_root: Path
 ) -> list[tuple[str, str]]:
-    """Return [(path, reason), ...] for newly-referenced read paths that don't resolve.
+    """Core scan: extract read paths from `text` and return the unresolved ones.
 
-    Empty list means nothing to warn about. Respects the derive-ok escape
-    hatch. The caller decides whether to advise (PostToolUse) or block
-    (PreToolUse opt-in).
+    Shared by analyze() (scans an edit delta) and scan_file() (scans whole-file
+    content for the /commit pre-flight). Respects the derive-ok escape hatch.
     """
-    language = language_for_path(file_path)
-    if language is None:
+    if not text.strip():
         return []
 
-    delta = reconstruct_delta(tool_name, tool_input)
-    if not delta.strip():
-        return []
-
-    escaped_all, escaped_subs = escape_hatch(delta)
+    escaped_all, escaped_subs = escape_hatch(text)
     if escaped_all and not escaped_subs:
         return []
 
-    paths = extract_read_paths(delta, language)
+    paths = extract_read_paths(text, language)
     if not paths:
         return []
 
@@ -359,6 +350,36 @@ def analyze(
     return unresolved
 
 
+def analyze(
+    tool_name: str,
+    tool_input: dict,
+    file_path: str,
+    project_root: Path,
+) -> list[tuple[str, str]]:
+    """Return [(path, reason), ...] for newly-referenced read paths that don't resolve.
+
+    Empty list means nothing to warn about. Respects the derive-ok escape
+    hatch. The caller decides whether to advise (PostToolUse) or block
+    (PreToolUse opt-in). Scans the edit DELTA (newly-added text only).
+    """
+    language = language_for_path(file_path)
+    if language is None:
+        return []
+    return _scan_text(reconstruct_delta(tool_name, tool_input), language, project_root)
+
+
+def scan_file(file_path: str, project_root: Path) -> list[tuple[str, str]]:
+    """Scan a whole file's current content (used by the /commit pre-flight CLI)."""
+    language = language_for_path(file_path)
+    if language is None:
+        return []
+    try:
+        text = Path(file_path).read_text(encoding="utf-8", errors="ignore")
+    except OSError:
+        return []
+    return _scan_text(text, language, project_root)
+
+
 def build_advisory_message(file_path: str, unresolved: list[tuple[str, str]]) -> str:
     """Human-readable advisory for the additionalContext injection."""
     lines = [
@@ -378,3 +399,33 @@ def build_advisory_message(file_path: str, unresolved: list[tuple[str, str]]) ->
         "`derive-ok: <path>` to the edit to silence this notice.",
     ]
     return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# CLI — `python3 derive_lib.py --check <file>...` for the /commit pre-flight
+# ---------------------------------------------------------------------------
+
+
+def _cli(argv: list[str]) -> int:
+    """Scan the given files; print unresolved read paths; exit 1 if any found."""
+    import os
+
+    files = [a for a in argv if a != "--check"]
+    root = Path(os.environ.get("CLAUDE_PROJECT_DIR", os.getcwd()))
+    found = False
+    for fp in files:
+        for path, reason in scan_file(fp, root):
+            found = True
+            print(f"{fp}: {path}  ({reason})")
+    if found:
+        print(
+            "\nderive-dont-guess: unresolved read path(s) above. Derive the real "
+            "value or add a `derive-ok` comment. See .claude/rules/derive-dont-guess.md."
+        )
+    return 1 if found else 0
+
+
+if __name__ == "__main__":
+    import sys
+
+    raise SystemExit(_cli(sys.argv[1:]))

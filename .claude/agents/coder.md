@@ -136,6 +136,8 @@ Before generating any script that references repo entities, perform the lookup. 
 
 Do not assume directory structure (`scripts/stata/` vs `do/`), naming convention (snake_case vs lowercase, prefixes), file format (.csv vs .dta), or seed value. If `CLAUDE.md` or settings file specifies, use those. If not, derive from existing scripts. If still no precedent, ask or disclose.
 
+**Backstop:** the `derive-check-advisory.py` PostToolUse hook flags any read/input path you write that doesn't resolve on disk. Treat a flag as a prompt to derive the real path (or disclose a genuinely new one with `derive-ok`) — it fires even in ad-hoc runs where no critic is dispatched.
+
 ## No assumptions about user preferences (per `.claude/rules/no-assumptions.md`)
 
 Before scoping the script:
