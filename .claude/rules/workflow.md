@@ -58,6 +58,10 @@ quality_reports/plans/YYYY-MM-DD_short-description.md
 
 Format: Status (DRAFT/APPROVED/COMPLETED), approach, files to modify, verification steps.
 
+### Enforcement
+
+"Save to disk" (step 5) is hook-enforced, not just advisory. The Stop hook `.claude/hooks/plan-persist-check.py` fires at turn-end: if plan mode was used this session (an `ExitPlanMode` call, or a write to the harness `~/.claude/plans/` file) but no `quality_reports/plans/*.md` was written, it blocks the turn-end with a remediation message. The records copy can only be written *after* plan mode exits (during plan mode the only writable file is the harness plan file), so the gate is at Stop, not at plan-exit. It respects `stop_hook_active`, so it nudges at most once per turn and never loops. To satisfy it: after approval, copy the plan to `quality_reports/plans/YYYY-MM-DD_<slug>.md` and add an `INDEX.md` line.
+
 ---
 
 ## 2. The Orchestrator Loop
