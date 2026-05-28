@@ -1,6 +1,6 @@
 # Plan — Give `derive-dont-guess` (and other prose-only rules) Enforcement Teeth
 
-**Status:** APPROVED 2026-05-28 (Components 1–5). Component 6 PROPOSED (mechanism verified: Stop hooks; one open decision — output-length advisory vs blocking).
+**Status:** COMPLETED 2026-05-28. All 6 components implemented across 5 code commits (4c0cdb3 docs → 8b662b7). 59 hook unit/integration tests pass. Output-length decided: advisory, non-blocking. Deferred: Component 4d (`/write`→`writer-critic`); applying the CLAUDE.md Core Principles bullet to overlay branches; opt-in block hook stays off pending field calibration. See `TODO.md`.
 **Date:** 2026-05-28
 **Scope decisions (confirmed with user):** Full systemic fix · derive-dont-guess first but built for reuse · advisory-on-by-default, blocking opt-in later. **Plus (added 2026-05-28):** plan-persistence and output-length must become hook-enforced "hard" rules — same disease, same fix.
 **Source audit:** `quality_reports/reviews/2026-05-28_derive-dont-guess-binding-audit.md`

@@ -1,6 +1,6 @@
 # TODO — claude-code-my-workflow
 
-Last updated: 2026-05-24
+Last updated: 2026-05-28
 
 Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracker tasks (TaskCreate) are working memory; this file is the persistent cross-session record.
 
@@ -17,6 +17,12 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracke
 - [ ] **D6 — pilot exit decision** (after pilot's 7-day run) — go/no-go on bulk migration based on the five §6.6 metrics in the LFS+DVC plan.
 
 ## Backlog
+
+- [ ] **derive-dont-guess enforcement — overlay + follow-ups** (from 2026-05-28 enforcement work, plan `quality_reports/plans/2026-05-28_derive-dont-guess-enforcement.md`):
+  - Apply the CLAUDE.md "Derive, don't guess" Core Principles bullet to `applied-micro` + `behavioral` overlay branches (Class B — manual; folds into the overlay-sync item below).
+  - Component 4d (deferred): make `/write` dispatch `writer-critic` so the prose-side derive table reaches the main authoring path.
+  - Consider enabling the opt-in block hook (`touch .claude/state/derive-guess-block.enabled`) once the advisory hook's logs show an acceptable false-positive profile.
+  - Pre-existing: `test_destructive_action_guard.py` fails pytest collection (unrelated import error surfaced during this work) — investigate separately.
 
 - [ ] **`~/.claude/settings.json` drift** — diverged ~50 days from `claude-config/settings.json` (193 vs 81 bytes). Per `sync-global-config.md`, the live file should be copied to the repo and committed. Small task; ~10 min.
 - [ ] **Extend `NEVER_SURNAMES` blocklist** in `.claude/hooks/primary_source_lib.py` with two clusters of false positives encountered in real session-log writing: (a) status words `Resolved` / `Pending` / `Deferred` / `Open` (bracketed-year like `[Resolved 2026-05-05]`); (b) common changes-table verbs `Added` / `New` / `Fixed` / `Removed` / `Inserted` / `Replaced` / `Changed` / `Extended` / `Deleted` / `Dropped` / `Copied` / `Merged` / `Patched` (table-cell-start verbs followed by date-like strings). ~10 lines + tests.
