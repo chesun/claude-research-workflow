@@ -32,6 +32,13 @@ patterns = [
   ".claude/skills/tools/*.py",
   ".claude/skills/stata/references/*.md",
   ".claude/file-classes.toml",
+  # settings.json carries the hook REGISTRATIONS — without propagating it, a
+  # fork gets new hook .py files but never wires them in, so hook-backed rules
+  # (primary-source-first, derive-dont-guess, destructive-actions, ...) stay
+  # dormant. Consumers keep machine/consumer-specific permission overrides in
+  # `.claude/settings.local.json` (gitignored, never propagated) so a universal
+  # sync of settings.json doesn't clobber local `permissions.allow`.
+  ".claude/settings.json",
   ".claude/state/.gitkeep",
   "templates/*",
   "templates/**",
