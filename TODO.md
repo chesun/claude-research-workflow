@@ -1,6 +1,6 @@
 # TODO — claude-code-my-workflow
 
-Last updated: 2026-05-28
+Last updated: 2026-05-29
 
 Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracker tasks (TaskCreate) are working memory; this file is the persistent cross-session record.
 
@@ -12,6 +12,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracke
 - [ ] **Context-tightening — remaining levers** (plan `quality_reports/plans/2026-05-28_context-tightening-plan.md`):
   - DONE + MERGED to main 2026-05-28 (merge `448b3d0`): Lever 1 (8 convention rules path-scoped) + low-risk Lever 3 (dropped dead logging requirements; epistemic-table dedup). Always-on rules **165,455 → 116,366 B (−49,089 B / ~12.3k tokens / ~30%)**. Smoke check verified both directions. Branch `audit/workflow-context-tightening` retained (can delete). Not yet pushed to origin.
   - DEFERRED (await approval): Lever 2 (references/ split for data-version-control — held until DVC is used in a live repo) and the hook-rule prose trims (#13–16 in the plan, ~+7%). Lever 3 item E (revision.md diagram, verification↔SSOT overlap) judged not worth it.
+- [ ] **Build the Evidence-Gating Discipline** (design of record: `quality_reports/reviews/2026-05-28_whole-picture-critic-gates-dispatch.md` §7; nothing built yet). One rule operationalizing `adversarial-default` via evidence gating: Step-0 operationalization gate (advisory) + 3 tiers + `{PASS, UNVERIFIED, FAIL}` vocabulary + ledger schema extension. Tier-1 = a language-agnostic normdiff hook (agnostic core + per-language normalizers) shipping **Stata, Python, R, LaTeX**; advisory-default with opt-in `refactor-mode.enabled` blocking. Decided: Q2/Q3/Q4/Q6/Q10; recommended-pending: Q1/Q5/Q7/Q8/Q9. Build plan not yet written — start only on user go.
 - [ ] **Resume BDD pilot** — wait for user "resume" signal. Tasks #5–#12 in tracker; first action is soft-migrate 60 existing PDFs to LFS pointers (already approved 2026-05-06).
 
 ## Waiting On
@@ -31,6 +32,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracke
   - Apply the new CLAUDE.md "Adversarial default" Core Principles bullet to the overlay branches (Class B; folds into the overlay-sync item below).
   - Optional: have critics record `diagnosis:` ledger rows when they confirm/reject a cause, to seed institutional memory.
 
+- [ ] **Quarto (`.qmd`) normalizer for the evidence-gating Tier-1 gate** — deferred from the initial four-language build (Stata/Python/R/LaTeX). Needs `extract_executable_regions` chunk-extraction (YAML + prose + code chunks) *and* broader Quarto infrastructure the repo does not yet have (toolchain, render path, chunk-aware tooling). Pick up alongside the planned Quarto + R migration. See design doc §Q3.
 - [ ] **`~/.claude/settings.json` drift** — diverged ~50 days from `claude-config/settings.json` (193 vs 81 bytes). Per `sync-global-config.md`, the live file should be copied to the repo and committed. Small task; ~10 min.
 - [ ] **Extend `NEVER_SURNAMES` blocklist** in `.claude/hooks/primary_source_lib.py` with two clusters of false positives encountered in real session-log writing: (a) status words `Resolved` / `Pending` / `Deferred` / `Open` (bracketed-year like `[Resolved 2026-05-05]`); (b) common changes-table verbs `Added` / `New` / `Fixed` / `Removed` / `Inserted` / `Replaced` / `Changed` / `Extended` / `Deleted` / `Dropped` / `Copied` / `Merged` / `Patched` (table-cell-start verbs followed by date-like strings). ~10 lines + tests.
 - [ ] **Refine anti-AI-prose catalog: carve out academic-prose false positives.** The humanizer / writer-critic / storyteller-critic currently flag three patterns that are legitimate in academic and experimental-design writing. Skip them in future audits:
