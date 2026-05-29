@@ -1,3 +1,9 @@
+---
+paths:
+  - "**/*.do"
+  - "**/*.doh"
+---
+
 # Stata Code Conventions
 
 **Paths:** `**/*.do`, `**/*.doh`

@@ -1,3 +1,8 @@
+---
+paths:
+  - "**/*.py"
+---
+
 # Python Code Conventions
 
 **Scope:** `**/*.py`

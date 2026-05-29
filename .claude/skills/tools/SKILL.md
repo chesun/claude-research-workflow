@@ -1,7 +1,7 @@
 ---
 name: tools
-description: Utility commands — commit, compile, validate-bib, journal, context-status, deploy, learn, sync-status, propagate, list-consumers. Replaces individual utility skills.
-argument-hint: "[subcommand: commit | compile | validate-bib | journal | context | deploy | learn | sync-status | propagate | list-consumers] [args]"
+description: Utility commands — commit, compile, validate-bib, context-status, deploy, learn, sync-status, propagate, list-consumers. Replaces individual utility skills.
+argument-hint: "[subcommand: commit | compile | validate-bib | context | deploy | learn | sync-status | propagate | list-consumers] [args]"
 allowed-tools: Read,Grep,Glob,Write,Edit,Bash,Task
 ---
 
@@ -106,16 +106,6 @@ Cross-reference all citation keys against the project's `.bib` file.
 | Quality issues | N | (key → which field is missing/malformed) |
 
 Save full report to `quality_reports/bib_validation_[YYYY-MM-DD].md` if any issues found.
-
----
-
-### `/tools journal` — Research Journal
-
-Regenerate `quality_reports/research_journal.md` from quality reports and git history.
-
-- Walk `quality_reports/` for agent reports, extract date + score + verdict
-- Cross-reference with `git log` for phase-transition commits
-- Append-only: never overwrite existing entries; only add new ones since the last journal update
 
 ---
 

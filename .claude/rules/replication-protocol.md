@@ -1,3 +1,8 @@
+---
+paths:
+  - "replication/**"
+---
+
 # Replication Protocol
 
 **Core principle:** Replicate original results to the dot BEFORE extending.

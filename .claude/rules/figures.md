@@ -1,3 +1,10 @@
+---
+paths:
+  - "figures/**"
+  - "paper/**"
+  - "**/*.tex"
+---
+
 # Figures: Standards and Prohibited Patterns
 
 **Target:** Publication-quality figures matching AER, QJE, Econometrica visual standards.

@@ -1,3 +1,9 @@
+---
+paths:
+  - "paper/**"
+  - "**/*.tex"
+---
+
 # Working Paper Format Standard
 
 All LaTeX papers generated or reviewed by this system must conform to the standard economics working paper format. This rule applies to the writer, writer-critic, and verifier agents.

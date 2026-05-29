@@ -1,3 +1,10 @@
+---
+paths:
+  - "tables/**"
+  - "paper/**"
+  - "**/*.tex"
+---
+
 # Tables: Standards and Prohibited Patterns
 
 **Target:** Publication-quality tables matching AER, QJE, Econometrica formatting.

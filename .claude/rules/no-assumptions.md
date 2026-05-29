@@ -18,12 +18,14 @@ What you must never do: fill in blanks with plausible-sounding assumptions and p
 
 The workflow has four rules that together prevent four distinct failure modes of "filling in blanks." This rule is the user-facing one.
 
-| Rule | Source-of-truth |
-|---|---|
-| **no-assumptions.md** (this rule) | The user's stated requirements, preferences, workflow, infrastructure |
-| `primary-source-first.md` | The actual PDF in `master_supporting_docs/literature/papers/` |
-| `derive-dont-guess.md` | The relevant file in this repo (filepaths, variables, configs already encoded in code) |
-| `adversarial-default.md` | A `grep` / diagnostic / test output recorded in the verification ledger |
+This is the canonical mapping of all four rules (other rule files point here rather than restating it):
+
+| Rule | Source-of-truth | What it prevents |
+|---|---|---|
+| **no-assumptions.md** (this rule) | The user's stated requirements, preferences, workflow, infrastructure | Guessing about user preferences, workflow, tools, role boundaries |
+| `primary-source-first.md` | The actual PDF in `master_supporting_docs/literature/papers/` | Framing claims about external papers without reading them |
+| `derive-dont-guess.md` | The relevant file in this repo (filepaths, variables, configs already encoded in code) | Fabricating internal facts when the repo has the answer |
+| `adversarial-default.md` | A `grep` / diagnostic / test output recorded in the verification ledger | Asserting compliance without producing evidence |
 
 Use this rule when the missing fact is something only the user knows. Use `derive-dont-guess.md` when the missing fact is something the repo already encodes. Use `primary-source-first.md` when the missing fact is in an external paper. Use `adversarial-default.md` when the question is whether an artifact satisfies a project convention.
 

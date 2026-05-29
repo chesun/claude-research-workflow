@@ -56,7 +56,6 @@ In session logs, analysis docs, commit messages, and other ADRs, cite decisions 
 - **Session logs** (`quality_reports/session_logs/`) — chronological narrative of what happened in a working session. Records the *process* leading to a decision and any incremental reasoning. When a decision lands, write both a session log entry *and* the ADR; cross-link them.
 - **Analysis docs** (e.g., `quality_reports/*_analysis.md`) — deep reasoning, alternatives considered, evidence. Stay as-is; ADRs point at them.
 - **TODO.md Done section** — tracks completed tasks, not decisions. A completed task may or may not correspond to an ADR. Keep both (see `todo-tracking.md`).
-- **Research journal** (`quality_reports/research_journal.md`) — append-only agent output log. Separate concern; do not move ADR entries there.
 
 ## Pending decisions
 

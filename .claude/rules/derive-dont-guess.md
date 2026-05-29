@@ -35,14 +35,7 @@ A bare `<!-- derive-ok -->` (or `// derive-ok`, `# derive-ok`) suppresses all wa
 
 ## Where this fits in the epistemic stack
 
-Four rules together prevent four distinct failure modes of "filling in blanks":
-
-| Rule | Source-of-truth | What it prevents |
-|---|---|---|
-| `no-assumptions.md` | The user's stated requirements | Guessing about user preferences, workflow, tools, role boundaries |
-| `primary-source-first.md` | The actual PDF in `master_supporting_docs/literature/papers/` | Framing claims about external papers without reading them |
-| `adversarial-default.md` | A `grep` / diagnostic / test output recorded in the verification ledger | Asserting compliance without producing evidence |
-| **derive-dont-guess.md** (this rule) | The relevant file in this repo | Fabricating internal facts when the repo has the answer |
+This rule is one of four that together prevent four distinct failure modes of "filling in blanks." The canonical table mapping each rule to its source-of-truth and the failure mode it prevents lives in `no-assumptions.md` (§ "What this rule covers"). In the stack, `derive-dont-guess` is the repo-facing one: it prevents fabricating internal facts (filepaths, variables, configs) when the repo already encodes the answer.
 
 Each rule has a distinct scope. Together they form the workflow's epistemic floor: don't make things up, don't claim what you haven't checked, don't guess what you can derive.
 

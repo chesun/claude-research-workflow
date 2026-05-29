@@ -1,3 +1,10 @@
+---
+paths:
+  - "**/*.R"
+  - "**/*.r"
+  - "**/*.Rmd"
+---
+
 # R Code Conventions
 
 **Scope:** `**/*.R`
