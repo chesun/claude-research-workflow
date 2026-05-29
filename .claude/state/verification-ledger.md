@@ -5,7 +5,7 @@ Cache of verification results for the adversarial-default rule (`.claude/rules/a
 **Columns:**
 
 - *Path* — repo-relative path to the artifact under check.
-- *Check* — slug from the per-domain table in `adversarial-default.md` (e.g., `no-hardcoded-paths`, `seed-set-once`, `parallel-trends`, `incentive-compatibility`).
+- *Check* — slug from the per-domain table in `adversarial-default.md` (e.g., `no-hardcoded-paths`, `seed-set-once`, `parallel-trends`, `incentive-compatibility`), OR a `diagnosis:<symptom-slug>` row recording an investigated bug/error cause (`Result` = `DIAGNOSED` / `RULED-OUT`). Grep these before re-diagnosing — see `adversarial-default.md` § Diagnostic findings.
 - *Verified At* — ISO 8601 UTC, minute precision.
 - *File hash* — `sha256(<path>) | head -c 12`. Content hash, not metadata.
 - *Result* — `PASS`, `FAIL`, or `ASSUMED` (cost-prohibitive / infrastructure-unavailable).
