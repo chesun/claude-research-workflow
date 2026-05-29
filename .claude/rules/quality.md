@@ -160,7 +160,7 @@ Talk scores are reported as "Talk: XX/100" but do **not** block commits or PRs.
 - **Score < 80:** block commit; list blocking issues.
 - **Score < 90:** allow commit, warn; list recommendations.
 - **Score ≥ 95 + all components ≥ 80:** submission-ready.
-- User can override with justification (logged in `research_journal.md`).
+- User can override with justification (logged in the session log).
 
 ---
 

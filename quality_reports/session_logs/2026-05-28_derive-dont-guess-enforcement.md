@@ -82,9 +82,17 @@ User concern: too many always-on rules dilute attention / risk rules not binding
 - **Deferred (user chose Lever 1 only):** Lever 2 (references/ split for data-version-control) + Lever 3 (epistemic-table dedup + hook-rule trims) → ~42–47% total. Branch unmerged.
 - [LEARN:context-mgmt] `paths:` frontmatter is the workflow's lazy-load lever for rules. Even hook-rules can be path-scoped (it's not a move/rename, so hook path references still resolve). `@import` is the wrong tool — it's always-on. Skill bodies are already lazy (only descriptions load).
 
+## Addendum — Lever-1 smoke check fully verified (later session, 2026-05-28)
+
+Both directions of the `paths:` lazy-load confirmed on this Claude Code build:
+- **Absent direction:** fresh session, no matching file touched → `anti-ai-prose.md` not in context (user-confirmed at session start).
+- **Load direction:** `Read README.md` (matches anti-ai-prose's `paths:` glob) → harness injected the full rule into context via system-reminder.
+
+Conclusion: Lever 1's 27% always-on reduction loses no requirement — path-scoped rules auto-load when a matching file is touched. Branch `audit/workflow-context-tightening` ready to merge. No revert needed.
+
 ## Open items (carried to TODO)
 
-- Fresh-session verification of path-scoping (user-side): confirm a path-scoped rule is absent from context until a matching file is touched.
+- ~~Fresh-session verification of path-scoping (user-side)~~ — DONE (see addendum above).
 - Merge `audit/workflow-context-tightening` to main when ready (derive + diagnostic work already on main).
 - Levers 2 & 3 await separate approval.
 - Pre-existing `test_destructive_action_guard.py` pytest collection error (unrelated).

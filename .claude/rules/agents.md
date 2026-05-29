@@ -204,6 +204,6 @@ Round 3: Critic reviews → Worker fixes
 ### Rules
 
 - **Max 3 rounds per pair per invocation** — no infinite loops
-- **Escalation is logged** in the research journal with strike count
+- **Escalation is logged** in the session log with strike count
 - **User escalation requires a clear question** — not "they disagree," but "strategist-critic requires X, which contradicts Y. Which takes priority?"
 - **Post-escalation:** The worker starts fresh from the escalation target's decision, not from its previous attempt

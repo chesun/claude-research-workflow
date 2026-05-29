@@ -129,7 +129,6 @@ patterns = [
   "decisions/*",
   "decisions/**",
   "MEMORY.md",
-  "SESSION_REPORT.md",
   "TODO.md",
 
   # Literature — per-project library
