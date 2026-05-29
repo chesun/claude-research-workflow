@@ -7,7 +7,13 @@
 
 ## Outcome — executed 2026-05-28
 
-User decided to drop **both** logging sections, not just A. Rationale for also dropping B (`research_journal.md`): the orchestrated agent pipeline the journal serves isn't run in practice either — same dead-requirement logic as SESSION_REPORT. Executed: removed `logging.md` §2 + §3 (5,445 → 1,972 B, −3,473 B / ~870 tokens off always-on), cleaned 5 incidental pointers (file-classes.toml, quality.md, decision-log.md, agents.md, tools/SKILL.md). The 2 live "logged in research journal" instructions retargeted to the session log. Verified 0 dangling refs; no hook rules touched. C/D/E (epistemic-table dedup, crosswalk dedup, misc) remain optional/pending.
+User decided to drop **both** logging sections, not just A. Rationale for also dropping B (`research_journal.md`): the orchestrated agent pipeline the journal serves isn't run in practice either — same dead-requirement logic as SESSION_REPORT. Executed: removed `logging.md` §2 + §3 (5,445 → 1,972 B, −3,473 B / ~870 tokens off always-on), cleaned 5 incidental pointers (file-classes.toml, quality.md, decision-log.md, agents.md, tools/SKILL.md). The 2 live "logged in research journal" instructions retargeted to the session log. Verified 0 dangling refs; no hook rules touched.
+
+**C (epistemic-table dedup) — DONE, but byte-neutral.** The full table lived in two always-on files that had *diverged* (no-assumptions: 2 columns; derive-dont-guess: 3 columns, different row wording). Consolidated to one canonical 3-column table in `no-assumptions.md`; `derive-dont-guess.md` now points to it. Net bytes ≈ +82 B (enriching the canonical + leaving a real pointer ≈ what the duplicate cost), so this is a **maintainability/anti-drift win, not a context win**. derive-dont-guess Enforcement (hook) section untouched.
+
+**D (crosswalk dedup) — MOOT.** Its target was a triplicated "relationship to other records/logs" crosswalk across logging/decision-log/todo-tracking. Removing logging §3 already deleted logging's copy; `todo-tracking.md` never had a crosswalk (only integral cross-mentions in its rules); the one in `decision-log.md` legitimately belongs there (decision-centric). No real duplication left — skipped rather than manufacture a trivial edit.
+
+**E (misc) — not done.** revision.md ASCII diagram worth keeping for readability; verification-protocol↔single-source-of-truth overlap minor. Left as-is.
 
 ## Scope of this review
 
