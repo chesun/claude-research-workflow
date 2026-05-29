@@ -1,6 +1,6 @@
 # Plan — Enforce verification of diagnostic/causal claims (adversarial-default teeth)
 
-**Status:** APPROVED 2026-05-28
+**Status:** COMPLETED 2026-05-28 — 3 commits (`da163a4` docs → `7adf876` register), 77 hook tests pass. Deferred: tighten evidence-matching from turn-granularity to the specific cited file (future refinement); apply the CLAUDE.md "Adversarial default" bullet to overlay branches (Class B; tracked in TODO).
 **Builds on:** the completed `derive-dont-guess` enforcement (`quality_reports/plans/2026-05-28_derive-dont-guess-enforcement.md`). This is the *next* class of violation: claims that go beyond references.
 **Decisions confirmed with user:** findings store = the **existing** `.claude/state/verification-ledger.md` (not a new substrate) · strictness = **block-once** Stop-audit · scope = **bug/error causation claims only**.
 

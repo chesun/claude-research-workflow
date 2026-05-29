@@ -62,3 +62,12 @@ Diagnose why `derive-dont-guess` violations keep happening in consumer repos, th
 - Apply the CLAUDE.md "Derive, don't guess" Core Principles bullet to `applied-micro` + `behavioral` overlays (Class B). Folds into existing overlay-sync TODO.
 - Component 4d (`/write` → dispatch `writer-critic`) deferred.
 - Consider enabling the opt-in block hook after the advisory's false-positive profile is known.
+
+## Addendum — diagnostic-claim enforcement (same session)
+
+User raised the harder class: causal/diagnostic claims ("bug A caused by line B in file C") asserted without investigation, *even when prior findings were recorded* (hit in tx-peer-effects). Built a second enforcement layer (plan `quality_reports/plans/2026-05-28_diagnostic-claim-enforcement.md`).
+
+- **Meta-failure noted:** I first proposed inventing a new findings store despite the verification ledger being in context — the exact "ignore the record, re-guess" pattern, in the meta-conversation. User caught it; corrected to use the existing ledger.
+- **Mechanism:** `diagnosis:<slug>` rows in `.claude/state/verification-ledger.md` (file-hash staleness handles "code moved on") + `diagnostic-claim-audit.py` Stop hook (block-once) — blocks a turn that asserts a bug/error cause with no investigation this turn and no ledger consult. Gives `adversarial-default.md` its first hook.
+- **Commits:** `da163a4` (docs/convention) → `1612585` (hook+lib+tests) → `7adf876` (register+Core Principles). 77 hook tests pass.
+- [LEARN:institutional-memory] Recorded findings only help if consultation is *triggered*. The verification ledger existed but nothing forced consulting it before re-diagnosing — same prose-without-trigger gap as the other rules.

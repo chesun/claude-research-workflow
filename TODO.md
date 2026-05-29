@@ -23,6 +23,10 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracke
   - Component 4d (deferred): make `/write` dispatch `writer-critic` so the prose-side derive table reaches the main authoring path.
   - Consider enabling the opt-in block hook (`touch .claude/state/derive-guess-block.enabled`) once the advisory hook's logs show an acceptable false-positive profile.
   - Pre-existing: `test_destructive_action_guard.py` fails pytest collection (unrelated import error surfaced during this work) — investigate separately.
+- [ ] **diagnostic-claim enforcement — follow-ups** (from 2026-05-28, plan `quality_reports/plans/2026-05-28_diagnostic-claim-enforcement.md`):
+  - Tighten the Stop-audit's evidence check from turn-granularity to the *specific cited file* (v1 passes if any investigation happened this turn, even on a different file).
+  - Apply the new CLAUDE.md "Adversarial default" Core Principles bullet to the overlay branches (Class B; folds into the overlay-sync item below).
+  - Optional: have critics record `diagnosis:` ledger rows when they confirm/reject a cause, to seed institutional memory.
 
 - [ ] **`~/.claude/settings.json` drift** — diverged ~50 days from `claude-config/settings.json` (193 vs 81 bytes). Per `sync-global-config.md`, the live file should be copied to the repo and committed. Small task; ~10 min.
 - [ ] **Extend `NEVER_SURNAMES` blocklist** in `.claude/hooks/primary_source_lib.py` with two clusters of false positives encountered in real session-log writing: (a) status words `Resolved` / `Pending` / `Deferred` / `Open` (bracketed-year like `[Resolved 2026-05-05]`); (b) common changes-table verbs `Added` / `New` / `Fixed` / `Removed` / `Inserted` / `Replaced` / `Changed` / `Extended` / `Deleted` / `Dropped` / `Copied` / `Merged` / `Patched` (table-cell-start verbs followed by date-like strings). ~10 lines + tests.
