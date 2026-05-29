@@ -1,3 +1,15 @@
+---
+paths:
+  - "paper/**"
+  - "talks/**"
+  - "docs/**"
+  - "blog/**"
+  - "README.md"
+  - "CONTRIBUTING.md"
+  - "CHANGELOG.md"
+  - "**/*-blog.md"
+---
+
 # Anti-AI Prose
 
 **Scope:** All external-facing prose — anything a human audience reads. Internal artifacts are exempt.
