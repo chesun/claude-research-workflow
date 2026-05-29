@@ -30,6 +30,7 @@
 - **Worker-critic pairs** — every creator has a paired critic; critics never edit files (see `agents.md`)
 - **Primary source first** — before citing a paper in a load-bearing artifact, read the PDF and produce reading notes in `master_supporting_docs/literature/reading_notes/`; hooks block edits otherwise (see `primary-source-first.md`)
 - **Derive, don't guess** — look up repo facts (paths, macros, variables, configs) before referencing them; an advisory hook flags read/input paths that don't resolve on disk and points to the source you should derive from (see `derive-dont-guess.md`)
+- **Adversarial default** — a claim is a positive assertion needing evidence; before asserting a bug/error *cause*, investigate or consult the `diagnosis:` rows in the verification ledger — a Stop hook blocks unverified causal claims (see `adversarial-default.md`)
 - **Decisions are ADRs** — substantive decisions live in `decisions/NNNN_slug.md` (see `decision-log.md`)
 - **Track TODOs** — project root `TODO.md` (see `todo-tracking.md`)
 - **Auto-memory** — corrections and preferences saved automatically via Claude Code's built-in memory system
