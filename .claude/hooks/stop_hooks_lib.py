@@ -15,12 +15,15 @@ messages carry tool_use blocks, user messages carry the prompt or tool_result.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Iterable
 
 _PLANS_RECORDS_FRAGMENT = "quality_reports/plans/"
 _HARNESS_PLANS_FRAGMENT = "/.claude/plans/"
 _WRITE_TOOLS = {"Write", "Edit", "MultiEdit"}
+_INVESTIGATION_TOOLS = {"Read", "Grep", "Glob", "Bash"}
+_LEDGER_FRAGMENT = "verification-ledger.md"
 
 
 def iter_events(transcript_path: Path) -> Iterable[dict]:
@@ -149,3 +152,92 @@ def md_written_this_turn(transcript_path: Path) -> bool:
 def significant_line_count(text: str) -> int:
     """Count non-blank lines (the unit the output-length rule is written in)."""
     return sum(1 for ln in text.splitlines() if ln.strip())
+
+
+# ---------------------------------------------------------------------------
+# Diagnostic-claim predicates
+# ---------------------------------------------------------------------------
+
+
+def current_turn_assistant_text(transcript_path: Path) -> str:
+    """Assistant text emitted in the current turn (since the last user prompt)."""
+    texts: list[str] = []
+    for ev in current_turn_events(transcript_path):
+        if ev.get("type") != "assistant":
+            continue
+        for b in _content_blocks(ev):
+            if isinstance(b, dict) and b.get("type") == "text":
+                texts.append(b.get("text", "") or "")
+    return "\n".join(texts)
+
+
+def investigation_this_turn(transcript_path: Path) -> bool:
+    """True if the current turn used any investigation tool (Read/Grep/Glob/Bash)."""
+    for ev in current_turn_events(transcript_path):
+        for b in _content_blocks(ev):
+            if (
+                isinstance(b, dict)
+                and b.get("type") == "tool_use"
+                and b.get("name") in _INVESTIGATION_TOOLS
+            ):
+                return True
+    return False
+
+
+def ledger_consulted_this_session(transcript_path: Path) -> bool:
+    """True if the verification ledger was Read (or referenced via Bash) this session."""
+    for name, tool_input in iter_tool_uses(transcript_path):
+        if name == "Read":
+            fp = (tool_input.get("file_path", "") or "").replace("\\", "/")
+            if _LEDGER_FRAGMENT in fp:
+                return True
+        if name == "Bash":
+            cmd = tool_input.get("command", "") or ""
+            if _LEDGER_FRAGMENT in cmd:
+                return True
+    return False
+
+
+# Causal connectives strongly associated with diagnostic claims. Bare "because"
+# is deliberately excluded (too common in benign prose); only specific forms.
+_CAUSAL_RE = re.compile(
+    r"caused by|due to|because of|root cause|stems from|results from|"
+    r"the (?:bug|issue|problem|error|failure|crash) (?:is|was)|"
+    r"fails? because|breaks? because|responsible for|culprit|"
+    r"the reason (?:is|for|why)",
+    re.IGNORECASE,
+)
+
+# Defect indicators that, co-occurring with a causal connective, mark a
+# bug/error diagnosis (vs. a benign causal statement about a design choice).
+_DEFECT_RE = re.compile(
+    r"\b(?:bug|error|fail(?:s|ed|ure|ing)?|crash(?:es|ed|ing)?|broke|broken|"
+    r"exception|traceback|segfault|wrong|incorrect|nan|null|missing|"
+    r"regression|doesn'?t work|does not work|not working)\b",
+    re.IGNORECASE,
+)
+
+# A file:line or filename reference (analysis/code/paper extensions).
+_FILEREF_RE = re.compile(
+    r"\b[\w./-]+\.(?:py|R|r|do|doh|tex|sql|sh|js|ts|ipynb|csv|dta)\b(?::\d+)?",
+)
+
+_SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+|\n+")
+
+
+def detect_bug_causation_claims(text: str) -> list[str]:
+    """Return sentences that assert a bug/error CAUSE (causal + defect/file-ref).
+
+    Conservative by design: requires a causal connective co-occurring in the
+    same sentence with EITHER a defect indicator OR a file/line reference, so
+    benign causal prose ("we cluster because it matches assignment") is not
+    flagged.
+    """
+    hits: list[str] = []
+    for sentence in _SENTENCE_SPLIT_RE.split(text):
+        s = sentence.strip()
+        if not s or not _CAUSAL_RE.search(s):
+            continue
+        if _DEFECT_RE.search(s) or _FILEREF_RE.search(s):
+            hits.append(s if len(s) <= 200 else s[:197] + "...")
+    return hits

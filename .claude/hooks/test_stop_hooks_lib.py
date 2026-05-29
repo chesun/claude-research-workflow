@@ -139,3 +139,94 @@ def test_md_written_this_turn_false_non_md(tmp_path):
         _assistant([_tool_use("Edit", file_path="scripts/01.do")]),
     ])
     assert lib.md_written_this_turn(t) is False
+
+
+# ---------------------------------------------------------------------------
+# Diagnostic-claim predicates
+# ---------------------------------------------------------------------------
+
+def test_current_turn_assistant_text(tmp_path):
+    t = _write_transcript(tmp_path, [
+        _assistant([_text("old turn text")]),
+        _user_text("now do X"),
+        _assistant([_text("new turn text")]),
+    ])
+    assert lib.current_turn_assistant_text(t) == "new turn text"
+
+
+def test_investigation_this_turn_true(tmp_path):
+    t = _write_transcript(tmp_path, [
+        _user_text("why does it crash"),
+        _assistant([_tool_use("Read", file_path="utils.py")]),
+        _assistant([_text("found it")]),
+    ])
+    assert lib.investigation_this_turn(t) is True
+
+
+def test_investigation_this_turn_false(tmp_path):
+    t = _write_transcript(tmp_path, [
+        _user_text("why does it crash"),
+        _assistant([_text("it's obviously the index")]),
+    ])
+    assert lib.investigation_this_turn(t) is False
+
+
+def test_ledger_consulted_via_read(tmp_path):
+    t = _write_transcript(tmp_path, [
+        _assistant([_tool_use("Read", file_path="/r/.claude/state/verification-ledger.md")]),
+    ])
+    assert lib.ledger_consulted_this_session(t) is True
+
+
+def test_ledger_consulted_via_bash(tmp_path):
+    t = _write_transcript(tmp_path, [
+        _assistant([_tool_use("Bash", command="grep diagnosis .claude/state/verification-ledger.md")]),
+    ])
+    assert lib.ledger_consulted_this_session(t) is True
+
+
+def test_ledger_not_consulted(tmp_path):
+    t = _write_transcript(tmp_path, [
+        _assistant([_tool_use("Read", file_path="scripts/01.do")]),
+    ])
+    assert lib.ledger_consulted_this_session(t) is False
+
+
+# detect_bug_causation_claims
+
+def test_detect_causal_plus_defect():
+    hits = lib.detect_bug_causation_claims(
+        "The crash is caused by an off-by-one in the loop."
+    )
+    assert len(hits) == 1
+
+
+def test_detect_causal_plus_fileref():
+    hits = lib.detect_bug_causation_claims(
+        "The root cause is the indexing at utils.py:42."
+    )
+    assert len(hits) == 1
+
+
+def test_detect_benign_causal_not_flagged():
+    # Causal connective but no defect / no file ref → not a bug diagnosis.
+    hits = lib.detect_bug_causation_claims(
+        "We cluster at the classroom level because of the assignment mechanism."
+    )
+    assert hits == []
+
+
+def test_detect_no_causal_not_flagged():
+    hits = lib.detect_bug_causation_claims(
+        "The regression has an error in column 3."  # defect but no causal claim
+    )
+    assert hits == []
+
+
+def test_detect_multiple_sentences():
+    text = (
+        "Everything compiles fine. The failure is caused by a missing merge key. "
+        "Separately, the bug is in parser.py:88."
+    )
+    hits = lib.detect_bug_causation_claims(text)
+    assert len(hits) == 2
