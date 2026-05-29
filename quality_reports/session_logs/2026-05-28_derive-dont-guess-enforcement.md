@@ -71,3 +71,20 @@ User raised the harder class: causal/diagnostic claims ("bug A caused by line B 
 - **Mechanism:** `diagnosis:<slug>` rows in `.claude/state/verification-ledger.md` (file-hash staleness handles "code moved on") + `diagnostic-claim-audit.py` Stop hook (block-once) — blocks a turn that asserts a bug/error cause with no investigation this turn and no ledger consult. Gives `adversarial-default.md` its first hook.
 - **Commits:** `da163a4` (docs/convention) → `1612585` (hook+lib+tests) → `7adf876` (register+Core Principles). 77 hook tests pass.
 - [LEARN:institutional-memory] Recorded findings only help if consultation is *triggered*. The verification ledger existed but nothing forced consulting it before re-diagnosing — same prose-without-trigger gap as the other rules.
+
+## Addendum — context-tightening audit + Lever 1 (same session)
+
+User concern: too many always-on rules dilute attention / risk rules not binding. Comprehensive audit on branch `audit/workflow-context-tightening`.
+
+- **Mechanism finding (the key one):** the harness auto-globs `.claude/rules/*.md` into always-on context — no `@import`, no hook, no settings key. `@import` does NOT help (imported content still loads at startup). The real lever is **`paths:` YAML frontmatter** on a rule → it loads lazily (only when a matching file is edited). Confirmed empirically: 3 rules already had `paths:` frontmatter (`tikz-visual-quality`, `exploration-*`) and were absent from this session's context.
+- **Audit:** 7-lane workflow → report `quality_reports/reviews/2026-05-28_workflow-context-audit.md`; plan `quality_reports/plans/2026-05-28_context-tightening-plan.md` (rewrote the workflow's references/-move framing to lead with path-scoping — lower risk, no rewiring).
+- **Lever 1 executed:** path-scoped all 8 convention rules (anti-ai-prose, working-paper-format, figures, tables, r/python/stata-conventions, replication-protocol). Always-on rules 165,455 → 119,914 B (**−45,541 B / ~11,385 tokens / 27%**). Hook rules intact; stata Comment Safety byte-untouched. Commits `27d03a7`, `f48d554`, `c6675da`.
+- **Deferred (user chose Lever 1 only):** Lever 2 (references/ split for data-version-control) + Lever 3 (epistemic-table dedup + hook-rule trims) → ~42–47% total. Branch unmerged.
+- [LEARN:context-mgmt] `paths:` frontmatter is the workflow's lazy-load lever for rules. Even hook-rules can be path-scoped (it's not a move/rename, so hook path references still resolve). `@import` is the wrong tool — it's always-on. Skill bodies are already lazy (only descriptions load).
+
+## Open items (carried to TODO)
+
+- Fresh-session verification of path-scoping (user-side): confirm a path-scoped rule is absent from context until a matching file is touched.
+- Merge `audit/workflow-context-tightening` to main when ready (derive + diagnostic work already on main).
+- Levers 2 & 3 await separate approval.
+- Pre-existing `test_destructive_action_guard.py` pytest collection error (unrelated).

@@ -9,6 +9,10 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracke
 - *(nothing actively in flight)*
 
 ## Up Next
+- [ ] **Context-tightening — branch + remaining levers** (branch `audit/workflow-context-tightening`, plan `quality_reports/plans/2026-05-28_context-tightening-plan.md`):
+  - Lever 1 DONE: 8 convention rules path-scoped, −27% always-on. Branch unmerged → **merge to main when ready**.
+  - Fresh-session verification (user-side): confirm a path-scoped rule (e.g. anti-ai-prose) is absent from context until a matching file is edited; if not honored, `git revert` the 2 frontmatter commits.
+  - Lever 2 (references/ split for data-version-control, ~+6%) and Lever 3 (epistemic-table dedup + hook-rule trims, ~+7%) — await approval; full plan → ~42–47%.
 - [ ] **Resume BDD pilot** — wait for user "resume" signal. Tasks #5–#12 in tracker; first action is soft-migrate 60 existing PDFs to LFS pointers (already approved 2026-05-06).
 
 ## Waiting On
