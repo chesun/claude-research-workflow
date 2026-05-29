@@ -3,7 +3,7 @@
 
 # Context-Tightening Consolidation Plan (path-scoping–led)
 
-**Status:** DRAFT (awaiting approval)
+**Status:** LEVER 1 EXECUTED 2026-05-28 (commits 27d03a7, f48d554) — all 8 convention rules path-scoped; always-on rules 165,455 → 119,914 B (−45,541 B / ~11,385 tokens / 27%). Levers 2 (references/ split) and 3 (trim/dedup) NOT yet executed (await separate approval). User-side check pending: in a fresh session, confirm a path-scoped rule (e.g. anti-ai-prose) is absent from context until a matching file is edited.
 **Date:** 2026-05-28
 **Goal:** Cut the always-on `.claude/rules/*.md` footprint WITHOUT losing any requirement. Location/loading + verbosity only — no requirement deleted.
 **Primary mechanism (revised after the `paths:` finding):** add `paths:` YAML frontmatter to convention rules so they load **lazily** (only when a matching file is touched), instead of moving content to `references/`. Path-scoping needs **no file move, no rename, no consumer rewiring**, and hook-referenced paths stay intact. References/-relocation is used only where a rule has no clean file trigger.
