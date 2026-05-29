@@ -22,6 +22,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracke
 
 ## Backlog
 
+- [ ] **Trim `logging.md` — drop the master-log requirement.** §2 `SESSION_REPORT.md` (root + `.claude/` mirror) and §3 `research_journal.md` have never been instantiated in this repo across many sessions — actual practice is per-session logs in `quality_reports/session_logs/` + `TODO.md`. Remove the `SESSION_REPORT.md` consolidated-master-log section; reassess whether `research_journal.md` earns its keep or also goes. Double win: simpler rule + less always-on context (logging.md is ~5.4 KB). Fold into context-tightening **Lever 3** (`quality_reports/plans/2026-05-28_context-tightening-plan.md`). Update any cross-refs to the removed sections.
 - [ ] **derive-dont-guess enforcement — overlay + follow-ups** (from 2026-05-28 enforcement work, plan `quality_reports/plans/2026-05-28_derive-dont-guess-enforcement.md`):
   - Apply the CLAUDE.md "Derive, don't guess" Core Principles bullet to `applied-micro` + `behavioral` overlay branches (Class B — manual; folds into the overlay-sync item below).
   - Component 4d (deferred): make `/write` dispatch `writer-critic` so the prose-side derive table reaches the main authoring path.
