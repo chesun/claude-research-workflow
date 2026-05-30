@@ -47,11 +47,17 @@ Built via workflow `wf_afe138ec-b3f` (coder → independent verify + 2 adversari
 
 Commits on `design/evidence-gating-discipline`: `a5d6b73` (design), `4a509a4` (plan v3 + 2 reviews), `8176d0f` (Phase 1 code).
 
+## Phase 2 BUILT + committed (03782aa)
+
+Built via workflow `wf_46630aea-121` (build → verify + 3 adversarial lenses → fix). The rule (`adversarial-default.md`) + lazy `references/evidence-gating-detail.md` + ledger schema (append Tier/Citation/Tally) + **the GATE** (`coder-critic.md` consults the `no-logic-change` ledger row). **Adversarial review caught the gate was under-specified** (path-only match, no ASSUMED/missing-row/timing/scope) + the ledger append had no regression test → fix operationalized the gate + added 4 backward-compat tests (32→36). **Independently re-verified:** 36/36; diagnostic 7-pass + loud bare-python3; ledger append-not-insert + example rows backfilled to 9 cols + real 6-col rows parse; rule lean (0 tier-table rows in it, 8 refs intact); recorder↔gate contract confirmed (`_CHECK_SLUG="no-logic-change"`, Result PASS/UNVERIFIED).
+
 ## Pending
 
-- **Phase 2** (the GATE): the rule + verdict vocabulary + ledger schema + critic-consumes-ledger. Phase 1 only *records*; Phase 2 makes it bite.
-- **Minor follow-ups** (review's non-blocking findings → TODO): block-comment "symmetric clipping" docstring imprecise for asymmetric edits; R/Python path-token regex can tokenize a non-path first quoted arg (`sep=`).
-- Branch not pushed.
+- **Phase 3** (Tier-2): schema-enforced `{claim, artifact_citation, sufficiency_argument}` for critics + `citation_existence_lib.py` (resolve cited `file:line`, run named test, ASSUMED if infra absent).
+- **Phase 4**: operationalization gate (requirements-spec tier column, advisory) + Tier-3 adversarial-verify panel template.
+- **Phase 5**: class-aware propagation (rule/hooks/lib = Class A; CLAUDE.md + workflow.md = Class B manual).
+- **Minor polish** (TODO): block-comment docstring; R/Python path-token first-arg edge.
+- Branch `design/evidence-gating-discipline` NOT pushed (per user: hold until whole thing built).
 
 ## Artifacts
 
