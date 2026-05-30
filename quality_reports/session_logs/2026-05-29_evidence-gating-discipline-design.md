@@ -55,12 +55,16 @@ Built via workflow `wf_46630aea-121` (build → verify + 3 adversarial lenses �
 
 Tier-2: `citation_existence_lib.py` (`resolve_citation` → RESOLVED/MISSING/ASSUMED; MISSING = fabrication signal, ASSUMED = infra absent) + `/tools cite-check` + schema-enforced critic evidence `{claim, artifact_citation, sufficiency_argument}`. Adversarial **security lens found 0 holes**; I independently pen-tested (path traversal, absolute, shell-metachar/`$()`/backtick test_ids → all rejected, no execution). Review caught the Phase-3 M9 edit had muddied the *Tier-1* deduction with schema language (Tier-1 binds in ALL contexts, deterministic) → corrected. 24/24 citation + 36/36 normdiff. Removed a stray review-scratch file before commit.
 
+## Phase 4 BUILT + committed (b96a292)
+
+Advisory layer: `requirements-spec.md` Verification-Tier column (Class A) + `workflow.md` §1 Step-0 operationalization (Class B — manual overlay apply) + new `references/evidence-gating-tier3-panel.md` (Tier-3 convention: load-bearing only, independent verifiers, majority-refute kills PASS). Docs-only — regression unchanged (36/36, 24/24), no code touched. Review nits resolved.
+
 ## Pending
 
-- **Phase 4**: operationalization gate (requirements-spec tier column, advisory) + Tier-3 adversarial-verify panel template. (`workflow.md` edit = Class B → manual overlay apply.)
-- **Phase 5**: class-aware propagation to consumer repos + overlays — **OUTWARD-FACING; confirm with user before running** (modifies other repos).
+- **Phase 5 — class-aware propagation** to consumer repos + the `applied-micro`/`behavioral` overlays. **OUTWARD-FACING — awaiting explicit user go.** Class A (auto): rule, references, hooks, lib, normdiff/cite-check CLIs, settings.json, requirements-spec template. Class B (manual to overlays): `workflow.md` §1 edit + `CLAUDE.md` bullet.
 - **Minor polish** (TODO): block-comment docstring; R/Python path-token first-arg edge; pytest exit-code 4-vs-5; citation timeout configurability.
 - Branch `design/evidence-gating-discipline` NOT pushed (hold until whole thing built).
+- **Phases 1–4 all built, reviewed, independently verified, committed.** The discipline is functionally complete in-repo; Phase 5 is distribution.
 
 ## Artifacts
 
