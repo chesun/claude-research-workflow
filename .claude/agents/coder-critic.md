@@ -187,7 +187,22 @@ Save to `quality_reports/reviews/YYYY-MM-DD_<target>_coder_review.md` per the ca
 4. **Proportional.** A missing `set.seed()` is not the same as wrong clustering.
 5. **Adversarial default** (per `.claude/rules/adversarial-default.md`). Compliance is a positive claim; demand evidence. For each script under review, consult the verification ledger at `.claude/state/verification-ledger.md` for the relevant `(path, check)` rows from the Code-Stata, Code-R, or Code-Python checklist. If rows are missing, stale (file hash mismatch), or `Result != PASS`, deduct as below. Do not accept "no issues found" without ledger evidence.
 
+6. **Evidence gating — the no-logic-change GATE** (per `.claude/rules/adversarial-default.md` § Evidence gating; detail in `.claude/references/evidence-gating-detail.md`). Adopt the verdict vocabulary `{PASS, UNVERIFIED, FAIL}` for verifiable claims — `PASS` only with evidence in hand; `UNVERIFIED` when evidence is absent (loud, deducting, never a silent default-PASS); `FAIL` when disproven.
+
+   **When and what to consult.** Consult the ledger **at the start of the review**, before issuing any code-quality verdict, for **every in-scope research-artifact file** (under `paper/ talks/ scripts/ replication/ figures/ tables/ preambles/`) that carries a no-logic-change claim — i.e. is presented as a mechanical/clean refactor. For each such file, find the ledger row whose **`Path` matches the file AND `Check` is exactly `no-logic-change`** (the Phase-1 PostToolUse recorder writes/updates it on every supported edit). Do **not** match on `Path` alone — other `(path, check)` pairs (e.g. `no-hardcoded-paths`) do not apply to the refactor gate. A row missing because the file was never edited is different from a row missing because the recorder did not run; if the file is in scope and a no-logic-change claim is made about it, a missing row is treated as `UNVERIFIED` (see below).
+
+   Adjudicate by the matched row's `Result`:
+
+   - **Row exists, `Result == PASS`, hash current** → the recorded residue was empty (path/scaffold-only change). You may issue a clean-refactor **verdict of `PASS`** in the Code Quality section (citing the row as evidence) and apply **no** deduction below. "Permitted `PASS`" means exactly this: a `PASS` verdict in the report *and* no deduction — the two go together.
+   - **Row exists, `Result == UNVERIFIED`** → a non-empty residue was recorded (content changed beyond path swaps). You **MUST NOT issue a clean-refactor `PASS`.** Default to a verdict of `UNVERIFIED`; **cite the row's `Evidence` cell as the residue summary** in your verdict (that cell is the recorded residue — it is your evidence). Escalate to `FAIL` **only if** you manually inspect the file and confirm the residue is substantive logic change beyond path/comment/scaffold refactoring (a critic judgment — the recorder only emits `PASS`/`UNVERIFIED`, never `FAIL`). Apply the deduction below.
+   - **Row exists, `Result == ASSUMED`** → verification was cost-prohibitive / infrastructure-unavailable, not full evidence. Treat as `UNVERIFIED` (not `PASS`): do not issue a clean-refactor `PASS`; cite the `Evidence` cell's stated reason, and apply the `ASSUMED` deduction (-10) from the table below.
+   - **Row missing for an in-scope research-artifact file under a no-logic-change claim** → this is itself `UNVERIFIED` (the recorder may not have run — e.g. an external-editor edit or a `--no-verify` commit). Do not infer a `PASS` from a missing row; flag it and deduct.
+
+   This is the claim-time gate: the recorder gathers evidence continuously; you adjudicate at the moment the no-logic-change claim is made. **Interim binding (M9):** until Phase-3 schema validation is live, these verdict-vocabulary deductions are **advisory** — the Phase-1 recorder + ledger is the interim guarantee. Apply the deduction, but do not present it as a hard block the current phases cannot deliver.
+
 ## Adversarial-default deductions
+
+> **Note — advisory until Phase 3 (M9 caveat).** The verdict-vocabulary deductions in the rows below (the `no-logic-change` gate rows) are **advisory** until Phase-3 schema validation is live. Apply them and report them, but do not present them as a hard block the current phases cannot deliver. See the M9 interim-binding paragraph above.
 
 Apply on top of the standard code-quality deductions. These cap the score regardless of other categories.
 
@@ -197,6 +212,8 @@ Apply on top of the standard code-quality deductions. These cap the score regard
 | Critical | Ledger row exists but `File hash` is stale (file edited since verification) and check not re-run | -15 |
 | Major | Required ledger row missing for an inherited script (not authored in-session) | -10 per missing row, capped at -30 |
 | Major | Ledger row marked `ASSUMED` without a specific cost / infrastructure reason in Evidence | -10 |
+| Critical | Clean-refactor `PASS` issued on a no-logic-change claim when the ledger's `no-logic-change` row is `UNVERIFIED` (non-empty recorded residue) — verdict must be `UNVERIFIED`/`FAIL` | -25 (advisory until Phase 3) |
+| Major | No-logic-change claim on an in-scope research-artifact file with no `no-logic-change` ledger row (recorder may not have run) — treat as `UNVERIFIED` | -10 (advisory until Phase 3) |
 | Minor | Ledger row exists, `PASS`, but Evidence is vague ("looks good") rather than concrete (line number / count) | -3 |
 
 Include a "Compliance Evidence" section in the report listing every consulted ledger row:

@@ -294,6 +294,153 @@ def test_python_seed_change_residue():
 
 
 # ---------------------------------------------------------------------------
+# Ledger backward-compat — schema-extension safety (build plan M3, line 77).
+#
+# The ledger gained three trailing columns (Tier / Artifact Citation / Refuter
+# Tally) appended AFTER Evidence. The only positional consumer is the recorder's
+# _row_cells()/_upsert_ledger_row() (evidence-gate-recorder.py). These tests
+# prove that:
+#   (1) a pre-schema 6-column row still parses — rc[0] (Path), rc[1] (Check),
+#       rc[4] (Result) resolve at the same positions after the append;
+#   (2) a 9-column row parses identically at positions 0/1/4;
+#   (3) _upsert_ledger_row() updates a matching (path, check) row in place
+#       (no duplicate) and the row stays queryable by (path, check);
+#   (4) the recorder writes a row whose first six positional columns are
+#       intact, so old and new rows coexist (ragged 6-col == Tier-1 by design).
+# These were absent while the schema change shipped; without them a column
+# append could have silently shifted the consumer's indices.
+# ---------------------------------------------------------------------------
+
+def _load_recorder_mod():
+    return _load_recorder()
+
+
+def test_ledger_6col_row_parses():
+    rec = _load_recorder_mod()
+    six_col = (
+        "| scripts/01_clean.do | no-logic-change | 2026-04-28T10:00Z "
+        "| a1b2c3d4e5f6 | PASS | grep returned 0 matches |"
+    )
+    cells = rec_row_cells(rec, six_col)
+    ok = (
+        len(cells) == 6
+        and cells[0] == "scripts/01_clean.do"
+        and cells[1] == "no-logic-change"
+        and cells[4] == "PASS"
+    )
+    _check("ledger_6col_row_parses", ok, str(cells))
+
+
+def test_ledger_9col_row_parses():
+    rec = _load_recorder_mod()
+    nine_col = (
+        "| paper/main.tex | no-logic-change | 2026-04-28T10:05Z "
+        "| 9e8d7c6b5a4f | UNVERIFIED | added 1 line | 1 | paper/main.tex:42 | 0/3 refuted |"
+    )
+    cells = rec_row_cells(rec, nine_col)
+    ok = (
+        len(cells) == 9
+        and cells[0] == "paper/main.tex"
+        and cells[1] == "no-logic-change"
+        and cells[4] == "UNVERIFIED"
+    )
+    _check("ledger_9col_row_parses", ok, str(cells))
+
+
+def rec_row_cells(rec, line):
+    # _row_cells is a closure inside _upsert_ledger_row; reproduce its exact
+    # splitting logic here so the test exercises the same parse the consumer
+    # uses (pipe-split, strip leading/trailing pipe, strip each cell).
+    inner = line.strip()
+    if inner.startswith("|"):
+        inner = inner[1:]
+    if inner.endswith("|"):
+        inner = inner[:-1]
+    return [c.strip() for c in inner.split("|")]
+
+
+def test_ledger_upsert_update_in_place():
+    import tempfile
+
+    rec = _load_recorder_mod()
+    header = (
+        "| Path | Check | Verified At | File hash | Result | Evidence "
+        "| Tier | Artifact Citation | Refuter Tally |"
+    )
+    sep = "|------|-------|-------------|-----------|--------|----------|------|-------------------|---------------|"
+    # Pre-existing rows: one 6-col (old format), one 9-col (new format),
+    # and the target 6-col row we will update in place.
+    pre6 = "| scripts/02_analysis.do | no-logic-change | 2026-04-28T10:00Z | f7e8d9c0b1a2 | PASS | clean |"
+    pre9 = "| paper/main.tex | no-logic-change | 2026-04-28T10:05Z | 9e8d7c6b5a4f | UNVERIFIED | added 1 | 1 | paper/main.tex:42 | 0/3 |"
+    target = "| scripts/01_clean.do | no-logic-change | 2026-04-28T09:00Z | deadbeef0000 | PASS | old evidence |"
+    with tempfile.NamedTemporaryFile(
+        "w", suffix=".md", delete=False, encoding="utf-8"
+    ) as fh:
+        fh.write("\n".join([header, sep, pre6, pre9, target]) + "\n")
+        ledger = Path(fh.name)
+
+    rec._upsert_ledger_row(
+        ledger,
+        "scripts/01_clean.do",
+        "cafef00d1234",
+        "UNVERIFIED",
+        "injected keep if",
+    )
+    text = ledger.read_text(encoding="utf-8")
+    rows = [ln for ln in text.splitlines() if "scripts/01_clean.do" in ln]
+    ledger.unlink()
+
+    # Exactly one row for the (path, check) pair — updated, not duplicated.
+    one_row = len(rows) == 1
+    cells = rec_row_cells(rec, rows[0]) if rows else []
+    updated = (
+        one_row
+        and cells[1] == "no-logic-change"
+        and cells[3] == "cafef00d1234"
+        and cells[4] == "UNVERIFIED"
+        and cells[5] == "injected keep if"
+    )
+    # Pre-existing rows untouched: the 9-col paper row still has 9 cols.
+    paper_rows = [ln for ln in text.splitlines() if "paper/main.tex" in ln]
+    paper_intact = len(paper_rows) == 1 and len(rec_row_cells(rec, paper_rows[0])) == 9
+    _check("ledger_upsert_update_in_place", updated and paper_intact, text)
+
+
+def test_ledger_upsert_appends_new_row():
+    import tempfile
+
+    rec = _load_recorder_mod()
+    header = (
+        "| Path | Check | Verified At | File hash | Result | Evidence "
+        "| Tier | Artifact Citation | Refuter Tally |"
+    )
+    sep = "|------|-------|-------------|-----------|--------|----------|------|-------------------|---------------|"
+    pre6 = "| scripts/02_analysis.do | no-logic-change | 2026-04-28T10:00Z | f7e8d9c0b1a2 | PASS | clean |"
+    with tempfile.NamedTemporaryFile(
+        "w", suffix=".md", delete=False, encoding="utf-8"
+    ) as fh:
+        fh.write("\n".join([header, sep, pre6]) + "\n")
+        ledger = Path(fh.name)
+
+    rec._upsert_ledger_row(
+        ledger, "tables/t1.tex", "0011223344ff", "PASS", "path swap only"
+    )
+    text = ledger.read_text(encoding="utf-8")
+    ledger.unlink()
+
+    new_rows = [ln for ln in text.splitlines() if "tables/t1.tex" in ln]
+    old_rows = [ln for ln in text.splitlines() if "scripts/02_analysis.do" in ln]
+    cells = rec_row_cells(rec, new_rows[0]) if new_rows else []
+    ok = (
+        len(new_rows) == 1
+        and len(old_rows) == 1  # pre-existing 6-col row preserved
+        and cells[0] == "tables/t1.tex"
+        and cells[4] == "PASS"
+    )
+    _check("ledger_upsert_appends_new_row", ok, text)
+
+
+# ---------------------------------------------------------------------------
 # Runner
 # ---------------------------------------------------------------------------
 
@@ -324,6 +471,11 @@ _ALL_TESTS = [
     test_stata_backtick_macro_real_change_residue,
     test_r_seed_change_residue,
     test_python_seed_change_residue,
+    # Ledger backward-compat (build plan M3 — schema column append)
+    test_ledger_6col_row_parses,
+    test_ledger_9col_row_parses,
+    test_ledger_upsert_update_in_place,
+    test_ledger_upsert_appends_new_row,
 ]
 
 

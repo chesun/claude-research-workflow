@@ -23,6 +23,8 @@
 
 ## Core Principles
 
+<!-- The rules these principles reference are Class A (Universal) per `.claude/file-classes.toml` unless explicitly marked otherwise. This CLAUDE.md file itself is Class B (overlay-customized) — apply edits to overlays manually, not via propagation. -->
+
 - **Plan first** — enter plan mode before non-trivial tasks; save plans to `quality_reports/plans/`
 - **Verify after** — compile and confirm output at the end of every task
 - **Single source of truth** — the paper is authoritative; talks and supplements derive from it (see `single-source-of-truth.md`)
@@ -31,6 +33,7 @@
 - **Primary source first** — before citing a paper in a load-bearing artifact, read the PDF and produce reading notes in `master_supporting_docs/literature/reading_notes/`; hooks block edits otherwise (see `primary-source-first.md`)
 - **Derive, don't guess** — look up repo facts (paths, macros, variables, configs) before referencing them; an advisory hook flags read/input paths that don't resolve on disk and points to the source you should derive from (see `derive-dont-guess.md`)
 - **Adversarial default** — a claim is a positive assertion needing evidence; before asserting a bug/error *cause*, investigate or consult the `diagnosis:` rows in the verification ledger — a Stop hook blocks unverified causal claims (see `adversarial-default.md`)
+- **Evidence gating** — a verdict is only as good as the evidence it carries; gate on *claims*, not actions; verdicts are `{PASS, UNVERIFIED, FAIL}` (never a silent default-PASS), and the verification mechanism scales to checkability (block only deterministic Tier-1 checks; advise+deduct for judgment). A no-logic-change claim is gated against the residue the recorder writes to the verification ledger (see `adversarial-default.md` § Evidence gating and `.claude/references/evidence-gating-detail.md`)
 - **Decisions are ADRs** — substantive decisions live in `decisions/NNNN_slug.md` (see `decision-log.md`)
 - **Track TODOs** — project root `TODO.md` (see `todo-tracking.md`)
 - **Auto-memory** — corrections and preferences saved automatically via Claude Code's built-in memory system
