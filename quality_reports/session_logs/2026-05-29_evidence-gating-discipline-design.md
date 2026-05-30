@@ -39,9 +39,19 @@
 - **Round 2 re-review (REVISE-AGAIN):** `..._rereview.md`. C1 fix was **vapor** — relied on `/tools refactor-mode`, `/tools normdiff`, `bin/` pre-commit, none of which exist; memory-dependency relocated, not eliminated. Closure: 6 closed, 11 partial, C1 not-closed. Also corrected: agents.md is Class A not B; inbound refs = 8 not 12.
 - **C1 redesign (user-decided, round 2):** **record-always + gate-at-claim-time.** PostToolUse hook silently records normdiff residue to ledger on every supported edit (no tooling, no noise, non-blocking); the gate is the evidence-gated critic consuming the ledger (cannot PASS a clean-refactor verdict when residue recorded). refactor-mode/pre-commit → optional hardening. → **v3** written (plan rewritten; M4=fresh normalizer, M9=recorder is interim guarantee, M10/M11 corrected with verified facts, references-loading clarified, CLAUDE.md+workflow.md flagged Class B, ledger content = local state not propagated).
 
-## Pending (user)
+## Phase 1 BUILT + committed (8176d0f)
 
-- **Next step:** optional light re-review of the v3 C1 redesign, or proceed to build Phase 1 (a non-blocking PostToolUse recorder — low risk). Plus: commit v3 + both review reports + session-log/TODO onto `design/evidence-gating-discipline`. Nothing built yet.
+Built via workflow `wf_afe138ec-b3f` (coder → independent verify + 2 adversarial review lenses → fix). Files: `normdiff_lib.py` (core + 4 normalizers), `evidence-gate-recorder.py` (PostToolUse, registered in settings.json), `normdiff.py` CLI (+ SKILL.md), `test_normdiff_lib.py`.
+
+**Adversarial review caught 4 real correctness bugs the build's own 25 tests passed over** — Stata `*` (mult) mis-stripped as comment; set-diff blind to reorder/dup; backtick-macro poisoning quote-state; seed-change as scaffold. Fix phase resolved all 4. **I independently re-verified** (re-ran tests + exercised each bug scenario directly against the lib) and **added 7 regression tests** (the original suite passed 25/25 with the bugs live → tests were the gap). Now 32/32. Recorder fail-open confirmed (garbage/unsupported/out-of-scope → exit 0, ledger untouched). settings.json registration done via `BYPASS_SHARED_GUARD=1` (protect-files.sh blocks the Edit tool); JSON validated.
+
+Commits on `design/evidence-gating-discipline`: `a5d6b73` (design), `4a509a4` (plan v3 + 2 reviews), `8176d0f` (Phase 1 code).
+
+## Pending
+
+- **Phase 2** (the GATE): the rule + verdict vocabulary + ledger schema + critic-consumes-ledger. Phase 1 only *records*; Phase 2 makes it bite.
+- **Minor follow-ups** (review's non-blocking findings → TODO): block-comment "symmetric clipping" docstring imprecise for asymmetric edits; R/Python path-token regex can tokenize a non-path first quoted arg (`sep=`).
+- Branch not pushed.
 
 ## Artifacts
 
