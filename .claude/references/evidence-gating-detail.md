@@ -82,12 +82,68 @@ Language dispatch reuses `derive_lib.language_for_path()`. Recorder scope is **r
 
 ## The citation-existence contract (Phase 3)
 
-Tier-2 evidence is a citation of form `file:line-range[:test_id]`. A lightweight check resolves it:
+Tier-2 evidence is a structured `{claim, artifact_citation, sufficiency_argument}`. The `artifact_citation` is a string that a lightweight, non-model check resolves mechanically. Implemented in `.claude/hooks/citation_existence_lib.py`; exposed manually as `/tools cite-check <citation>` (`.claude/skills/tools/cite_check.py`).
 
-- `resolve_citation(citation) -> {exists, output}` — the cited line range must exist in the file; if a `:test_id` is present, the named test is run (extension-dispatched) and must pass.
-- **Fail-open when infra is unavailable:** a citation that cannot be checked because the test runner / interpreter is absent records an **`ASSUMED`** ledger row (not `FAIL`), with the reason in Evidence. This catches *fabricated artifacts* (a line/test that does not exist) without penalizing a genuinely uncheckable environment.
+**Citation format:** `file[:line-or-range][:test_id]`.
 
-This is what makes Tier 2 more than trust: presence of a structured citation is schema-enforced; existence of the cited artifact is mechanically checked. Neither catches a fabrication that *survives both* — that is the honest limit (see below).
+- `scripts/01_clean.do:47` — file + single line.
+- `scripts/01_clean.do:40-52` — file + inclusive line range.
+- `tests/test_x.py:88:test_foo` or `tests/test_x.py::test_foo` — file + named test (the pytest `::` node form is also accepted).
+- `paper/main.tex` — file only (existence of the file).
+
+**I/O:** `resolve_citation(citation: str, repo_root) -> {exists: bool, kind: str, status: str, detail: str}`.
+
+- `exists` — True iff the artifact resolves (file present, cited line / range in range, and — if a test is named — the test ran and passed).
+- `kind` — `'line' | 'test' | 'file'` (what was actually resolved).
+- `status` — `'RESOLVED' | 'MISSING' | 'ASSUMED'`.
+- `detail` — human-readable reason / evidence (goes into the ledger Evidence cell).
+
+**The MISSING-vs-ASSUMED rule (load-bearing):**
+
+- **`MISSING`** — a real fabrication / broken-evidence signal: the file does not exist, the line / range is out of range, the named test *failed* or was *not collected* (does not exist), or the citation is malformed / unsafe. `exists = False`. The CLI exits nonzero.
+- **`ASSUMED`** — infrastructure absence *only*: a test was named but the whitelisted runner for that file type is unavailable (no runner for the extension, or the toolchain — e.g. pytest — is not installed), or a read/spawn error prevented the check. This must **not** read as fabrication. `exists = False` (we could not confirm), but the row is recorded `ASSUMED` with the reason, and the CLI exits 0 (fail-open). This mirrors the verdict-vocabulary rule: a genuinely uncheckable environment is `ASSUMED`, not penalized.
+- **`RESOLVED`** — file present, line(s) in range, any named test ran and passed. `exists = True`.
+
+So a *missing line* is `MISSING` (fabrication); a *missing test runner* is `ASSUMED` (infra). The two are deliberately separated: the check catches fabricated artifacts without punishing an environment that cannot run the test.
+
+**The security boundary (the citation is untrusted input):** a citation string must NEVER become arbitrary command execution or a path-traversal read. Four defenses, in order:
+
+1. **Path containment.** The file part is resolved *relative to* `repo_root` and the realpath must stay inside `repo_root`. Absolute paths, `..` traversal, and symlinks that escape the tree are rejected → `MISSING` ("path escapes repo"). Uses `os.path.realpath` + `commonpath`.
+2. **test_id whitelist.** A test id must match a conservative identifier pattern (function / class-qualified / pytest-node / `[param]` shapes only — no slash, space, quote, or shell metacharacter). Anything else is rejected → `MISSING` ("unsafe test id") *before* any subprocess is spawned.
+3. **Fixed, whitelisted runner.** Tests run only via a per-extension runner from a hard-coded table (python → `['python3','-m','pytest', '<relpath>::<test_id>']`), with `shell=False`, an args **list** (never a command string), and `cwd=repo_root`. The *extension*, not the citation, selects the program. An extension with no table entry is `ASSUMED` (infra-absent), never executed.
+4. **No shell, ever.** `subprocess` is called with a list and `shell=False`; there is no path that passes the citation to a shell.
+
+This is what makes Tier 2 more than trust: presence of a structured citation is schema-enforced (below); existence of the cited artifact is mechanically checked here. Neither catches a fabrication that *survives both* — that is the honest limit (see below).
+
+---
+
+## Workflow schema-enforcement convention (what makes Tier-2 binding — Q5)
+
+The verdict-vocabulary deductions in the critic agents are *advisory prose* on their own — a model can ignore prose. The mechanism that makes Tier-2 evidence **binding** is the harness, not the agent file: when a critic runs inside a JS `Workflow()`, route it via `agent(..., { schema })` with the evidence fields **required**. `StructuredOutput` then mechanically rejects an empty-evidence verdict — the critic literally cannot return a `PASS` (or any verdict) without populating `claim` and `artifact_citation`.
+
+Convention (apply when a critic that issues Tier-2 verdicts runs in a schema-routed workflow):
+
+```js
+const verdict = await agent(criticPrompt, {
+  schema: {
+    type: "object",
+    properties: {
+      claim:              { type: "string" },   // the locatable-judgment claim
+      artifact_citation:  { type: "string" },   // file[:line-or-range][:test_id]
+      sufficiency_argument: { type: "string" }, // why the cited artifact suffices
+      verdict:            { type: "string", enum: ["PASS", "UNVERIFIED", "FAIL"] }
+    },
+    required: ["claim", "artifact_citation", "verdict"]
+  }
+});
+// Then existence-check the citation mechanically:
+//   resolve_citation(verdict.artifact_citation, repoRoot)
+// MISSING ⇒ downgrade PASS to UNVERIFIED (fabricated/absent artifact).
+```
+
+`required: ["claim", "artifact_citation"]` is the load-bearing line: it converts "the critic *should* attach evidence" (prose) into "the critic *cannot return* without evidence" (schema). `sufficiency_argument` is recommended but not in `required`, because a model judging sufficiency is Tier-2 by definition and the existence-check, not the schema, is what mechanically guards the artifact.
+
+**Precise enforcement boundary (do not overclaim):** schema enforcement binds **only** when the critic runs inside a schema-routed `Workflow()` (or any harness that enforces `StructuredOutput`'s `required`). In **ad-hoc / standalone** critic use — a `/review` invocation, an orchestrator dispatch without a schema, a human reading the agent file — there is no `StructuredOutput` gate, so the evidence requirement reverts to **advisory prose** (the critic *should* attach a citation; nothing mechanically stops it from not doing so). The citation-existence check (`resolve_citation` / `cite-check`) is available in *both* contexts, but it only runs if something invokes it; the schema is what *forces* the citation to exist in the first place.
 
 ---
 

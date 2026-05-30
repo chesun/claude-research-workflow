@@ -6,6 +6,10 @@ When writing a new review, consult this index first. If an `Active` entry exists
 
 ---
 
+## 2026-05
+
+- [2026-05-29_pre-commit_verifier_review.md](2026-05-29_pre-commit_verifier_review.md) — Phase 3 evidence-gating (cite lib + normdiff lib + cite-check CLI), PASS, Active
+
 ## 2026-04
 
 - [2026-04-23_archive-content-audit.md](2026-04-23_archive-content-audit.md) — pre-public archive content audit

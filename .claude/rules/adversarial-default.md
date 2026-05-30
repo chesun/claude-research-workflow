@@ -29,7 +29,12 @@ This rule's operational form, generalized across the checkability spectrum.
 
 **Known limit (state it plainly):** only **Edit/Write-tool-mediated edits are recorded** by the Tier-1 evidence recorder. Changes made in an external editor, and commits made with `git commit --no-verify`, bypass the recorder. This is an honest gap, not a defect — it is the boundary of what a tool-event hook can observe.
 
-**Interim binding (M9):** the Phase-1 recorder + the verification ledger is the **interim guarantee**. The verdict-vocabulary deductions in the critic agents are **advisory until Phase-3 schema validation is live** — until then, the deterministic recorder writing residue to the ledger (and the critic consuming that ledger) is what actually binds. Do not imply binding enforcement that Phases 1+2 cannot yet deliver.
+**Binding boundary (M9, updated for Phase 3).** Two mechanisms bind, with distinct scopes:
+
+- **Tier 1 (no-logic-change)** binds via the **deterministic recorder + verification ledger** in every context — it is script-decidable, so the residue is real evidence regardless of who reads it.
+- **Tier 2 (locatable-judgment verdicts)** is now **schema-enforceable**: when a critic runs inside a schema-routed JS `Workflow()` (via `agent(…, { schema })` with `required: [claim, artifact_citation]`), `StructuredOutput` mechanically rejects an empty-evidence verdict, and a fabricated/absent `artifact_citation` is caught by `.claude/hooks/citation_existence_lib.py` (`resolve_citation`). The schema mechanism *exists* as of Phase 3.
+
+**Be precise — do not overclaim.** Tier-2 binding holds **only inside a schema-routed workflow**. In **ad-hoc / standalone** critic use (a `/review` invocation, an orchestrator dispatch with no schema, a human reading an agent file) there is no `StructuredOutput` gate, so the Tier-2 evidence requirement reverts to **advisory prose**. The citation-existence check is available in both contexts but only runs when invoked; the schema is what *forces* the citation to exist. Do not claim blanket binding for Tier 2.
 
 **Read** `.claude/references/evidence-gating-detail.md` for the full tier table, the verdict vocabulary in detail, the normalizer interface, the citation-existence contract (Phase 3), and the optional-hardening (refactor-mode / pre-commit) spec — mirroring how `primary-source-first.md` points to `.claude/references/pdf-chunking.md` (there is no auto-load; open it when this section points you there).
 
