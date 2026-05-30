@@ -31,9 +31,17 @@
 - **Q9 →** extend ledger columns (`tier`, `artifact_citation`, `refuter_tally`).
 - **Q10 →** one rule operationalizing `adversarial-default` via evidence gating.
 
+## Build plan + independent review
+
+- Build plan written: `quality_reports/plans/2026-05-29_evidence-gating-build-plan.md` (DRAFT, indexed). Design committed `a5d6b73` on branch `design/evidence-gating-discipline`.
+- Independent multi-lens review run as a workflow (`wf_12b61ffb-b3e`): 4 lens-reviewers (technical / adversarial / repo-consistency / completeness) → verify high-sev → synthesize. Report: `quality_reports/reviews/2026-05-29_evidence-gating-build-plan_synthesis_review.md`. **Verdict: REVISE-FIRST.** 34 findings, 23 high-sev, 12 verified, 0 refuted. Plan structurally sound (reusable infra all verified to exist); not a rewrite.
+- **Round 1 (REVISE-FIRST):** C1 — refactor-mode-gating makes the guarantee default-OFF → ADR-0011 class. User chose "claim-gated + robust establishment" → **v2** (folded C2 + M1–M12).
+- **Round 2 re-review (REVISE-AGAIN):** `..._rereview.md`. C1 fix was **vapor** — relied on `/tools refactor-mode`, `/tools normdiff`, `bin/` pre-commit, none of which exist; memory-dependency relocated, not eliminated. Closure: 6 closed, 11 partial, C1 not-closed. Also corrected: agents.md is Class A not B; inbound refs = 8 not 12.
+- **C1 redesign (user-decided, round 2):** **record-always + gate-at-claim-time.** PostToolUse hook silently records normdiff residue to ledger on every supported edit (no tooling, no noise, non-blocking); the gate is the evidence-gated critic consuming the ledger (cannot PASS a clean-refactor verdict when residue recorded). refactor-mode/pre-commit → optional hardening. → **v3** written (plan rewritten; M4=fresh normalizer, M9=recorder is interim guarantee, M10/M11 corrected with verified facts, references-loading clarified, CLAUDE.md+workflow.md flagged Class B, ledger content = local state not propagated).
+
 ## Pending (user)
 
-- Go/no-go on writing the **build plan** (single rule + Tier-1 hook + four normalizers + ledger schema + schema-enforced critic evidence). Nothing built yet.
+- **Next step:** optional light re-review of the v3 C1 redesign, or proceed to build Phase 1 (a non-blocking PostToolUse recorder — low risk). Plus: commit v3 + both review reports + session-log/TODO onto `design/evidence-gating-discipline`. Nothing built yet.
 
 ## Artifacts
 
