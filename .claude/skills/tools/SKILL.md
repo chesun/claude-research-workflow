@@ -1,7 +1,7 @@
 ---
 name: tools
 description: Utility commands — commit, compile, validate-bib, context-status, deploy, learn, sync-status, propagate, list-consumers. Replaces individual utility skills.
-argument-hint: "[subcommand: commit | compile | validate-bib | context | deploy | learn | sync-status | propagate | list-consumers] [args]"
+argument-hint: "[subcommand: commit | compile | validate-bib | context | deploy | learn | sync-status | propagate | list-consumers | stata-sweep | normdiff] [args]"
 allowed-tools: Read,Grep,Glob,Write,Edit,Bash,Task
 ---
 
@@ -333,6 +333,15 @@ One commit per overlay listing the propagated Class A files. No git push — use
 Plan: `quality_reports/plans/2026-05-07_comprehensive-propagation-plan.md` §5.
 
 ---
+
+### `/tools normdiff [--check] FILE` — Evidence-Gating Normalized-Content Diff
+
+Compute the normalized-content diff of a research-artifact file vs its `HEAD` baseline — the Tier-1 evidence check of the evidence-gating discipline (`.claude/rules/adversarial-default.md`; design of record `quality_reports/reviews/2026-05-28_whole-picture-critic-gates-dispatch.md` §7). Strips comments/scaffold/blank lines and path-tokenizes, then reports any residual analysis/content change (Stata/R/Python/LaTeX). Implementation: `python3 .claude/skills/tools/normdiff.py`; shared logic `.claude/hooks/normdiff_lib.py`.
+
+- default — prints the residue (added/removed/reordered normalized lines) vs `HEAD`.
+- `--check` — exits nonzero if residue is non-empty (clean refactor = exit 0).
+
+The always-on PostToolUse recorder `evidence-gate-recorder.py` uses the same lib to silently record a `no-logic-change` row to the verification ledger on every research-artifact edit (scope: `paper/ talks/ scripts/ replication/ figures/ tables/ preambles/`); this subcommand is the manual / orchestrator entry point to the same check.
 
 ### `/tools stata-sweep [--check | --fix] [--root PATH] [--diff] [--json] [FILE ...]` — Stata Greedy-`/*` Bug Sweep
 
