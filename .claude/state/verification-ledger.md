@@ -22,3 +22,4 @@ Cache of verification results for the adversarial-default rule (`.claude/rules/a
 | _example_ paper/main.tex | bibliography-resolves | 2026-04-28T10:05Z | 9e8d7c6b5a4f | ASSUMED | Cost-prohibitive: full pdflatex+biber run not yet executed in this session |
 
 <!-- Real entries replace the _example_ rows above. Keep one row per (path, check). When a file changes, its rows become stale and are re-evaluated on next access. -->
+| .claude/hooks/test_normdiff_lib.py | tests-pass | 2026-05-30T01:30Z | f4919ba6bebb | PASS | re-ran standalone: 32/32 checks passed (incl. 7 regression tests for the 4 review-caught bugs), exit 0 |
