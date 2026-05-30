@@ -93,7 +93,7 @@ So **the guarantee is distributed**: Phase 1 (recorder) + Phase 2 (critic consum
 
 ## Phase 4 — Operationalization gate (advisory) + Tier-3 convention
 
-- EDIT `templates/requirements-spec.md` (Class A; verified: no tier column today) — add a **"Verification Tier"** column. EDIT `.claude/rules/workflow.md` **(Class B — verified line 66)** §1 — every acceptance criterion tagged with its tier; advisory (reminder + critic deduction), never block (Q6). workflow.md edit applies to overlays **manually**.
+- EDIT `templates/requirements-spec.md` (**Class A** — default, unlisted in `[overlay-customized]`; auto-propagates) — add a **"Verification Tier"** column. Consumer projects receive the updated template via propagation. EDIT `.claude/rules/workflow.md` (**Class B** — verified `.claude/file-classes.toml:66`) §1 — every acceptance criterion tagged with its tier; advisory (reminder only), never block (Q6). The workflow.md edit does **not** auto-propagate; apply it to the `applied-micro` and `behavioral` overlays **manually**. The two files have different classes: the template is universal, the rule is overlay-customized.
 - NEW `.claude/references/` Tier-3 adversarial-verify panel template — mandatory only for load-bearing judgment verdicts (Q8).
 
 **Verification:** requirements-spec emits tier-tagged criteria; a load-bearing judgment verdict triggers the panel in a sample workflow.

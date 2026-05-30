@@ -8,6 +8,7 @@ When writing a new review, consult this index first. If an `Active` entry exists
 
 ## 2026-05
 
+- [2026-05-30_phase4-evidence-gating_verifier_review.md](2026-05-30_phase4-evidence-gating_verifier_review.md) — Phase 4 evidence-gating docs-only non-destructiveness audit, PASS, Active
 - [2026-05-29_pre-commit_verifier_review.md](2026-05-29_pre-commit_verifier_review.md) — Phase 3 evidence-gating (cite lib + normdiff lib + cite-check CLI), PASS, Active
 
 ## 2026-04
