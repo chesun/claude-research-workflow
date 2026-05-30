@@ -51,13 +51,16 @@ Commits on `design/evidence-gating-discipline`: `a5d6b73` (design), `4a509a4` (p
 
 Built via workflow `wf_46630aea-121` (build → verify + 3 adversarial lenses → fix). The rule (`adversarial-default.md`) + lazy `references/evidence-gating-detail.md` + ledger schema (append Tier/Citation/Tally) + **the GATE** (`coder-critic.md` consults the `no-logic-change` ledger row). **Adversarial review caught the gate was under-specified** (path-only match, no ASSUMED/missing-row/timing/scope) + the ledger append had no regression test → fix operationalized the gate + added 4 backward-compat tests (32→36). **Independently re-verified:** 36/36; diagnostic 7-pass + loud bare-python3; ledger append-not-insert + example rows backfilled to 9 cols + real 6-col rows parse; rule lean (0 tier-table rows in it, 8 refs intact); recorder↔gate contract confirmed (`_CHECK_SLUG="no-logic-change"`, Result PASS/UNVERIFIED).
 
+## Phase 3 BUILT + committed (668bc35)
+
+Tier-2: `citation_existence_lib.py` (`resolve_citation` → RESOLVED/MISSING/ASSUMED; MISSING = fabrication signal, ASSUMED = infra absent) + `/tools cite-check` + schema-enforced critic evidence `{claim, artifact_citation, sufficiency_argument}`. Adversarial **security lens found 0 holes**; I independently pen-tested (path traversal, absolute, shell-metachar/`$()`/backtick test_ids → all rejected, no execution). Review caught the Phase-3 M9 edit had muddied the *Tier-1* deduction with schema language (Tier-1 binds in ALL contexts, deterministic) → corrected. 24/24 citation + 36/36 normdiff. Removed a stray review-scratch file before commit.
+
 ## Pending
 
-- **Phase 3** (Tier-2): schema-enforced `{claim, artifact_citation, sufficiency_argument}` for critics + `citation_existence_lib.py` (resolve cited `file:line`, run named test, ASSUMED if infra absent).
-- **Phase 4**: operationalization gate (requirements-spec tier column, advisory) + Tier-3 adversarial-verify panel template.
-- **Phase 5**: class-aware propagation (rule/hooks/lib = Class A; CLAUDE.md + workflow.md = Class B manual).
-- **Minor polish** (TODO): block-comment docstring; R/Python path-token first-arg edge.
-- Branch `design/evidence-gating-discipline` NOT pushed (per user: hold until whole thing built).
+- **Phase 4**: operationalization gate (requirements-spec tier column, advisory) + Tier-3 adversarial-verify panel template. (`workflow.md` edit = Class B → manual overlay apply.)
+- **Phase 5**: class-aware propagation to consumer repos + overlays — **OUTWARD-FACING; confirm with user before running** (modifies other repos).
+- **Minor polish** (TODO): block-comment docstring; R/Python path-token first-arg edge; pytest exit-code 4-vs-5; citation timeout configurability.
+- Branch `design/evidence-gating-discipline` NOT pushed (hold until whole thing built).
 
 ## Artifacts
 
