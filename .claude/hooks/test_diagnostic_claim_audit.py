@@ -126,3 +126,15 @@ def test_malformed_json_fail_open(tmp_path):
     )
     assert proc.returncode == 0
     assert proc.stdout.strip() == ""
+
+
+if __name__ == "__main__":
+    # These tests use the pytest `tmp_path` fixture and CANNOT run under a bare
+    # `python3 test_diagnostic_claim_audit.py` — doing so would exit 0 with no
+    # assertions run, which falsely reads as a green suite. Fail loudly instead.
+    raise SystemExit(
+        "This is a pytest suite (uses the tmp_path fixture). Run it with:\n"
+        "    python3 -m pytest .claude/hooks/test_diagnostic_claim_audit.py -q\n"
+        "A bare `python3` invocation runs zero assertions and must not be "
+        "mistaken for a passing suite."
+    )

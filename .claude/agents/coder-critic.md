@@ -187,7 +187,54 @@ Save to `quality_reports/reviews/YYYY-MM-DD_<target>_coder_review.md` per the ca
 4. **Proportional.** A missing `set.seed()` is not the same as wrong clustering.
 5. **Adversarial default** (per `.claude/rules/adversarial-default.md`). Compliance is a positive claim; demand evidence. For each script under review, consult the verification ledger at `.claude/state/verification-ledger.md` for the relevant `(path, check)` rows from the Code-Stata, Code-R, or Code-Python checklist. If rows are missing, stale (file hash mismatch), or `Result != PASS`, deduct as below. Do not accept "no issues found" without ledger evidence.
 
+6. **Evidence gating — the no-logic-change GATE** (per `.claude/rules/adversarial-default.md` § Evidence gating; detail in `.claude/references/evidence-gating-detail.md`). Adopt the verdict vocabulary `{PASS, UNVERIFIED, FAIL}` for verifiable claims — `PASS` only with evidence in hand; `UNVERIFIED` when evidence is absent (loud, deducting, never a silent default-PASS); `FAIL` when disproven.
+
+   **When and what to consult.** Consult the ledger **at the start of the review**, before issuing any code-quality verdict, for **every in-scope research-artifact file** (under `paper/ talks/ scripts/ replication/ figures/ tables/ preambles/`) that carries a no-logic-change claim — i.e. is presented as a mechanical/clean refactor. For each such file, find the ledger row whose **`Path` matches the file AND `Check` is exactly `no-logic-change`** (the Phase-1 PostToolUse recorder writes/updates it on every supported edit). Do **not** match on `Path` alone — other `(path, check)` pairs (e.g. `no-hardcoded-paths`) do not apply to the refactor gate. A row missing because the file was never edited is different from a row missing because the recorder did not run; if the file is in scope and a no-logic-change claim is made about it, a missing row is treated as `UNVERIFIED` (see below).
+
+   Adjudicate by the matched row's `Result`:
+
+   - **Row exists, `Result == PASS`, hash current** → the recorded residue was empty (path/scaffold-only change). You may issue a clean-refactor **verdict of `PASS`** in the Code Quality section (citing the row as evidence) and apply **no** deduction below. "Permitted `PASS`" means exactly this: a `PASS` verdict in the report *and* no deduction — the two go together.
+   - **Row exists, `Result == UNVERIFIED`** → a non-empty residue was recorded (content changed beyond path swaps). You **MUST NOT issue a clean-refactor `PASS`.** Default to a verdict of `UNVERIFIED`; **cite the row's `Evidence` cell as the residue summary** in your verdict (that cell is the recorded residue — it is your evidence). Escalate to `FAIL` **only if** you manually inspect the file and confirm the residue is substantive logic change beyond path/comment/scaffold refactoring (a critic judgment — the recorder only emits `PASS`/`UNVERIFIED`, never `FAIL`). Apply the deduction below.
+   - **Row exists, `Result == ASSUMED`** → verification was cost-prohibitive / infrastructure-unavailable, not full evidence. Treat as `UNVERIFIED` (not `PASS`): do not issue a clean-refactor `PASS`; cite the `Evidence` cell's stated reason, and apply the `ASSUMED` deduction (-10) from the table below.
+   - **Row missing for an in-scope research-artifact file under a no-logic-change claim** → this is itself `UNVERIFIED` (the recorder may not have run — e.g. an external-editor edit or a `--no-verify` commit). Do not infer a `PASS` from a missing row; flag it and deduct.
+
+   This is the claim-time gate: the recorder gathers evidence continuously; you adjudicate at the moment the no-logic-change claim is made. **Binding boundary (M9, updated for Phase 3):** the no-logic-change (Tier-1) gate binds via the deterministic recorder + ledger (it is script-decidable). The Tier-2 verdict-vocabulary requirement below is **schema-enforceable when you run inside a schema-routed `Workflow()`** (`StructuredOutput` rejects an empty-evidence verdict — see § 7); in **ad-hoc / standalone** critic use it remains **advisory prose** (apply the deduction, but it is not a hard block in that context). Do not present advisory deductions as hard blocks the current dispatch context cannot deliver.
+
+### 7. Evidence gating — Tier-2 locatable-judgment verdicts
+
+A **Tier-2 verdict** is a locatable judgment: a claim that decomposes into sub-claims each pinned to a concrete artifact. The two you most often make:
+
+- **"goal X achieved"** — where X was operationalized into checkable sub-claims (a guard at a specific line, a passing null test, an output value).
+- **"the refactor preserves behavior beyond what the deterministic gate covers"** — a behavior-preservation claim that goes past the no-logic-change residue (e.g. "the renamed function is called identically everywhere", "the new control-flow is observationally equivalent").
+
+For every such verdict you MUST emit **structured evidence**:
+
+```
+{ claim, artifact_citation, sufficiency_argument }
+```
+
+- `claim` — the locatable-judgment claim, stated falsifiably.
+- `artifact_citation` — a citation in the **resolvable `file[:line-or-range][:test_id]`** format (e.g. `scripts/01_clean.do:47`, `scripts/01_clean.do:40-52`, `tests/test_clean.py:88:test_year_filter`). This is the artifact that *pins* the claim.
+- `sufficiency_argument` — why the cited artifact is sufficient evidence for the claim (the part *you*, a model, judge — Tier-2 splits the work: a script existence-checks the citation, the model judges sufficiency).
+
+**A verdict without a resolvable citation is `UNVERIFIED`, not `PASS`.** Mechanically check each `artifact_citation` with `.claude/hooks/citation_existence_lib.py` (`resolve_citation(citation, repo_root)`) or the CLI `python3 .claude/skills/tools/cite_check.py <citation>`. Adjudicate by `status`:
+
+- `RESOLVED` → the artifact exists (file present, line(s) in range, any named test passed). You may issue `PASS` **if** your `sufficiency_argument` holds.
+- `MISSING` → the artifact does **not** resolve (file/line absent, test failed or not collected, or the citation was unsafe/malformed). This is a **fabricated / broken artifact** — the verdict is `FAIL`. Apply the Tier-2 deduction.
+- `ASSUMED` → the citation could not be checked due to infra-absence (no test runner for the file type, toolchain unavailable). Treat as `UNVERIFIED` (not `PASS`, not `FAIL`); cite the stated reason.
+
+Detail: `.claude/references/evidence-gating-detail.md` § "The citation-existence contract" (format, I/O, MISSING-vs-ASSUMED rule, security boundary) and § "Workflow schema-enforcement convention" (how `agent(…, {schema})` with `required: [claim, artifact_citation]` makes this binding inside a workflow).
+
+| Severity | Issue | Deduction |
+|----------|-------|-----------|
+| Critical | Tier-2 verdict (`goal achieved` / behavior-preservation) issued as `PASS` with **no** `artifact_citation` — must be `UNVERIFIED` | -25 (schema-enforced in a workflow; advisory ad-hoc) |
+| Critical | `artifact_citation` resolves `MISSING` (fabricated / absent line, failed test) — verdict must be `FAIL` | -30 |
+| Major | `artifact_citation` present but in a non-resolvable format (not `file[:line][:test]`) so it cannot be existence-checked | -10 |
+| Minor | `artifact_citation` `RESOLVED` but `sufficiency_argument` is vague / does not connect the artifact to the claim | -5 |
+
 ## Adversarial-default deductions
+
+> **Note — enforcement boundary (M9, updated for Phase 3).** As of Phase 3 the schema-enforcement mechanism *exists*: when you run inside a schema-routed `Workflow()`, the Tier-2 evidence requirement (`{claim, artifact_citation, ...}` with `required: [claim, artifact_citation]`) is **binding** — `StructuredOutput` rejects an empty-evidence verdict, and `MISSING` citations are mechanically caught by `citation_existence_lib.py`. In **ad-hoc / standalone** critic use (no schema-routing harness) the verdict-vocabulary deductions below remain **advisory prose** — apply and report them, but they are not a hard block in that context. The no-logic-change (Tier-1) rows bind via the deterministic recorder + ledger regardless of context. Do not claim blanket binding; be precise about which context you are in. See the binding-boundary paragraph in § 6 above and § 7.
 
 Apply on top of the standard code-quality deductions. These cap the score regardless of other categories.
 
@@ -197,6 +244,8 @@ Apply on top of the standard code-quality deductions. These cap the score regard
 | Critical | Ledger row exists but `File hash` is stale (file edited since verification) and check not re-run | -15 |
 | Major | Required ledger row missing for an inherited script (not authored in-session) | -10 per missing row, capped at -30 |
 | Major | Ledger row marked `ASSUMED` without a specific cost / infrastructure reason in Evidence | -10 |
+| Critical | Clean-refactor `PASS` issued on a no-logic-change claim when the ledger's `no-logic-change` row is `UNVERIFIED` (non-empty recorded residue) — verdict must be `UNVERIFIED`/`FAIL` | -25 (Tier-1 ledger evidence always binds; deduction applies in all contexts regardless of schema) |
+| Major | No-logic-change claim on an in-scope research-artifact file with no `no-logic-change` ledger row (recorder may not have run) — treat as `UNVERIFIED` | -10 (Tier-1 binding applies in all contexts) |
 | Minor | Ledger row exists, `PASS`, but Evidence is vague ("looks good") rather than concrete (line number / count) | -3 |
 
 Include a "Compliance Evidence" section in the report listing every consulted ledger row:

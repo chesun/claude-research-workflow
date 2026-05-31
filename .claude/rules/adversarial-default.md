@@ -15,6 +15,31 @@ This inverts the prevailing pattern. Without this rule, an agent reviewing inher
 
 ---
 
+## Evidence gating
+
+This rule's operational form, generalized across the checkability spectrum.
+
+**The one principle: a verdict is only as good as the evidence it carries. Scale the verification *mechanism* to how checkable the evidence is.** A grep/test/diff is script-decidable; "the proof is correct" is not. The requirement to show evidence never relaxes; the *mechanism* that produces and checks it differs by claim type.
+
+**Gate on claims, not actions.** Enforcement fires when a verifiable claim is *made or in force* (a "no-logic-change" refactor declaration, a critic's "goal achieved" verdict) — never on every edit indiscriminately. An edit that makes no verifiable claim has nothing to gate.
+
+**Verdict vocabulary — `{PASS, UNVERIFIED, FAIL}`.** `PASS` only with tier-appropriate evidence attached; `UNVERIFIED` when evidence is absent or not yet produced (loud, deducting, never silent — this is the floor that turns a silent false `PASS` into an audible failure); `FAIL` when disproven. No bare assertion is ever a `PASS`. Vocabulary detail, the three checkability tiers, and the normalizer interface live in the reference doc.
+
+**Enforcement strength — block only where the check is deterministic.** Hard *block* is reserved for **Tier 1** (script-decidable), and even there it ships advisory-by-default with opt-in blocking (the `derive-dont-guess` `.enabled` precedent). **Tier 2 / Tier 3** checks and the operationalization gate **advise + deduct** — never hard-block, because a probabilistic check has too many false positives to stop legitimate work. The audible-failure guarantee (`UNVERIFIED` is never silent) still holds at every tier.
+
+**Known limit (state it plainly):** only **Edit/Write-tool-mediated edits are recorded** by the Tier-1 evidence recorder. Changes made in an external editor, and commits made with `git commit --no-verify`, bypass the recorder. This is an honest gap, not a defect — it is the boundary of what a tool-event hook can observe.
+
+**Binding boundary (M9, updated for Phase 3).** Two mechanisms bind, with distinct scopes:
+
+- **Tier 1 (no-logic-change)** binds via the **deterministic recorder + verification ledger** in every context — it is script-decidable, so the residue is real evidence regardless of who reads it.
+- **Tier 2 (locatable-judgment verdicts)** is now **schema-enforceable**: when a critic runs inside a schema-routed JS `Workflow()` (via `agent(…, { schema })` with `required: [claim, artifact_citation]`), `StructuredOutput` mechanically rejects an empty-evidence verdict, and a fabricated/absent `artifact_citation` is caught by `.claude/hooks/citation_existence_lib.py` (`resolve_citation`). The schema mechanism *exists* as of Phase 3.
+
+**Be precise — do not overclaim.** Tier-2 binding holds **only inside a schema-routed workflow**. In **ad-hoc / standalone** critic use (a `/review` invocation, an orchestrator dispatch with no schema, a human reading an agent file) there is no `StructuredOutput` gate, so the Tier-2 evidence requirement reverts to **advisory prose**. The citation-existence check is available in both contexts but only runs when invoked; the schema is what *forces* the citation to exist. Do not claim blanket binding for Tier 2.
+
+**Read** `.claude/references/evidence-gating-detail.md` for the full tier table, the verdict vocabulary in detail, the normalizer interface, the citation-existence contract (Phase 3), and the optional-hardening (refactor-mode / pre-commit) spec — mirroring how `primary-source-first.md` points to `.claude/references/pdf-chunking.md` (there is no auto-load; open it when this section points you there).
+
+---
+
 ## Inherited-artifact protocol
 
 When working with code, text, data, or design materials that you didn't write *in this session*, the prior is "presumed non-compliant with this project's conventions." Original authors didn't have these conventions; even if they did, drift accumulates. Before any claim of compliance, run the per-domain pre-flight checklist (§ Per-domain checklists) and record results in the verification ledger.

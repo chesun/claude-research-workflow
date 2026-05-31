@@ -1,7 +1,7 @@
 ---
 name: tools
 description: Utility commands — commit, compile, validate-bib, context-status, deploy, learn, sync-status, propagate, list-consumers. Replaces individual utility skills.
-argument-hint: "[subcommand: commit | compile | validate-bib | context | deploy | learn | sync-status | propagate | list-consumers] [args]"
+argument-hint: "[subcommand: commit | compile | validate-bib | context | deploy | learn | sync-status | propagate | list-consumers | stata-sweep | normdiff | cite-check] [args]"
 allowed-tools: Read,Grep,Glob,Write,Edit,Bash,Task
 ---
 
@@ -333,6 +333,24 @@ One commit per overlay listing the propagated Class A files. No git push — use
 Plan: `quality_reports/plans/2026-05-07_comprehensive-propagation-plan.md` §5.
 
 ---
+
+### `/tools normdiff [--check] FILE` — Evidence-Gating Normalized-Content Diff
+
+Compute the normalized-content diff of a research-artifact file vs its `HEAD` baseline — the Tier-1 evidence check of the evidence-gating discipline (`.claude/rules/adversarial-default.md`; design of record `quality_reports/reviews/2026-05-28_whole-picture-critic-gates-dispatch.md` §7). Strips comments/scaffold/blank lines and path-tokenizes, then reports any residual analysis/content change (Stata/R/Python/LaTeX). Implementation: `python3 .claude/skills/tools/normdiff.py`; shared logic `.claude/hooks/normdiff_lib.py`.
+
+- default — prints the residue (added/removed/reordered normalized lines) vs `HEAD`.
+- `--check` — exits nonzero if residue is non-empty (clean refactor = exit 0).
+
+The always-on PostToolUse recorder `evidence-gate-recorder.py` uses the same lib to silently record a `no-logic-change` row to the verification ledger on every research-artifact edit (scope: `paper/ talks/ scripts/ replication/ figures/ tables/ preambles/`); this subcommand is the manual / orchestrator entry point to the same check.
+
+### `/tools cite-check <citation>...` — Tier-2 Citation Existence Check
+
+Resolve a Tier-2 evidence citation (`file[:line-or-range][:test_id]`) — the existence-check half of the evidence-gating discipline's Tier-2 enforcement (`.claude/rules/adversarial-default.md`; detail `.claude/references/evidence-gating-detail.md`; design of record `quality_reports/reviews/2026-05-28_whole-picture-critic-gates-dispatch.md` §7). A locatable-judgment verdict ("goal X achieved") must carry a structured `{claim, artifact_citation, sufficiency_argument}`; this confirms the cited *artifact* resolves — file exists, any cited line / range is in the file, and any named test runs and passes — so a *fabricated* artifact is caught mechanically (the critic still judges sufficiency). Implementation: `python3 .claude/skills/tools/cite_check.py`; shared logic `.claude/hooks/citation_existence_lib.py`.
+
+- Format: `scripts/01_clean.do:47` (file+line), `scripts/01_clean.do:40-52` (range), `tests/test_x.py:88:test_foo` or `tests/test_x.py::test_foo` (named test).
+- Exit codes: `0` RESOLVED (or ASSUMED, with a printed note); `1` MISSING (file/line absent or test failed).
+- **MISSING vs ASSUMED:** a missing file / out-of-range line / failed test is **MISSING** (a real fabrication signal). Infra-absence only — no test runner for the file type, toolchain absent — is **ASSUMED** (fail-open, exit 0), never MISSING.
+- **Security:** the citation is untrusted input. Paths are resolved repo-relative and must stay inside the repo (`..` traversal / absolute / symlink-escape rejected → MISSING); test ids must match a safe-identifier whitelist; tests run via a fixed per-extension runner with `shell=False` and an argv list — the citation never reaches a shell.
 
 ### `/tools stata-sweep [--check | --fix] [--root PATH] [--diff] [--json] [FILE ...]` — Stata Greedy-`/*` Bug Sweep
 
