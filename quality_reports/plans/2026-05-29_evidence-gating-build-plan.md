@@ -1,6 +1,6 @@
 # Build Plan — Evidence-Gating Discipline
 
-**Status:** DRAFT v3 — two review rounds incorporated; awaiting approval (nothing implemented)
+**Status:** COMPLETED 2026-05-30 — all 5 phases built, adversarially reviewed, independently verified, and distributed (Class A + configurable roots + Class B) to all 7 consumers + 2 overlays; minor polish done. (History below was DRAFT v3.)
 **Date:** 2026-05-29
 **Spec / design of record:** `quality_reports/reviews/2026-05-28_whole-picture-critic-gates-dispatch.md` §7
 **Reviews incorporated:** `..._synthesis_review.md` (REVISE-FIRST) + `..._rereview.md` (REVISE-AGAIN)

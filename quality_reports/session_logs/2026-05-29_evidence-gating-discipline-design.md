@@ -70,6 +70,15 @@ Advisory layer: `requirements-spec.md` Verification-Tier column (Class A) + `wor
 
 Merged → main (`b675e83`), pushed. Propagated Class A to all 7 consumers; verification caught + fixed dangling hook refs (the 2026-05-28 enforcement wave had never been propagated → synced full hook suite). Made recorder scope CLAUDE.md-configurable (`**Analysis roots:**`, default-fallback, traversal-hardened — `d14b610`) + propagated. Applied Class B (roots line + evidence-gating bullet + operationalization gate) to 2 overlay worktrees + 7 consumers via parallel workflow, each with repo-appropriate roots; **tx → `do/`, end-to-end verified the recorder now scopes its incident directory.** `main` + overlays pushed; consumer remote pushes left to user. `va_consolidated` has pre-existing uncommitted dev toggles (user's, untouched). Status doc: `quality_reports/reviews/2026-05-30_evidence-gating-distribution-status.md`. **Evidence-gating discipline COMPLETE + distributed.**
 
+<!-- primary-source-ok: wrap-up_2026 -->
+
+## Wrap-up — 2026-05-30
+
+- **Minor polish (5 items)** done + propagated (`59a3dea`): path-likeness guard, degenerate-root rejection (`.`/`./`/empty → DEFAULT), pytest exit 4-and-5 → MISSING, configurable `CITATION_TEST_TIMEOUT`, honest block-comment docstring. +3 regression tests → 50/50 normdiff, 25/25 citation.
+- **6 consumer remotes pushed** (bdd → main; bdd_audit → audit-fix branch of shared bdd remote [linked worktree]; bdm_bic, csac, csac2025, tx_peer_effects_local → main). `va_consolidated` excluded per user (handling its pre-existing `do/main.do` toggles).
+- **Housekeeping**: CHANGELOG `[Unreleased]` entry added; build plan → COMPLETED (+ plans INDEX); distribution-status doc updated; this log + TODO finalized. Diagnosed the earlier Stop-hook "fired a bunch" = stale fallback-wakeup prose turns (stopped scheduling them); primary-source false-positives on date-stamped headings handled via escape hatch (durable fix queued: add such words to `NEVER_SURNAMES`).
+- **Workflow `main` + both overlay branches + 6 consumer remotes all pushed.** Effort closed.
+
 ## Artifacts
 
 - `quality_reports/reviews/2026-05-28_deterministic-gate-workflow-proposal.md` (options menu; Tier-1 slice)

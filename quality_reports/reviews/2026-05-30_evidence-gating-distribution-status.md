@@ -46,7 +46,8 @@ The Phase-4 operationalization-gate edit lives in Class B files that propagation
   - `belief_distortion_discrimination(_audit)`: `analysis/do_files/, analysis/py/, ...`; `bdm_bic`: `analysis/do/, analysis/out/, analysis/est/`; `csac`: `do/, fig/, tab/`; `csac2025`: `do/, py/, paper/, slides/, ...`; **`tx_peer_effects_local`: `do/, figures/, tables/`**; `va_consolidated`: `do/, py/, ...`.
   - **End-to-end verified:** with `tx`'s real CLAUDE.md, `_in_scope("do/code_fix/main_do/7G_Regressions.do", tx) -> True` — the recorder now fires on the exact incident directory.
 - **1 verifier flag (not our defect):** `va_consolidated` has pre-existing uncommitted local changes (`do/main.do` run-toggles + a `.smcl` log) unrelated to Class B; its Class B commit (`6dc6914`) is clean. Left untouched — surface to user.
-- **Pushes:** `main` + overlay branches pushed to origin. **Consumer remote pushes left to the user** (their research repos; local commits suffice for testing).
+- **Pushes:** `main` + overlay branches pushed to origin. **All 6 consumer remotes pushed 2026-05-30** (belief_distortion_discrimination → main; belief_distortion_discrimination_audit → audit-fix branch of the shared bdd remote — it's a linked worktree; bdm_bic, csac, csac2025, tx_peer_effects_local → main). `va_consolidated` excluded at user request (user handling its pre-existing `do/main.do` toggles).
+- **Minor polish (5 items) done** (`59a3dea`): path-likeness guard, degenerate-root rejection, pytest exit 4-and-5, configurable `CITATION_TEST_TIMEOUT`, honest block-comment docstring; +3 regression tests (50/50 normdiff, 25/25 citation); propagated.
 
 ## Bottom line
 
