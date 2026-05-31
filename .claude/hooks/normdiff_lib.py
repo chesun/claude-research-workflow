@@ -118,8 +118,25 @@ _STATA_CONFIG = {
         re.compile(r"^\s*clear\s+all\b", re.IGNORECASE),
         re.compile(r"^\s*clear\s*$", re.IGNORECASE),
         re.compile(r"^\s*version\s+[\d.]+\s*$", re.IGNORECASE),
+        # §4 mechanical-refactor scaffolding (ported from consumer validation).
+        re.compile(r"^\s*set\s+processors\b", re.IGNORECASE),
+        re.compile(r"^\s*di(?:splay)?\b", re.IGNORECASE),          # display-only
+        re.compile(r"^\s*local\s+dofile\b", re.IGNORECASE),        # §4.1 log-name macro
+        re.compile(r'^\s*assert\s+strpos\(\s*"?\$\{', re.IGNORECASE),  # §4.4 sandbox guard
+    ],
+    # Multi-line scaffold blocks stripped from the region BEFORE per-line
+    # normalization. The required-globals guard: a `foreach` over globals with
+    # an `if "${..}"=="" { ...; exit N }` body. The `if "${...}"==""` + `exit`
+    # signature is REQUIRED so a normal foreach loop is never over-stripped.
+    "scaffold_blocks": [
+        re.compile(
+            r'foreach\s+\w+\s+in\b[^\n{]*\{\s*if\s+"\$\{.*?\bexit\b.*?\}\s*\}',
+            re.IGNORECASE | re.DOTALL,
+        ),
     ],
     "path_token_patterns": [
+        # regsave ... using "file" — an output-path swap is not a logic change
+        re.compile(r'\bregsave\b[^"\n]*?\busing\s+"([^"]+)"', re.IGNORECASE),
         # use "file" / use ... using "file"
         re.compile(r'\buse\s+(?:[^"\n]*?\busing\s+)?"([^"]+)"', re.IGNORECASE),
         # merge/append/joinby ... using "file"
@@ -384,6 +401,11 @@ def normalize(region: str, language: str) -> list[str]:
     if block is not None:
         region = _strip_block_comments(region, block)
 
+    # Strip multi-line scaffold blocks (e.g. the required-globals guard) before
+    # the per-line loop so the whole block vanishes, not just matching lines.
+    for block_pat in config.get("scaffold_blocks", []):
+        region = block_pat.sub(" ", region)
+
     line_prefixes = config["line_comment"]
     inline_prefixes = config.get("inline_comment", line_prefixes)
     quote_chars = config.get("quote_chars", ['"', "'"])
@@ -402,6 +424,15 @@ def normalize(region: str, language: str) -> list[str]:
         if content is None or not content.strip():
             continue
         content = _tokenize_paths(content, path_patterns)
+        if language == "stata":
+            # Tokenize UNQUOTED absolute/relative paths (e.g. `use /srv/a/b.dta`)
+            # so an unquoted→quoted-global refactor reads as no-change. Requires
+            # >=2 path segments (a leading-slash dir chain), so division like
+            # `r(N)/100` or `(x)/2` is never treated as a path.
+            content = re.sub(
+                r'(?<![\w/"\'])/(?:[A-Za-z0-9_.\-]+/)+[A-Za-z0-9_.\-]+',
+                '"%s"' % _PATH_TOKEN, content,
+            )
         # Collapse runs of whitespace so indentation/spacing churn is ignored.
         collapsed = re.sub(r"\s+", " ", content).strip()
         if collapsed:
@@ -442,6 +473,27 @@ def normdiff(baseline_text: str, current_text: str, language: str) -> dict[str, 
     """
     base_lines = normalize_text(baseline_text, language)
     curr_lines = normalize_text(current_text, language)
+
+    if language == "stata":
+        # Dead-local rule: dropping a `local X` that no longer exists in current
+        # AND has zero remaining `` `X' `` references in current is logic-neutral
+        # (its consumers were rewritten, e.g. to globals). SAFETY: this only
+        # removes the declaration line; if a consumer's VALUE changed, that
+        # consumer line surfaces as residue independently — so a real change is
+        # never masked.
+        def _macro_name(line):
+            m = re.match(r"local\s+(\w+)", line)
+            return m.group(1) if m else None
+
+        curr_macro_names = {n for n in (_macro_name(s) for s in curr_lines) if n}
+        base_lines = [
+            s for s in base_lines
+            if not (
+                (nm := _macro_name(s)) is not None
+                and nm not in curr_macro_names
+                and ("`%s'" % nm) not in current_text
+            )
+        ]
 
     base_counts = Counter(base_lines)
     curr_counts = Counter(curr_lines)

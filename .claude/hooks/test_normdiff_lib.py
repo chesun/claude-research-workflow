@@ -542,6 +542,99 @@ def test_degenerate_roots_fall_back_to_default():
 
 
 # ---------------------------------------------------------------------------
+# Stata refactor-escape fixes (ported from downstream consumer validation,
+# 2026-05-30): regsave output paths, §4 scaffolding, dead-local removal,
+# unquoted absolute paths. Under-match is safe; a false PASS is not.
+# ---------------------------------------------------------------------------
+
+def test_stata_regsave_path_swap_empty():
+    base = 'regsave using "output/old_results.dta", replace\n'
+    curr = 'regsave using "output/new_results.dta", replace\n'
+    d = lib.normdiff(base, curr, "stata")
+    _check("stata_regsave_path_swap_empty", _empty(d), str(d))
+
+
+def test_stata_fu00c_scaffolding_empty():
+    # §4 mechanical refactor: scaffolding added (di / local dofile /
+    # assert-strpos sandbox guard / required-globals foreach guard) + path→global
+    # swap; analysis lines unchanged → no residue.
+    base = 'use "data/main.dta", clear\nregress y x\n'
+    curr = (
+        'set processors 4\n'
+        'local dofile = "07_analysis"\n'
+        'di "running `dofile\'"\n'
+        'assert strpos("${root}", "sandbox") > 0\n'
+        'foreach req in root datadir { if "${`req\'}" == "" { di "missing"; exit 9 } }\n'
+        'use "${datadir}/main.dta", clear\n'
+        'regress y x\n'
+    )
+    d = lib.normdiff(base, curr, "stata")
+    _check("stata_fu00c_scaffolding_empty", _empty(d), str(d))
+
+
+def test_stata_fu00c_with_injected_logic_residue():
+    # Same refactor but with an injected keep-if → the real change must surface.
+    base = 'use "data/main.dta", clear\nregress y x\n'
+    curr = (
+        'local dofile = "07_analysis"\n'
+        'di "running"\n'
+        'assert strpos("${root}", "sandbox") > 0\n'
+        'foreach req in root { if "${`req\'}" == "" { di "x"; exit 9 } }\n'
+        'use "${datadir}/main.dta", clear\n'
+        'keep if year >= 2015\n'
+        'regress y x\n'
+    )
+    d = lib.normdiff(base, curr, "stata")
+    _check(
+        "stata_fu00c_with_injected_logic_residue",
+        not _empty(d) and any("keep if" in a for a in d["added"]),
+        str(d),
+    )
+
+
+def test_stata_dead_local_removal_empty():
+    # An unreferenced local removed → logic-neutral → empty.
+    base = 'local oldmacro = 100\nregress y x\n'
+    curr = 'regress y x\n'
+    d = lib.normdiff(base, curr, "stata")
+    _check("stata_dead_local_removal_empty", _empty(d), str(d))
+
+
+def test_stata_removed_local_with_consumer_change_residue():
+    # SAFETY: local removed AND its consumer's value changed → the consumer
+    # change must still surface (dead-local rule must not mask a real change).
+    base = 'local rate = 0.5\ngen z = x * `rate\'\n'
+    curr = 'gen z = x * 0.6\n'
+    d = lib.normdiff(base, curr, "stata")
+    _check("stata_removed_local_with_consumer_change_residue", not _empty(d), str(d))
+
+
+def test_stata_unquoted_to_quoted_path_empty():
+    base = 'use /srv/data/main.dta, clear\nregress y x\n'
+    curr = 'use "${datadir}/main.dta", clear\nregress y x\n'
+    d = lib.normdiff(base, curr, "stata")
+    _check("stata_unquoted_to_quoted_path_empty", _empty(d), str(d))
+
+
+def test_stata_division_not_pathized_residue():
+    # SAFETY: division is not a path (needs >=2 segments) → a changed divisor
+    # surfaces.
+    base = 'gen rate = r(N)/100\n'
+    curr = 'gen rate = r(N)/200\n'
+    d = lib.normdiff(base, curr, "stata")
+    _check("stata_division_not_pathized_residue", not _empty(d), str(d))
+
+
+def test_stata_real_foreach_not_overstripped():
+    # SAFETY: a real foreach loop (no `if "${..}"==""`/exit guard signature) is
+    # NOT stripped — a change to it surfaces.
+    base = 'foreach v of varlist a b {\nreplace `v\' = 0\n}\n'
+    curr = 'foreach v of varlist a b c {\nreplace `v\' = 0\n}\n'
+    d = lib.normdiff(base, curr, "stata")
+    _check("stata_real_foreach_not_overstripped", not _empty(d), str(d))
+
+
+# ---------------------------------------------------------------------------
 # Runner
 # ---------------------------------------------------------------------------
 
@@ -581,6 +674,15 @@ _ALL_TESTS = [
     # Regression (2026-05-30 polish)
     test_pathlike_guard_nonpath_arg_surfaces,
     test_degenerate_roots_fall_back_to_default,
+    # Stata refactor-escape fixes (ported 2026-05-30)
+    test_stata_regsave_path_swap_empty,
+    test_stata_fu00c_scaffolding_empty,
+    test_stata_fu00c_with_injected_logic_residue,
+    test_stata_dead_local_removal_empty,
+    test_stata_removed_local_with_consumer_change_residue,
+    test_stata_unquoted_to_quoted_path_empty,
+    test_stata_division_not_pathized_residue,
+    test_stata_real_foreach_not_overstripped,
 ]
 
 
