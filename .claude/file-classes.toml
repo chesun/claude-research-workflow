@@ -48,7 +48,6 @@ patterns = [
   ".gitignore",
   ".gitattributes",
   "LICENSE",
-  "README.md",
   "CHANGELOG.md",
 ]
 
@@ -58,7 +57,6 @@ patterns = [
 # When the universal portion of a Class B file changes, edit each overlay branch manually.
 [overlay-customized]
 patterns = [
-  "CLAUDE.md",                                      # overlay-specific Skills Quick Reference rows
   ".claude/agents/orchestrator.md",                 # behavioral has Behavioral/Experimental Pipeline section
   ".claude/agents/verifier.md",                     # overlay-specific verification logic
   ".claude/agents/writer.md",                       # behavioral references domain-profile-behavioral; different examples
@@ -123,6 +121,15 @@ patterns = [
 # CLASS D — Excluded: never propagates. Project-state files maintained per-instance.
 [exclude]
 patterns = [
+  # Project identity — each consumer owns its own. CLAUDE.md and README.md
+  # were previously Class B and Class A respectively; on 2026-05-31 we found
+  # that /tools propagate had wiped both files in all 7 consumers, replacing
+  # consumer-specific content with workflow-template boilerplate. The fix
+  # is structural: these files describe the consumer's project, not the
+  # workflow, so propagation must never touch them.
+  "CLAUDE.md",
+  "README.md",
+
   # Workflow project state — each consumer has their own
   "quality_reports/*",
   "quality_reports/**",
