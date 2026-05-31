@@ -79,6 +79,10 @@ Merged → main (`b675e83`), pushed. Propagated Class A to all 7 consumers; veri
 - **Housekeeping**: CHANGELOG `[Unreleased]` entry added; build plan → COMPLETED (+ plans INDEX); distribution-status doc updated; this log + TODO finalized. Diagnosed the earlier Stop-hook "fired a bunch" = stale fallback-wakeup prose turns (stopped scheduling them); primary-source false-positives on date-stamped headings handled via escape hatch (durable fix queued: add such words to `NEVER_SURNAMES`).
 - **Workflow `main` + both overlay branches + 6 consumer remotes all pushed.** Effort closed.
 
+## Stata normalizer fix port (2026-05-30, later)
+
+Ported 4 mechanical-refactor false-UNVERIFIED escapes (developed/validated in a consumer) into the SOURCE `normdiff_lib.py` so they don't revert on propagate: regsave output paths; §4 scaffolding (`di`/`local dofile`/`assert strpos`/multi-line required-globals `scaffold_blocks`); dead-local removal (with consumer-change safety); unquoted absolute paths (≥2 segments so division is safe). Stata-only (R/Python/LaTeX untouched). +8 regression tests → 58/58 normdiff, 25/25 citation. Fail-closed verified (breaking the division guard reds the division test). Committed `0d98330`, pushed to main. Propagated to 5 clean consumers (local commits `faae5d9` et al.); **`tx_peer_effects_local` divergent (its prototype) — left for deliberate reconcile**; `va_consolidated` excluded per user. Consumer remote pushes pending user go.
+
 ## Artifacts
 
 - `quality_reports/reviews/2026-05-28_deterministic-gate-workflow-proposal.md` (options menu; Tier-1 slice)
