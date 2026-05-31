@@ -39,6 +39,15 @@ The Phase-4 operationalization-gate edit lives in Class B files that propagation
 - `.claude/rules/workflow.md` §1 (Step-0 operationalization) and the `CLAUDE.md` evidence-gating bullet must be hand-applied to the `applied-micro` + `behavioral` overlay branches (and, if wanted, to consumers' own workflow.md/CLAUDE.md).
 - This is advisory (Phase 4) — not required to exercise the core recorder + gate + Tier-2. Defer-able.
 
+## Resolution — applied same day, 2026-05-30
+
+- **Finding 2 — RESOLVED.** Recorder scope is now configurable via a CLAUDE.md `**Analysis roots:**` header (commit `d14b610`; default-fallback; path-traversal-hardened; propagated to all 7 consumers). **Class B applied** to 2 overlay worktrees + 7 consumers via parallel workflow, each with repo-appropriate roots detected from its real layout:
+  - overlays (templates): default placeholder line.
+  - `belief_distortion_discrimination(_audit)`: `analysis/do_files/, analysis/py/, ...`; `bdm_bic`: `analysis/do/, analysis/out/, analysis/est/`; `csac`: `do/, fig/, tab/`; `csac2025`: `do/, py/, paper/, slides/, ...`; **`tx_peer_effects_local`: `do/, figures/, tables/`**; `va_consolidated`: `do/, py/, ...`.
+  - **End-to-end verified:** with `tx`'s real CLAUDE.md, `_in_scope("do/code_fix/main_do/7G_Regressions.do", tx) -> True` — the recorder now fires on the exact incident directory.
+- **1 verifier flag (not our defect):** `va_consolidated` has pre-existing uncommitted local changes (`do/main.do` run-toggles + a `.smcl` log) unrelated to Class B; its Class B commit (`6dc6914`) is clean. Left untouched — surface to user.
+- **Pushes:** `main` + overlay branches pushed to origin. **Consumer remote pushes left to the user** (their research repos; local commits suffice for testing).
+
 ## Bottom line
 
 The core discipline (Tier-1 recorder + Tier-2 citation check + the gate + all enforcement hooks) is **distributed and consistent across all 7 working repos** and testable now — *with the caveat that the recorder only fires on the template-standard research roots*. For `do/`-layout repos (incl. tx), Finding 2 must be resolved first for the recorder to actually record. Class B (advisory operationalization gate) remains a manual follow-up.
