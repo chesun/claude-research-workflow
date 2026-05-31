@@ -18,6 +18,7 @@
 **Primary analysis language:** [e.g., Stata 17 / R / Python / Julia]
 **LaTeX engine:** [pdflatex | xelatex]
 **Overleaf path:** [optional — e.g., ~/Library/CloudStorage/Dropbox/Apps/Overleaf/project-name. If set, compile/verify tooling targets this path instead of in-repo paper/ and talks/.]
+**Analysis roots:** [optional — comma-separated dirs the evidence-gating recorder scopes to; default: scripts/, paper/, talks/, figures/, tables/, replication/, preambles/. Add your repo's analysis dir if different, e.g. do/]
 
 ---
 

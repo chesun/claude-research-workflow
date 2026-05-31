@@ -22,11 +22,18 @@ value is a deterministic evidence trail.
 Scope:
   - LANGUAGE FILTER: only .do/.doh/.r/.R/.py/.tex (via derive_lib.language_for_path).
     Everything else (incl. all .md) → exit 0.
-  - PATH SCOPE: only research-artifact roots (RESEARCH_ROOTS below). The
-    workflow's own infra (.claude/**), quality_reports/**, templates/**,
-    master_supporting_docs/**, decisions/**, data/**, explorations/** are
-    EXCLUDED — a no-logic-change claim is meaningful for research artifacts,
-    not infrastructure.
+  - PATH SCOPE: only research-artifact roots. The default roots
+    (DEFAULT_RESEARCH_ROOTS below) are derived from the CLAUDE.md Folder
+    Structure, but each repo MAY override them via an `**Analysis roots:**`
+    header line in its CLAUDE.md (see `_research_roots`). This makes the
+    recorder configurable per-repo: consumers with heterogeneous layouts
+    (e.g. Stata code in `do/` instead of `scripts/`) declare their analysis
+    dirs and the recorder scopes to them. CLAUDE.md is Class B (not
+    propagated), so each repo's declaration persists. The workflow's own infra
+    (.claude/**), quality_reports/**, templates/**, master_supporting_docs/**,
+    decisions/**, data/**, explorations/** are EXCLUDED by default — a
+    no-logic-change claim is meaningful for research artifacts, not
+    infrastructure.
 
 Conventions mirrored from derive-check-advisory.py and
 stata-comment-balance-check.py: stdin JSON, fail-open everywhere, exit 0,
@@ -43,15 +50,17 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Research-artifact roots (repo-relative). A no-logic-change record is only
-# written when the edited file lives under one of these. Derived from the
-# CLAUDE.md Folder Structure. Easy to adjust — it is a small constant.
-RESEARCH_ROOTS = (
+# Default research-artifact roots (repo-relative). A no-logic-change record is
+# only written when the edited file lives under one of these. Derived from the
+# CLAUDE.md Folder Structure. Used as the fallback when a repo's CLAUDE.md does
+# not declare an `**Analysis roots:**` header (see _research_roots).
+DEFAULT_RESEARCH_ROOTS = (
     "paper/",
     "talks/",
     "scripts/",
@@ -59,6 +68,16 @@ RESEARCH_ROOTS = (
     "figures/",
     "tables/",
     "preambles/",
+)
+
+# Matches a CLAUDE.md header line declaring analysis roots, e.g.
+#   **Analysis roots:** do/, paper/, tables/
+#   Analysis roots: scripts/ paper/
+# Tolerates optional surrounding ** markdown on the label and optional leading
+# list markers. The value (group 1) is parsed separately by _research_roots.
+_ANALYSIS_ROOTS_RE = re.compile(
+    r"^\s*[-*]?\s*\*{0,2}\s*analysis roots\s*:\s*\*{0,2}\s*(.+?)\s*$",
+    re.IGNORECASE,
 )
 
 _LEDGER_REL = ".claude/state/verification-ledger.md"
@@ -83,10 +102,67 @@ def _repo_relative(file_path: str, project_root: Path) -> str | None:
         return None
 
 
-def _in_scope(rel_path: str) -> bool:
-    """True iff rel_path is under one of the research-artifact roots."""
+def _research_roots(project_dir) -> tuple[str, ...]:
+    """Return the research-artifact roots for this repo.
+
+    Reads `<project_dir>/CLAUDE.md` and looks for a header line of the form
+    `**Analysis roots:** dir1/, dir2/, ...` (case-insensitive label; optional
+    surrounding `**`; comma- or space-separated; optional trailing slashes).
+    Each parsed root is normalized to end with `/`.
+
+    Falls back to DEFAULT_RESEARCH_ROOTS when:
+      - CLAUDE.md is absent or unreadable,
+      - the header is missing,
+      - the value is only a bracketed placeholder (e.g. `[optional — ...]`,
+        meaning "unset"),
+      - or any parse error occurs (fail-open).
+    """
+    try:
+        claude_md = Path(project_dir) / "CLAUDE.md"
+        if not claude_md.is_file():
+            return DEFAULT_RESEARCH_ROOTS
+        for line in claude_md.read_text(encoding="utf-8", errors="ignore").splitlines():
+            # Length cap: skip pathologically long lines before running the
+            # regex. Real header lines are short; this bounds per-line regex
+            # work on a maliciously large CLAUDE.md (DOS hardening).
+            if len(line) > 200:
+                continue
+            m = _ANALYSIS_ROOTS_RE.match(line)
+            if not m:
+                continue
+            value = m.group(1).strip()
+            # Strip a trailing markdown-bold closer the greedy label match may
+            # have left on the value (e.g. "**Analysis roots:**" → value "**").
+            value = value.strip("*").strip()
+            # A bracketed placeholder means "unset" — treat as default.
+            if value.startswith("["):
+                return DEFAULT_RESEARCH_ROOTS
+            # Split on commas and/or whitespace.
+            tokens = [t for t in re.split(r"[,\s]+", value) if t]
+            # Validate each token is a sensible in-repo directory. Reject path
+            # traversal (`..`) and absolute paths (leading `/`): such tokens
+            # would otherwise be parsed as roots and used for startswith()
+            # matching, bloating scope or causing confusion. Fail open to the
+            # default rather than honoring a malformed/hostile declaration.
+            for t in tokens:
+                if ".." in t or t.startswith("/"):
+                    return DEFAULT_RESEARCH_ROOTS
+            roots = tuple(t.rstrip("/") + "/" for t in tokens)
+            return roots if roots else DEFAULT_RESEARCH_ROOTS
+        return DEFAULT_RESEARCH_ROOTS
+    except Exception:
+        return DEFAULT_RESEARCH_ROOTS
+
+
+def _in_scope(rel_path: str, project_dir=None) -> bool:
+    """True iff rel_path is under one of the research-artifact roots.
+
+    Roots are resolved per-repo via _research_roots(project_dir); when
+    project_dir is None they fall back to DEFAULT_RESEARCH_ROOTS.
+    """
+    roots = DEFAULT_RESEARCH_ROOTS if project_dir is None else _research_roots(project_dir)
     norm = rel_path.replace("\\", "/")
-    return any(norm == r.rstrip("/") or norm.startswith(r) for r in RESEARCH_ROOTS)
+    return any(norm == r.rstrip("/") or norm.startswith(r) for r in roots)
 
 
 def _git_head_baseline(rel_path: str, project_root: Path) -> str:
@@ -197,7 +273,7 @@ def main() -> None:
     project_root = Path(project_dir)
 
     rel_path = _repo_relative(file_path, project_root)
-    if rel_path is None or not _in_scope(rel_path):
+    if rel_path is None or not _in_scope(rel_path, project_dir):
         sys.exit(0)
 
     normdiff_lib = _load_lib("normdiff_lib")

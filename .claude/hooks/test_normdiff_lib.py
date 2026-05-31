@@ -226,6 +226,75 @@ def test_path_scope():
     _check("scope_md_root_out", not rec._in_scope("README.tex_notes"), "")
 
 
+def test_research_roots_config():
+    """_research_roots / _in_scope honor a per-repo CLAUDE.md override."""
+    import tempfile
+
+    rec = _load_recorder()
+
+    def _write_claude(body: str) -> str:
+        d = tempfile.mkdtemp()
+        (Path(d) / "CLAUDE.md").write_text(body, encoding="utf-8")
+        return d
+
+    # (a) CLAUDE.md declaring do/ makes do/01.do in scope.
+    d_do = _write_claude("**Analysis roots:** do/, paper/, tables/\n")
+    _check("config_do_in_scope", rec._in_scope("do/01.do", d_do), str(rec._research_roots(d_do)))
+    # ...and scripts/ is NOT in scope when the repo declared only do/, paper/, tables/.
+    _check("config_scripts_out_when_overridden", not rec._in_scope("scripts/a.do", d_do), "")
+
+    # (b) Absent header -> DEFAULT used (scripts/ in, do/ out).
+    d_none = _write_claude("**Primary analysis language:** Stata 17\n")
+    _check("config_absent_scripts_in", rec._in_scope("scripts/a.do", d_none), "")
+    _check("config_absent_do_out", not rec._in_scope("do/a.do", d_none), "")
+    _check(
+        "config_absent_is_default",
+        rec._research_roots(d_none) == rec.DEFAULT_RESEARCH_ROOTS,
+        str(rec._research_roots(d_none)),
+    )
+
+    # (b') CLAUDE.md entirely absent -> DEFAULT.
+    d_missing = tempfile.mkdtemp()
+    _check(
+        "config_missing_file_is_default",
+        rec._research_roots(d_missing) == rec.DEFAULT_RESEARCH_ROOTS,
+        "",
+    )
+
+    # (c) Bracketed-placeholder value -> DEFAULT.
+    d_ph = _write_claude(
+        "**Analysis roots:** [optional — comma-separated dirs; default: scripts/, do/]\n"
+    )
+    _check(
+        "config_placeholder_is_default",
+        rec._research_roots(d_ph) == rec.DEFAULT_RESEARCH_ROOTS,
+        str(rec._research_roots(d_ph)),
+    )
+    _check("config_placeholder_do_out", not rec._in_scope("do/a.do", d_ph), "")
+
+    # (d) Malformed header -> fail-open to DEFAULT. An empty value after the
+    # colon parses to no tokens, so it must fall back rather than scope to
+    # nothing.
+    d_bad = _write_claude("**Analysis roots:**\n")
+    _check(
+        "config_malformed_empty_is_default",
+        rec._research_roots(d_bad) == rec.DEFAULT_RESEARCH_ROOTS,
+        str(rec._research_roots(d_bad)),
+    )
+
+    # (e) Trailing-slash + spacing tolerance: no trailing slash, extra spaces,
+    # surrounding **, space-separated all normalize to "<dir>/".
+    d_tol = _write_claude("  **Analysis roots:**   do    paper/   tables  \n")
+    roots = rec._research_roots(d_tol)
+    _check(
+        "config_tolerance_normalizes",
+        roots == ("do/", "paper/", "tables/"),
+        str(roots),
+    )
+    _check("config_tolerance_do_in", rec._in_scope("do/sub/x.R", d_tol), "")
+    _check("config_tolerance_exact_dir_in", rec._in_scope("do", d_tol), "")
+
+
 def test_language_for_path():
     ok = (
         lib.language_for_path("scripts/01.do") == "stata"
@@ -462,6 +531,7 @@ _ALL_TESTS = [
     test_latex_newcommand_rename_empty,
     test_new_file_full_residue,
     test_path_scope,
+    test_research_roots_config,
     test_language_for_path,
     # Regression (2026-05-29 adversarial review)
     test_stata_multiplication_residue,
