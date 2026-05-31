@@ -223,10 +223,13 @@ _CONFIG_BY_LANG = {
 def _strip_block_comments(text: str, delimiters: tuple[str, str]) -> str:
     """Remove `/* ... */`-style block comments (non-nested) from text.
 
-    Deliberately simple: a single non-greedy pass. String-literal awareness is
-    not needed for the residue use-case — a `/*` inside a Stata string is rare
-    and, if it ever clips content, it only shrinks the residue symmetrically on
-    both baseline and current sides, so the diff stays honest.
+    Deliberately simple: a single non-greedy, string-unaware pass. A `/*` inside
+    a Stata string literal is rare. Caveat: the "clips symmetrically on both
+    baseline and current sides" property holds only when the delimiters bounding
+    the clipped span are byte-identical on both sides; an edit that adds or moves
+    a `*/` near changed content can clip asymmetrically. Accepted limitation for
+    the residue use-case — worst case is a spurious residue line (over-report),
+    never a missed change. Make this string-literal-aware if it proves noisy.
     """
     open_tok, close_tok = delimiters
     pattern = re.compile(
@@ -329,14 +332,26 @@ def extract_executable_regions(text: str, language: str) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
+def _is_pathlike(s: str) -> bool:
+    """A captured literal is treated as a path only if it contains a path
+    separator or ends in a dotted file extension. Prevents tokenizing a
+    non-path first-quoted-arg (e.g. a separator/option string like ",") into
+    PATH, so a change to such a literal correctly surfaces as residue."""
+    s = s.strip()
+    return "/" in s or "\\" in s or bool(re.search(r"\.[A-Za-z0-9]{1,8}$", s))
+
+
 def _tokenize_paths(line: str, patterns: list[re.Pattern]) -> str:
-    """Replace each captured path/arg literal (group 1) with the PATH token."""
+    """Replace each captured path/arg literal (group 1) with the PATH token —
+    only when the literal looks path-like (see _is_pathlike)."""
     out = line
     for pat in patterns:
 
         def _repl(m: re.Match) -> str:
             full = m.group(0)
             captured = m.group(1)
+            if not _is_pathlike(captured):
+                return full
             # Replace only the captured span within the full match so the
             # surrounding verb/command structure is preserved (so a renamed
             # path collapses to identical text but a changed command does not).

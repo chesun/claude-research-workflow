@@ -364,6 +364,19 @@ def test_parse_empty_raises():
     _check("parse_empty_raises", raised, "")
 
 
+def test_timeout_config():
+    # Item 4: timeout overridable via CITATION_TEST_TIMEOUT; robust to garbage.
+    import os as _os
+    base = lib._test_timeout_s()
+    _os.environ["CITATION_TEST_TIMEOUT"] = "300"
+    e3 = lib._test_timeout_s()
+    _os.environ["CITATION_TEST_TIMEOUT"] = "garbage"
+    eg = lib._test_timeout_s()
+    _os.environ.pop("CITATION_TEST_TIMEOUT", None)
+    _check("timeout_config", base == 120 and e3 == 300 and eg == 120,
+           f"base={base} e3={e3} eg={eg}")
+
+
 # ---------------------------------------------------------------------------
 # Runner
 # ---------------------------------------------------------------------------
@@ -393,6 +406,7 @@ _ALL_TESTS = [
     test_windows_reserved_name_missing,
     test_parse_forms,
     test_parse_empty_raises,
+    test_timeout_config,
 ]
 
 

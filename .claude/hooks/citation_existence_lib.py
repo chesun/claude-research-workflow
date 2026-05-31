@@ -81,6 +81,18 @@ import shutil
 import subprocess
 from pathlib import Path
 
+
+def _test_timeout_s() -> int:
+    """Test-runner timeout (seconds), overridable via CITATION_TEST_TIMEOUT.
+    A timeout is fail-open (→ ASSUMED), so this only governs how long we wait
+    before treating a slow/hung suite as infra-absent. Robust to a bad env
+    value (falls back to 120)."""
+    try:
+        return max(1, int(os.environ.get("CITATION_TEST_TIMEOUT", "120")))
+    except (TypeError, ValueError):
+        return 120
+
+
 # ---------------------------------------------------------------------------
 # Citation parsing
 # ---------------------------------------------------------------------------
@@ -247,7 +259,7 @@ def _run_test(relpath: str, test_id: str, repo_root: Path, suffix: str) -> dict:
             cwd=str(repo_root),
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=_test_timeout_s(),
             shell=False,
         )
     except FileNotFoundError:
@@ -257,9 +269,10 @@ def _run_test(relpath: str, test_id: str, repo_root: Path, suffix: str) -> dict:
         return {"status": "ASSUMED", "detail": f"test runner error: {exc!r} (infra-absent)"}
     if proc.returncode == 0:
         return {"status": "RESOLVED", "detail": f"test '{test_id}' passed"}
-    # pytest exit 5 = "no tests collected" → the named test does not exist:
-    # that IS a fabrication signal (MISSING). All other nonzero = test failed.
-    if proc.returncode == 5:
+    # pytest exit 5 = "no tests collected"; exit 4 = usage/collection error for
+    # a nonexistent node (pytest 7+). Both mean the named test does not exist —
+    # a fabrication signal (MISSING). All other nonzero = test ran and failed.
+    if proc.returncode in (4, 5):
         return {"status": "MISSING", "detail": f"test '{test_id}' not collected (does not exist)"}
     tail = (proc.stdout or proc.stderr or "").strip().splitlines()
     last = tail[-1] if tail else f"exit {proc.returncode}"

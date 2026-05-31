@@ -140,12 +140,13 @@ def _research_roots(project_dir) -> tuple[str, ...]:
             # Split on commas and/or whitespace.
             tokens = [t for t in re.split(r"[,\s]+", value) if t]
             # Validate each token is a sensible in-repo directory. Reject path
-            # traversal (`..`) and absolute paths (leading `/`): such tokens
-            # would otherwise be parsed as roots and used for startswith()
-            # matching, bloating scope or causing confusion. Fail open to the
-            # default rather than honoring a malformed/hostile declaration.
+            # traversal (`..`), absolute paths (leading `/`), and degenerate
+            # roots (`.`, `./`, empty) — these would otherwise be parsed as
+            # roots and used for startswith() matching, bloating scope or
+            # silently matching nothing. Fail open to the default rather than
+            # honoring a malformed/hostile declaration.
             for t in tokens:
-                if ".." in t or t.startswith("/"):
+                if ".." in t or t.startswith("/") or t.rstrip("/") in ("", "."):
                     return DEFAULT_RESEARCH_ROOTS
             roots = tuple(t.rstrip("/") + "/" for t in tokens)
             return roots if roots else DEFAULT_RESEARCH_ROOTS

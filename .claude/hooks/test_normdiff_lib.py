@@ -510,6 +510,38 @@ def test_ledger_upsert_appends_new_row():
 
 
 # ---------------------------------------------------------------------------
+# Regression — 2026-05-30 polish items
+# ---------------------------------------------------------------------------
+
+def test_pathlike_guard_nonpath_arg_surfaces():
+    # Item 2: a non-path first-quoted-arg must NOT be tokenized — so a change to
+    # it surfaces as residue — while a real path swap still normalizes to empty.
+    swap = lib.normdiff('df = pd.read_csv("data/old.csv")\n',
+                        'df = pd.read_csv("data/new.csv")\n', "python")
+    nonpath = lib.normdiff('x = pd.read_csv("sepvalue")\n',
+                          'x = pd.read_csv("othervalue")\n', "python")
+    _check("pathlike_guard_nonpath_surfaces",
+           _empty(swap) and not _empty(nonpath), f"swap={swap} nonpath={nonpath}")
+
+
+def test_degenerate_roots_fall_back_to_default():
+    # Item 5: '.', './', empty roots declared in CLAUDE.md must fall back to
+    # DEFAULT_RESEARCH_ROOTS; a legit declaration is still honored.
+    import tempfile
+    rec = _load_recorder()
+    ok = True
+    for decl in (".", "./", "., paper/", ""):
+        d = tempfile.mkdtemp()
+        (Path(d) / "CLAUDE.md").write_text(f"**Analysis roots:** {decl}\n")
+        if rec._research_roots(d) != rec.DEFAULT_RESEARCH_ROOTS:
+            ok = False
+    d = tempfile.mkdtemp()
+    (Path(d) / "CLAUDE.md").write_text("**Analysis roots:** do/\n")
+    ok = ok and rec._research_roots(d) == ("do/",)
+    _check("degenerate_roots_default", ok, "")
+
+
+# ---------------------------------------------------------------------------
 # Runner
 # ---------------------------------------------------------------------------
 
@@ -546,6 +578,9 @@ _ALL_TESTS = [
     test_ledger_9col_row_parses,
     test_ledger_upsert_update_in_place,
     test_ledger_upsert_appends_new_row,
+    # Regression (2026-05-30 polish)
+    test_pathlike_guard_nonpath_arg_surfaces,
+    test_degenerate_roots_fall_back_to_default,
 ]
 
 
