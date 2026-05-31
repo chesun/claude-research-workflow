@@ -127,6 +127,15 @@ patterns = [
   # consumer-specific content with workflow-template boilerplate. The fix
   # is structural: these files describe the consumer's project, not the
   # workflow, so propagation must never touch them.
+  #
+  # CHERRY-PICK CAVEAT: the workflow source's CLAUDE.md template still
+  # accumulates substantive workflow-level changes (new principles, new
+  # skills, new folder-structure entries). Those changes are NOT auto-
+  # propagated. When the workflow's CLAUDE.md changes substantively,
+  # MANUALLY cherry-pick the relevant sections into each consumer's
+  # CLAUDE.md — `git diff <prior>..HEAD -- CLAUDE.md` from the workflow
+  # source identifies the change set; per-consumer merge is a judgment
+  # call. See .claude/skills/tools/SKILL.md § Cherry-pick caveat.
   "CLAUDE.md",
   "README.md",
 

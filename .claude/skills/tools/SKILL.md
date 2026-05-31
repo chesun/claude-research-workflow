@@ -221,11 +221,13 @@ Sync selected files from this workflow source repo to all configured consumer re
 **Class-aware routing.** Every file is read from the branch its class declares as authoritative:
 
 - **Class A — Universal** (default): read from `main`. Hooks, most rules, templates.
-- **Class B — Overlay-customized**: read from consumer's overlay branch (`applied-micro` or `behavioral`). E.g., `CLAUDE.md`, `orchestrator.md`, `quality.md`.
+- **Class B — Overlay-customized**: read from consumer's overlay branch (`applied-micro` or `behavioral`). E.g., `orchestrator.md`, `quality.md`.
 - **Class C — Overlay-only**: read from the consumer's overlay if the consumer is on a matching branch; otherwise skipped as "not-applicable". E.g., `strategist.md` (applied-micro) or `designer.md` (behavioral).
-- **Class D — Excluded**: never propagates. Project-state files like `quality_reports/`, `MEMORY.md`, `data/`.
+- **Class D — Excluded**: never propagates. Project-state files (`quality_reports/`, `MEMORY.md`, `data/`) AND project-identity files (`CLAUDE.md`, `README.md`) that mix workflow guidance with consumer-specific content.
 
 The manifest lives at `.claude/file-classes.toml` on `main` (itself Class A so it propagates to overlay worktrees via `/tools sync-overlays`). Default for unlisted files = Class A.
+
+**Cherry-pick caveat for Class D project-identity files.** `CLAUDE.md` and `README.md` are Class D because each consumer owns its own copy (project name, coauthors, dataset paths, current state — all consumer-specific). But the workflow source's `CLAUDE.md` template ALSO accumulates substantive workflow-level changes (new principles, new skills in the Quick Reference, new folder-structure entries, new rule cross-references). Those changes are NOT auto-propagated. When the workflow's `CLAUDE.md` template changes substantively, **manually cherry-pick the relevant sections into each consumer's `CLAUDE.md`** — `git diff main:CLAUDE.md` between the prior workflow commit and now identifies the change set; the per-consumer merge is a judgment call (which sections apply, what to rename per project terminology). The same applies to `README.md` if you ever change the workflow's README's structure in a way that's worth propagating.
 
 **Step 1: identity check.** Run `python3 .claude/skills/tools/propagate.py --check-identity` first. The script's three identity modes:
 
