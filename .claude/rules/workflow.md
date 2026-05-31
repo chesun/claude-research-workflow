@@ -41,12 +41,29 @@
    - **CLEAR:** Fully specified
    - **ASSUMED:** Reasonable assumption (user can override)
    - **BLOCKED:** Cannot proceed until answered
-5. Get user approval on spec
-6. THEN proceed to Step 4 (draft the plan) with spec as input
+5. Tag each acceptance criterion with its **Verification Tier** — Step-0 operationalization (see below).
+6. Get user approval on spec
+7. THEN proceed to Step 4 (draft the plan) with spec as input
 
 **Template:** `templates/requirements-spec.md`
 
 **Why this helps:** Catches ambiguity BEFORE planning. Reduces mid-plan pivots by 30-50%.
+
+#### Step-0 Operationalization: Tag Each Acceptance Criterion with a Verification Tier
+
+Every acceptance criterion is operationalized into a falsifiable check and tagged with the tier at which "achieved" will later be confirmed:
+
+- **Tier 1 — script-decidable:** a deterministic script gives yes/no (diff, grep, test exit).
+- **Tier 2 — locatable judgment:** decomposes into sub-claims each pinned to an artifact (`file:line`, a test, an output value) plus a sufficiency argument.
+- **Tier 3 — irreducible judgment:** no single artifact pins it; verified by independent refutation or a diverse-lens panel (see `.claude/references/evidence-gating-tier3-panel.md`).
+
+**Why operationalize up front:** assigning a tier *before* any work runs forces the goal to become falsifiable. It prevents lazy "did it work? yes" prompting — a verdict of "achieved / compliant" must then cite a tagged criterion rather than assert itself — and it shrinks the irreducible-judgment residue by pushing as many sub-claims as possible down toward Tier 1. This is the planning-time face of `adversarial-default.md`'s evidence-gating discipline (burden of proof on the asserter; compliance is a positive claim requiring evidence). Full tier semantics live in `.claude/references/evidence-gating-detail.md`.
+
+**Enforcement is ADVISORY ONLY — it NEVER blocks.** One non-blocking nudge:
+
+1. A **reminder** when a spec's acceptance criteria are untagged.
+
+An untagged criterion does not stop the spec, the plan, or the work. The discipline is a floor that makes "show evidence" the default; it is not a gate. (A critic deduction for verdicts that cite no tier-tagged criterion is a candidate future hardening — it is not wired into any critic agent today, so the rule does not promise it. See `.claude/references/evidence-gating-detail.md` § Optional hardening and `adversarial-default.md`.)
 
 ### Plans on Disk
 

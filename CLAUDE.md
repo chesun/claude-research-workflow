@@ -13,6 +13,7 @@
 **Stata version:** 17
 **LaTeX engine:** pdflatex
 **Overleaf path:** [YOUR OVERLEAF PATH — e.g., ~/Library/CloudStorage/Dropbox/Apps/Overleaf/project-name]
+**Analysis roots:** [optional — comma-separated dirs the evidence-gating recorder scopes to; default: scripts/, paper/, talks/, figures/, tables/, replication/, preambles/. Add your repo's analysis dir if different, e.g. do/]
 
 ---
 
@@ -25,6 +26,7 @@
 - **Worker-critic pairs** -- every creator has a paired critic; critics never edit files
 - **Inference first** -- design experiments with inference in mind from the start; tests and treatments co-evolve (see inference-first checklist)
 - **Primary source first** -- before citing a paper in a load-bearing artifact, read the PDF and produce reading notes in `master_supporting_docs/literature/reading_notes/`; hooks block edits otherwise (see `primary-source-first.md`)
+- **Evidence gating** -- a verdict is only as good as the evidence it carries; gate on *claims*, not actions; verdicts are `{PASS, UNVERIFIED, FAIL}` (never a silent default-PASS), and the verification mechanism scales to checkability (block only deterministic Tier-1 checks; advise+deduct for judgment). A no-logic-change claim is gated against the residue the recorder writes to the verification ledger (see `adversarial-default.md` § Evidence gating and `.claude/references/evidence-gating-detail.md`)
 - **Decisions are ADRs** -- substantive design, identification, or specification decisions live in `decisions/NNNN_slug.md`; analysis docs hold reasoning, ADRs hold the record (see `decision-log.md`)
 - **Track TODOs** -- project root `TODO.md` tracks open work (Active / Up Next / Waiting / Backlog / Done); update after completing any task (see `todo-tracking.md`)
 - **Auto-memory** -- corrections and preferences are saved automatically via Claude Code's built-in memory system
