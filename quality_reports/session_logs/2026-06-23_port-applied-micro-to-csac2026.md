@@ -34,7 +34,7 @@ Seed a new project repo at `~/github_repos/csac2026` from the **applied-micro ov
 
 - Committed the plan (was untracked) and added it to `quality_reports/plans/INDEX.md`.
 - Wrote this session log (the port had none).
-- **Consumer recovery-push audit** (open question from `2026-05-31_consumer-claudemd-recovery`): re-checked push state of all 7 recovery commits. **6 of 7 are already pushed** to their GitHub remotes (BDD, bdm_bic, csac, csac2025, tx_peer_effects_local, va_consolidated — all 0 ahead / 0 behind on the recovered branch). **1 remains local-only:** `belief_distortion_discrimination_audit` `audit-fix` is 3 commits ahead of `origin/audit-fix` — those 3 are exactly the recovery sequence (`4e7962a` initial restore → `155c1e0` documented intermediate mistake → `cd985f7` correction; net CLAUDE.md restored, README removed). Pending user authorization to push to the shared remote.
+- **Consumer recovery-push audit** (open question from `2026-05-31_consumer-claudemd-recovery`): re-checked push state of all 7 recovery commits. **6 of 7 were already pushed** to their GitHub remotes (BDD, bdm_bic, csac, csac2025, tx_peer_effects_local, va_consolidated — all 0 ahead / 0 behind on the recovered branch). The 7th, `belief_distortion_discrimination_audit` `audit-fix`, was 3 commits ahead of `origin/audit-fix` — those 3 the recovery sequence (`4e7962a` initial restore → `155c1e0` documented intermediate mistake → `cd985f7` correction; net CLAUDE.md restored, README removed). **Pushed as-is** this session (user-authorized): `5b2ada0..cd985f7 audit-fix -> audit-fix`, verified 0 ahead / 0 behind and `cd985f7` in `origin/audit-fix`. **All 7 recovery commits are now on their remotes — the 2026-05-31 open question is closed.**
 
 ## Files touched (this repo)
 
