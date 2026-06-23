@@ -6,6 +6,10 @@ When creating a new plan, consult this index first. If an `Active` entry covers 
 
 ---
 
+## 2026-06
+
+- [2026-06-23_port-applied-micro-to-csac2026.md](2026-06-23_port-applied-micro-to-csac2026.md) — COMPLETED 2026-06-23: seeded new project repo `~/github_repos/csac2026` from the applied-micro overlay (synced overlay current first), filled csac2026 identity (CEL / UC Davis, CSAC + C2C, Stata), registered as an applied-micro consumer with propagate baseline. Local-only by design (no remote). Session log: `session_logs/2026-06-23_port-applied-micro-to-csac2026.md`.
+
 ## 2026-05
 
 - [2026-05-29_evidence-gating-build-plan.md](2026-05-29_evidence-gating-build-plan.md) — COMPLETED 2026-05-30: unified evidence-gating discipline (design of record `reviews/2026-05-28_whole-picture-critic-gates-dispatch.md` §7). All 5 phases built + adversarially reviewed + verified: Tier-1 normdiff recorder (Stata/R/Python/LaTeX, CLAUDE.md-configurable roots) → rule + `{PASS,UNVERIFIED,FAIL}` vocabulary + ledger schema + the gate → Tier-2 citation-existence + schema evidence → operationalization gate (advisory) + Tier-3 panel → distributed to all 7 consumers + 2 overlays. Merged to main; status `reviews/2026-05-30_evidence-gating-distribution-status.md`.
