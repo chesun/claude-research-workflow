@@ -49,3 +49,42 @@ The pilot's LFS half was largely done (12 PDFs in LFS); the DVC half was **half-
 | `5f20370` | data: add MANIFEST / PROVENANCE / CHANGELOG contract |
 
 All pushed to `origin/main` (0 ahead / 0 behind).
+
+---
+
+## Continuation — DVC lab-guide infrastructure (same day)
+
+After the pilot push, the work shifted to designing + building the self-contained DVC infrastructure for the CEL **Scribe** server, toward a guide for the lab. **This is a personal passion project**; lab adoption is the lab's prerogative.
+
+### Design doc
+
+`quality_reports/dvc-setup-learnings.md` — living design doc. Covers: the gitignore/DVC relationship (root vs nested `.gitignore`, the wholesale-ignore descend rule), cache-vs-remote, the **scribe environment** (`/home/research/ca_ed_lab/`, `go_sbac` group, shared project folder, single FS, Stata, public GitHub repos, the existing data-safety model + `.githooks/pre-push`), the **per-project on-Scribe architecture**, audiences (Kramer/lab-wide vs project teams), cache growth + `dvc gc`. Context pulled from the `cel_resource_hub` repo (the lab's MkDocs site — **do not edit it; Christina ports**).
+
+### The #1 safety finding
+
+`dvc push` is a **second data-egress channel** the lab's existing git `.githooks/pre-push` hook can't see. So: the DVC remote **must** stay on Scribe; `.dvc` pointers are safe on public GitHub; and the existing pre-push hook needs a carve-out to allow pointers.
+
+### Built + tested (`templates/dvc/`)
+
+- `dvc-egress-guard.sh` — refuse off-server DVC remotes (the egress analog of the git hook).
+- `dvc-sync-check.sh` — catch the dangling-pointer (unpushed-blobs) failure.
+- `setup-dvc-server.sh` — idempotent per-project setup (**git required**; git-mode `dvc init`; hardlink+group cache; on-server remote; installs hook+guards into `.githooks/`, never clobbering an existing hook).
+- `githooks-pre-push` — DVC-aware combined hook = lab data-block + `.dvc`/`.gitignore`/contract carve-out + the two guard calls. Faithful extension of `va_consolidated/.githooks/pre-push`.
+- `README.md` — usage + operational gotchas.
+
+### Decisions
+
+- **git is a prerequisite** ("no point using DVC without git") — guide written with git alongside; dropped `--no-scm`.
+- **Lab-deployment facts (backup, group mechanism) = out of scope** — not blockers; per-lab config.
+
+### Validation
+
+End-to-end **29/29**: 14 carve-out cases (real data blocked; pointers/`.gitignore`/contract/code allowed) + a 15-step Scribe simulation (pointer pushes through carve-out, `dvc push` to on-server remote, real-data push BLOCKED, off-server remote BLOCKED, old-version restore survives `dvc gc -A`). Two findings: (a) hardlink cache → tracked files read-only, edit via `dvc unprotect`; (b) parsing bug — use `dvc config --list`, never `dvc remote list` (wraps URLs).
+
+### Commits (workflow repo)
+
+`e844e85` (learnings doc) · `2689abb` (server arch) · `211245d` (scribe facts + egress rule) · `1ebaa2e` (guard+setup scripts) · `5b6769a` (git prerequisite) · `410f25e` (pre-push carve-out + e2e) · `458e924` (out-of-scope scoping).
+
+### State / next
+
+Infrastructure **complete and validated**. Remaining: draft the guide page as portable markdown in this repo (hub voice) for Christina to port to `cel_resource_hub` — not yet started. BDD's pre-LFS PDF churn remains a separate, parked LFS loose end.
