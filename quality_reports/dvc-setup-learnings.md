@@ -206,7 +206,7 @@ Resolved by the scribe facts (§7.2): **clone model** = one shared project folde
 
 ### 7.6 Self-contained guardrails (the "no Claude Code" answer)
 
-There are **two** things to guard, and on this server **git hooks only reach git users** — and only Christina uses git on Scribe (§7.2). So `dvc install`'s git-hook approach covers Christina's git-based projects; for the FileZilla majority (and for Kramer's possible no-`scm` lab-wide use, §7.7) the guard must be a **standalone script** run as part of the workflow, or wrapped into the data steward's process. Plan for both.
+**git is a prerequisite** (decided 2026-06-23 — "no point using DVC without git"; the guide teaches git alongside, cross-linking the hub's `git-for-newcomers.md`). That settles the guardrail home: both guards wire into the repo's **git `pre-push` hook**, sitting alongside the lab's existing `.githooks/pre-push` data-egress hook. `setup-dvc-server.sh` does this safely — it is `core.hooksPath`-aware and never clobbers an existing hook (prints add-by-hand lines instead). The guards are also plain scripts runnable by hand (e.g. `dvc-sync-check.sh` before logging off). Two things to guard:
 
 **Guard A — data egress (the safety guard, from §7.3).** Before any `dvc push`, verify the remote stays on Scribe:
 
@@ -254,21 +254,36 @@ This is the DVC analog of the lab's `.githooks/pre-push` data-egress guard, cove
 - Is `dvc` installable lab-wide (pip in a shared venv / conda / an environment module)? Pin one version across users (the pilot used 3.67.1). **[TBD]**
 - A `setup-dvc-server.sh` (plain bash, no Claude Code) should do, idempotently: set `cache.dir` / `cache.type` / `cache.shared`, add the remote, run `dvc install`, install the check hook, and `dvc pull`. This is the server analog of the laptop `templates/setup-machine.sh`.
 
+### 7.8 Cache growth & cleanup (`dvc gc`)
+
+Yes — by default the cache keeps **every** version's bytes (content-addressed), so it grows monotonically. But it grows with **churn, not total-size × versions**, and there's a cleanup valve:
+
+- **Dedup bounds it.** Identical files across versions are stored once. Re-`dvc add` after editing 2 of 263 files adds ~2 files' worth of blobs, not another 1.15 GB. So a dataset that's appended/tweaked grows slowly; one that's fully regenerated each run grows fast (each regen may rewrite every file → a full new copy).
+- **`dvc gc` prunes unreferenced versions.** Scope it by what you want to keep:
+  - `dvc gc -w` — keep only the **current workspace** version (aggressive).
+  - `dvc gc -A` — keep versions referenced by **all git branches/tags/commits** (conservative — preserves full history; the right default).
+  - add `-c` / `--cloud` to also prune the **remote**, not just the local cache.
+  - `dvc gc` **deletes** — anything not referenced by the chosen scope is gone. Pair it with git-tag discipline: tag the data versions you must never lose, then `gc -A` can't drop them.
+- **On the shared server this needs an owner.** The shared project cache accumulates every member's edits. Manage by: a periodic `dvc gc -A` (keeps everything git still points to, drops true orphans), and watching `du -sh .dvc/cache`. This is a natural data-steward (Kramer) responsibility.
+- **Retention is a policy choice**, not a default to accept silently: "keep every version forever" (max reproducibility, max space) vs. "gc to tagged releases only" (lean, but you can only return to tagged states). Decide per project and write it down. **[TBD for the guide: recommend a default — likely `gc -A` quarterly + tag every version cited in a paper.]**
+
 ---
 
 ## 8. Audiences & where the guide lives
 
 The guide's home is the lab's existing MkDocs site, the **`cel_resource_hub` repo** — a DVC page belongs in `docs/workflow-tips/` as a sibling to `data-safety.md`, `gitignore-setup.md`, `local-server-sync.md`, `reproducible-pipelines.md` (match the hub's first-person, admonition-heavy voice; ADR 0003 "personal-project-voice"). It should cross-link the egress story to `data-safety.md`/`local-server-sync.md#…pre-push-hook`.
 
+**git is a prerequisite for either track** (decided 2026-06-23): the guide is written *with git alongside* and presents DVC as a layer on top of git, cross-linking `git-for-newcomers.md`. No `--no-scm` path — DVC without git loses its whole point (the version history lives in git's history of the pointer, §2/§5).
+
 Two audiences (per Christina), which the page should serve as two tracks:
 
-1. **Kramer (lab data manager, has access to *all* lab data).** Awareness-level: DVC *could* version/dedup/integrity-check the whole `<lab>/data/` store. Caveats: tracking the canonical store in place changes how everyone reads it; and since most of the lab doesn't use git, this likely means **`dvc init --no-scm`** (DVC without git) or a steward-owned git repo of pointers — which trades away the "time-travel to the data at draft X" benefit. Frame as "here's the tool, your call."
-2. **Project teams maintaining data in project folders.** Concrete: per-project DVC (the §7.4 architecture), remote on Scribe, pointers safe on public GitHub. For the FileZilla (non-git) majority, `--no-scm` or a single git-using steward per project.
+1. **Kramer (lab data manager, has access to *all* lab data).** Awareness-level: DVC *could* version/dedup/integrity-check the whole `<lab>/data/` store, with Kramer owning the git repo of pointers (git is the prerequisite). Caveat: tracking the canonical store in place changes how everyone currently reads those files — likely defer; start with project-folder data. Frame as "here's the tool, your call."
+2. **Project teams maintaining data in project folders.** Concrete: per-project DVC (the §7.4 architecture), remote on Scribe, pointers safe on public GitHub. Each adopting project uses git (Method B in `local-server-sync.md`), so DVC slots onto the git-on-Scribe pattern Christina already runs for `va_consolidated`.
 
 ## 9. Open questions / next steps
 
 1. **Pin the remaining scribe facts (§7.5)** — datastore backup details, the per-project access/group mechanism on `<lab>/data/`, and whether canonical datasets get DVC-tracked centrally. These gate the concrete config; clone model + filesystem are already resolved.
-2. **Decide the git posture for the guide** — recommend per-project `--no-scm` (simplest for non-git users) vs. a steward-owned pointer repo (keeps versioning). This shapes both tracks above.
+2. ✅ **DECIDED (2026-06-23)** — git is a **prerequisite**; the guide is written *with git alongside it* (cross-link `git-for-newcomers.md`). No `--no-scm` path. `setup-dvc-server.sh` now requires a git repo and uses git-mode `dvc init`. Reflected in §7.6 / §8 and the scripts.
 3. ✅ **DONE (2026-06-23)** — the three self-contained scripts are built and tested (13/13 cases against the BDD pilot + a throwaway repo): `templates/dvc/{dvc-egress-guard,dvc-sync-check,setup-dvc-server}.sh` (+ `README.md`). Egress guard (Guard A), dangling-pointer check (Guard B), idempotent setup. Bug found & fixed in testing: never parse `dvc remote list` (it wraps URLs to terminal width) — use `dvc config --list`. These replace the Claude Code `/tools sync-status` idea server-side.
 4. **Patch the lab's existing `.githooks/pre-push`** to allow `*.dvc` pointers + `data/.gitignore` (safe) while still blocking real data (§7.3 rule 3).
 5. **Draft the DVC page in `cel_resource_hub`** once 1–2 are settled.
