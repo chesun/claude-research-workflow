@@ -129,7 +129,7 @@ Contrast with the pilot's `data_local/` (one wholesale-ignored top-level dir): i
 
 ---
 
-## 7. Server-specific topics  **[SERVER — TBD]**
+## 7. Server-specific design (scribe)
 
 The gitignore/DVC mechanics above are **identical on a laptop and a server**. This section is the server-specific design. **Hard constraint: the server will not have Claude Code.** Everything must be self-contained — plain `git` + `dvc` commands, shell scripts, and native git hooks. No `/tools` skills, no Claude Code hooks.
 
@@ -144,49 +144,57 @@ The gitignore/DVC mechanics above are **identical on a laptop and a server**. Th
 
 On a single shared server you want to make a deliberate choice about **both**, not just one.
 
-### 7.2 Recommended architecture for one shared analysis server
+### 7.2 The scribe environment (known facts)
 
-Assuming the common CEL case — everyone SSHes into the *same* server and runs analysis there:
+CEL's server is a **Linux box named `scribe`**. The lab root contains three subfolders:
 
 ```
-/data/cel/dvc-cache/              ← ONE shared cache for the lab (dedup across users + projects)
-/backup/cel/dvc-remotes/<proj>/   ← per-project local-filesystem REMOTE, on a BACKED-UP volume
-~/<user>/projects/<proj>/data/raw/   ← each user's workspace, hard/sym-linked from the shared cache
+<LAB_ROOT>/                  (exact absolute path on scribe — TBD)
+├── projects/
+│   └── <proj>/              project code + git clone(s); some have a data/ subfolder
+│       └── data/{raw,cleaned}/   ← project-specific data (natural DVC-track target)
+├── data/                    lab-maintained CANONICAL datasets — the shared datastore
+│   └── <proj-or-dataset>/   ← access-restricted: only members of the relevant project can read
+└── users/
+    └── <user>/              per-user space
 ```
 
-Two moves:
+Two facts drive the design:
 
-1. **Shared cache (the dedup win).** Point every user's DVC at one cache dir:
+1. **There are two data locations.** Canonical lab datasets live in `<LAB_ROOT>/data/` (shared, durable). Project-specific data lives in `<LAB_ROOT>/projects/<proj>/data/`. DVC's natural per-project track target is the latter; the former is shared source data (see §7.4 for how to treat it).
+2. **`<LAB_ROOT>/data/` is access-restricted per project** — only people on a project can read its datasets. This is almost certainly enforced by **per-project Unix groups**. This is the single most important constraint, and it rules out the lab-wide shared cache I'd sketched earlier.
 
-   ```bash
-   dvc config --global cache.dir /data/cel/dvc-cache
-   dvc config cache.type "reflink,hardlink,symlink"   # link, don't copy
-   dvc config cache.shared group                      # group-writable cache files
-   ```
+### 7.3 Revised architecture: per-project, scoped to the project's access group
 
-   With a shared cache + links, ten users each "holding" a 50 GB dataset consume **50 GB once**, not 500 GB — `dvc checkout` materializes the workspace as links into the shared cache, not copies.
+**Correction (driven by §7.2 fact 2):** do **not** use one lab-wide shared cache. A DVC cache/remote is content-addressed blobs in a directory; **access to the directory = access to the data** (DVC has no per-blob ACLs). Pooling all projects into one cache would let anyone with cache access read every project's restricted data — breaking the access model the lab already maintains. So scope DVC **per project**, reusing each project's existing access group:
 
-2. **Local-filesystem remote on a backed-up volume (the durability win).** This is your "dedicated directory," used as the `dvc push`/`pull` target:
+```
+<LAB_ROOT>/projects/<proj>/        git clone + code (data/{raw,cleaned} are DVC-tracked)
+<LAB_ROOT>/data/<proj>/dvc-remote/ ← per-project DVC REMOTE (own group = project's group; backed up with the datastore)
+<cache>                            ← per-project cache, same FS as the clone, same group
+```
 
-   ```bash
-   dvc remote add -d storage /backup/cel/dvc-remotes/<proj>
-   ```
+- **Remote → a dedicated subdir under the access-controlled datastore.** `dvc remote add -d storage <LAB_ROOT>/data/<proj>/dvc-remote`. It inherits the project's existing group/permissions and rides the datastore's backup. Keep it a *dedicated* `dvc-remote/` dir of opaque hash-named blobs — do **not** point DVC at the human-readable canonical dataset folders.
+- **Cache → per project (or per project's shared clone), `cache.shared group` with the project group.** Dedup happens *within* the project's members (the correct scope); cross-project dedup is intentionally given up because it would cross an access boundary.
+- **Keep cache and remote separate** even within a project: the cache is prunable by `dvc gc` and is not a source of truth; the remote is what `dvc pull` reconstructs from. Cache-only = one `dvc gc` or disk hiccup from loss.
 
-   `dvc push` then copies new blobs cache → remote (a fast local copy, since both are on the server). The remote is the durable source of truth; the cache is the fast working store.
+```bash
+# per project, run in the project repo:
+dvc remote add -d storage <LAB_ROOT>/data/<proj>/dvc-remote
+dvc config cache.type "hardlink,symlink"   # ext4/NFS → hardlink (reflink needs CoW FS)
+dvc config cache.shared group              # group-writable cache so project members can write
+# + sysadmin: project group owns the cache/remote dirs, `chmod g+s` (setgid) so new blobs inherit it
+```
 
-**Why keep both (don't collapse to just a shared cache):** the cache is subject to `dvc gc` (garbage collection prunes blobs not referenced by the current workspace) and isn't a "source of truth." The remote is what `dvc pull` reconstructs from. Skipping the remote makes the lab one `dvc gc` or one disk hiccup away from data loss.
+### 7.4 What still gates the concrete config (narrowed by scribe facts)
 
-### 7.3 The decision that actually gates this: which volumes?
+- **Clone model — the big open one.** Does each project have **one shared clone** under `<LAB_ROOT>/projects/<proj>/` that members all work in, or does **each user clone** into `<LAB_ROOT>/users/<user>/`? This decides cache placement: one shared clone → the in-repo `.dvc/cache` is already shared, simplest; per-user clones → need a per-project shared cache dir on a common filesystem so the N clones dedup. **[TBD]**
+- **Filesystem layout.** Are `projects/`, `data/`, `users/` the **same filesystem/mount** or separate? Hard/reflinks only dedup within one FS; if the cache and the clones are on different mounts, DVC falls back to copy (no dedup) or symlink. What FS is it (ext4 / XFS / ZFS / NFS)? — ext4/NFS → hardlink; XFS/ZFS → reflink possible. **[TBD]**
+- **Backup of `<LAB_ROOT>/data/`.** Putting the remote there assumes the datastore is backed up. Confirm, and ideally an **off-server** copy (the whole point of a remote is durability beyond one box). **[TBD]**
+- **Access groups.** Confirm the per-project groups exist and their names, since `cache.shared group` + setgid must use them. **[TBD: group naming convention; who administers groups on scribe.]**
+- **Canonical `<LAB_ROOT>/data/` datasets** — should these be DVC-tracked too, or only project-specific data? Options: (a) leave them as-is (human-readable canonical store) and have projects reference them; (b) DVC-track a project's *copy/extract* of them under `projects/<proj>/data/`. Tracking the shared canonical store centrally is possible but heavier — likely defer. **[TBD]**
 
-The architecture above is sound; the open variables are physical:
-
-- **Same-filesystem requirement for dedup.** Hard/reflinks only work when the shared **cache** and the users' **working dirs** are on the *same* filesystem/mount. If `~/` (home) and `/data` are different mounts, hard/reflink fails and DVC falls back to `copy` (no dedup) or `symlink` (works cross-FS but cache files are read-only and a stray edit can confuse things). **[TBD: are home dirs and the data volume the same filesystem? what FS — ext4/ZFS/XFS/NFS?]** (reflink needs CoW: XFS/Btrfs/ZFS/APFS; ext4 → hardlink.)
-- **The remote must be on a backed-up volume**, ideally *different* from the cache volume — otherwise cache and "backup" share a failure domain. **[TBD: which path is actually backed up?]**
-- **Off-server copy?** A purely on-server remote dies with the server room. If the institution has S3/MinIO or a second host, a *second* remote (`dvc remote add backup s3://…` / `ssh://…`) gives off-site durability. **[TBD: any cloud/object storage or second host available?]**
-- **Permissions.** Shared cache + remote on a multi-user box need a common Unix group (e.g. `cel`), `chmod g+s` (setgid) on the dirs so new blobs inherit the group, and a sane `umask`. `cache.shared group` handles the file mode; the group + setgid is a sysadmin step. **[TBD: is there a `cel` group? who administers it?]**
-- **PII / restricted data.** A discrimination experiment's raw files with participant IDs on a *shared* cache means every lab member can read them. May warrant a separate restricted cache/remote with tighter group membership. **[TBD: access-control requirements for restricted data.]**
-
-### 7.4 Self-contained guardrails (the "no Claude Code" answer)
+### 7.5 Self-contained guardrails (the "no Claude Code" answer)
 
 The dangling-pointer risk (§5) was going to be caught by `/tools sync-status` — which won't exist on the server. The self-contained replacements, in order of preference:
 
@@ -216,7 +224,7 @@ The dangling-pointer risk (§5) was going to be caught by `/tools sync-status` �
 
 3. **Documented habit + a one-line health check.** `dvc status -c` ("Cache and remote are in sync" = safe) before ending a session. Belt-and-suspenders behind the hook.
 
-### 7.5 Install & environment **[TBD]**
+### 7.6 Install & environment **[TBD]**
 
 - Is `dvc` installable lab-wide (pip in a shared venv / conda / an environment module)? Pin one version across users (the pilot used 3.67.1). **[TBD]**
 - A `setup-dvc-server.sh` (plain bash, no Claude Code) should do, idempotently: set `cache.dir` / `cache.type` / `cache.shared`, add the remote, run `dvc install`, install the check hook, and `dvc pull`. This is the server analog of the laptop `templates/setup-machine.sh`.
@@ -225,7 +233,7 @@ The dangling-pointer risk (§5) was going to be caught by `/tools sync-status` �
 
 ## 8. Open questions / next steps
 
-1. **Pin the server volume facts in §7.3** — filesystem type, which path is backed up, same-FS-as-home, common group, any off-server/cloud option, restricted-data access controls. These gate the concrete config.
-2. **Write `setup-dvc-server.sh`** (§7.5) and the `pre-push` check hook (§7.4) — the self-contained setup + guardrail, replacing the Claude Code `/tools sync-status` idea on the server.
+1. **Pin the scribe facts in §7.4** — clone model (one shared clone per project vs. per-user clones), filesystem layout of `projects/`/`data/`/`users/`, backup of `<LAB_ROOT>/data/`, per-project group naming, whether canonical datasets get DVC-tracked. These gate the concrete config.
+2. **Write `setup-dvc-server.sh`** (§7.6) and the `pre-push` check hook (§7.5) — the self-contained setup + guardrail, replacing the Claude Code `/tools sync-status` idea on the server.
 3. Decide whether the lab guide lives in `docs/` here, or a CEL-owned repo (likely the latter, since it's institution-specific and server-coupled).
 4. Resolve the pilot's separate LFS loose end (pre-LFS PDF churn) — unrelated to DVC, tracked in the pilot CHANGELOG.
