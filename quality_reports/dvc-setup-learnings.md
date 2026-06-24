@@ -4,7 +4,7 @@
 **Started:** 2026-06-23
 **Companions:** `.claude/rules/data-version-control.md` (the rule), `quality_reports/plans/2026-05-05_lfs-dvc-migration-plan.md` (the plan), `quality_reports/plans/2026-05-05_lfs-vs-dvc-explainer.md` (concept primer), `quality_reports/session_logs/2026-06-23_dvc-pilot-push-completion.md` (the pilot session).
 
-> **Promotion path:** once this matures, the polished version can move to `docs/` (template-user-facing) and/or be exported to a CEL-owned repo as the lab's server guide. Server-specific sections are marked **[SERVER — TBD]** until we pin down the lab's setup.
+> **Promotion path:** this is the design/scratch doc. The polished guide belongs in the lab's existing MkDocs site — the **`cel_resource_hub` repo**, `docs/workflow-tips/` — as a sibling to `data-safety.md` / `gitignore-setup.md` / `local-server-sync.md` (see §8 for audiences & placement).
 
 ---
 
@@ -144,29 +144,38 @@ The gitignore/DVC mechanics above are **identical on a laptop and a server**. Th
 
 On a single shared server you want to make a deliberate choice about **both**, not just one.
 
-### 7.2 The scribe environment (known facts)
+### 7.2 The scribe environment (concrete facts)
 
-CEL's server is a **Linux box named `scribe`**. The lab root contains three subfolders:
+Source: the lab's own resource hub repo `cel_resource_hub` (`docs/workflow-tips/{working-on-scribe,data-safety,gitignore-setup,local-server-sync}.md`, `docs/resources/tools.md`).
 
-```
-<LAB_ROOT>/                  (exact absolute path on scribe — TBD)
-├── projects/
-│   └── <proj>/              project code + git clone(s); some have a data/ subfolder
-│       └── data/{raw,cleaned}/   ← project-specific data (natural DVC-track target)
-├── data/                    lab-maintained CANONICAL datasets — the shared datastore
-│   └── <proj-or-dataset>/   ← access-restricted: only members of the relevant project can read
-└── users/
-    └── <user>/              per-user space
-```
+- **Server:** `Scribe.ssds.ucdavis.edu` — UC Davis SSDS, Linux. Reachable only over the **DSS VPN** with **Kerberos** login.
+- **Lab root:** `/home/research/ca_ed_lab/`; projects live under `projects/<proj>/`. Some projects keep a `data/` subfolder.
+- **Group permissions:** members run **`go_sbac`** each login to set the **CA Education Lab group** so files are lab-readable. So there is a lab-wide group mechanism already; the per-project access restriction on the canonical datastore sits on top of it (exact mechanism — extra groups / dir perms — TBD).
+- **Analysis:** **Stata**, run in batch (`stata-mp -b do …`); no local install — Stata runs on Scribe.
+- **Clone model — confirmed:** *one shared project folder per project* that all members work in (not per-user clones). So a project's in-repo `.dvc/cache` is automatically shared by everyone who uses that folder — the simple case.
+- **Filesystem — confirmed:** everything is one filesystem → hardlinks work for cache dedup.
+- **git posture — confirmed:** git is *optional* lab-wide ("recommended, not required"); most members sync code by **FileZilla**, not git. **Only Christina uses git on Scribe**, so far only for `va_consolidated`. This is decisive for §7.6.
+- **Two data locations:** canonical lab datasets in `<lab>/data/` (access-restricted per project); project-specific data in `projects/<proj>/data/`. The latter is DVC's natural per-project target.
 
-Two facts drive the design:
+**The lab already has a mature data-safety model that DVC must not break:**
 
-1. **There are two data locations.** Canonical lab datasets live in `<LAB_ROOT>/data/` (shared, durable). Project-specific data lives in `<LAB_ROOT>/projects/<proj>/data/`. DVC's natural per-project track target is the latter; the former is shared source data (see §7.4 for how to treat it).
-2. **`<LAB_ROOT>/data/` is access-restricted per project** — only people on a project can read its datasets. This is almost certainly enforced by **per-project Unix groups**. This is the single most important constraint, and it rules out the lab-wide shared cache I'd sketched earlier.
+> *"Code lives on GitHub. Confidential student data lives only on Scribe. The two never mix."*
 
-### 7.3 Revised architecture: per-project, scoped to the project's access group
+GitHub repos are **public**. `data/`, `estimates/`, `output/` are gitignored; **a pre-push hook (`.githooks/pre-push`) aborts any `git push` carrying a `data/`/`estimates/` file** off the server (logs are tracked, scrubbed of PII). Restricted sources: CALPADS, CSAC, CalSCHLS, NSC, surveys with respondent emails.
 
-**Correction (driven by §7.2 fact 2):** do **not** use one lab-wide shared cache. A DVC cache/remote is content-addressed blobs in a directory; **access to the directory = access to the data** (DVC has no per-blob ACLs). Pooling all projects into one cache would let anyone with cache access read every project's restricted data — breaking the access model the lab already maintains. So scope DVC **per project**, reusing each project's existing access group:
+### 7.3 ⚠️ The #1 DVC rule for this lab: `dvc push` is a second data channel the pre-push hook can't see
+
+This is the most important thing in this section. The lab's entire safety model guards the **git → public-GitHub** channel (gitignore + the pre-push hook). **DVC introduces a *separate* channel — `dvc push` to a DVC *remote* — that those guards never inspect.** If a DVC remote is ever pointed off-Scribe (S3, Google Drive, a laptop, GitHub LFS), `dvc push` **exfiltrates restricted student data**, and the existing pre-push hook does **not** fire (it only scans git pushes). That is a FERPA-class incident.
+
+Non-negotiables for DVC in this lab:
+
+1. **The DVC remote MUST be an on-Scribe path** (or an institution-approved on-prem store) — **never** an external/cloud remote for restricted data. The on-Scribe remote in §7.4 isn't just convenient; it's a hard safety requirement.
+2. **Add a `dvc push` guard analogous to the git pre-push hook** — e.g., a wrapper / pre-`dvc push` check that the configured `remote.*.url` resolves under `/home/research/ca_ed_lab/` and refuses otherwise. The git pre-push hook cannot cover this; DVC needs its own.
+3. **`.dvc` pointer files are SAFE to commit to public GitHub** (they're just md5 + size + path — no data). But the existing pre-push hook blocks everything under `data/`; it needs a **carve-out to allow `*.dvc` pointers and `data/.gitignore`** while still blocking real data, or DVC pointers placed under `data/` will trip the guard (false positive).
+
+### 7.4 Architecture: per-project, on-Scribe, scoped to the project's access group
+
+A DVC cache/remote is content-addressed blobs in a directory; **directory access = data access** (DVC has no per-blob ACLs). So a lab-wide shared cache would let anyone with cache access read every project's restricted data. Scope DVC **per project**, reusing each project's existing access group, with the remote on Scribe (per §7.3):
 
 ```
 <LAB_ROOT>/projects/<proj>/        git clone + code (data/{raw,cleaned} are DVC-tracked)
@@ -186,17 +195,33 @@ dvc config cache.shared group              # group-writable cache so project mem
 # + sysadmin: project group owns the cache/remote dirs, `chmod g+s` (setgid) so new blobs inherit it
 ```
 
-### 7.4 What still gates the concrete config (narrowed by scribe facts)
+### 7.5 What still gates the concrete config
 
-- **Clone model — the big open one.** Does each project have **one shared clone** under `<LAB_ROOT>/projects/<proj>/` that members all work in, or does **each user clone** into `<LAB_ROOT>/users/<user>/`? This decides cache placement: one shared clone → the in-repo `.dvc/cache` is already shared, simplest; per-user clones → need a per-project shared cache dir on a common filesystem so the N clones dedup. **[TBD]**
-- **Filesystem layout.** Are `projects/`, `data/`, `users/` the **same filesystem/mount** or separate? Hard/reflinks only dedup within one FS; if the cache and the clones are on different mounts, DVC falls back to copy (no dedup) or symlink. What FS is it (ext4 / XFS / ZFS / NFS)? — ext4/NFS → hardlink; XFS/ZFS → reflink possible. **[TBD]**
-- **Backup of `<LAB_ROOT>/data/`.** Putting the remote there assumes the datastore is backed up. Confirm, and ideally an **off-server** copy (the whole point of a remote is durability beyond one box). **[TBD]**
-- **Access groups.** Confirm the per-project groups exist and their names, since `cache.shared group` + setgid must use them. **[TBD: group naming convention; who administers groups on scribe.]**
-- **Canonical `<LAB_ROOT>/data/` datasets** — should these be DVC-tracked too, or only project-specific data? Options: (a) leave them as-is (human-readable canonical store) and have projects reference them; (b) DVC-track a project's *copy/extract* of them under `projects/<proj>/data/`. Tracking the shared canonical store centrally is possible but heavier — likely defer. **[TBD]**
+Resolved by the scribe facts (§7.2): **clone model** = one shared project folder → the in-repo `.dvc/cache` is already shared, no separate shared-cache dir needed; **filesystem** = single FS → hardlink dedup works (`cache.type "hardlink,symlink"`). Still open:
 
-### 7.5 Self-contained guardrails (the "no Claude Code" answer)
+- **Backup of `/home/research/ca_ed_lab/data/`.** Putting the remote there assumes the datastore is backed up (user believes so; details unknown). Confirm, and ideally an **on-prem off-server** copy — but remember §7.3: any off-Scribe copy of restricted data must be institution-approved, never a personal cloud. **[TBD: backup details.]**
+- **The per-project access mechanism on `<lab>/data/`.** `go_sbac` sets a lab-wide group; the per-project restriction on the datastore sits on top (extra groups? dir perms?). `cache.shared group` + setgid need the right group name. **[TBD: how per-project restriction is enforced + group names.]**
+- **FS type** (ext4 / ZFS / XFS) — only affects whether reflink is available *on top of* hardlink; hardlink already works, so this is a nice-to-have. **[minor]**
+- **Canonical `<lab>/data/` datasets** — DVC-track centrally (Kramer's lab-wide use case, §7.0/audiences) or only project-specific data? Tracking the shared canonical store in place is heavier and changes how everyone reads those files — likely defer; start with project-folder data. **[TBD]**
 
-The dangling-pointer risk (§5) was going to be caught by `/tools sync-status` — which won't exist on the server. The self-contained replacements, in order of preference:
+### 7.6 Self-contained guardrails (the "no Claude Code" answer)
+
+There are **two** things to guard, and on this server **git hooks only reach git users** — and only Christina uses git on Scribe (§7.2). So `dvc install`'s git-hook approach covers Christina's git-based projects; for the FileZilla majority (and for Kramer's possible no-`scm` lab-wide use, §7.7) the guard must be a **standalone script** run as part of the workflow, or wrapped into the data steward's process. Plan for both.
+
+**Guard A — data egress (the safety guard, from §7.3).** Before any `dvc push`, verify the remote stays on Scribe:
+
+```bash
+# refuse dvc push if the default remote points off /home/research/ca_ed_lab/
+url=$(dvc remote list | awk '$1=="storage"{print $2}')
+case "$url" in
+  /home/research/ca_ed_lab/*) : ;;                    # OK — on Scribe
+  *) echo "🛑 DVC remote is OFF-Scribe ($url) — refusing push of restricted data" >&2; exit 1 ;;
+esac
+```
+
+This is the DVC analog of the lab's `.githooks/pre-push` data-egress guard, covering the channel that hook can't see. Ship it as a tracked script and/or a `pre-push` git hook.
+
+**Guard B — dangling pointer (the durability guard, from §5).** The dangling-pointer risk was going to be caught by `/tools sync-status` — which won't exist on the server. Self-contained replacements, in order of preference:
 
 1. **`dvc install` — native git hooks (DVC's built-in, fully self-contained).** Wires DVC into plain git hooks so the two-step rhythm stops depending on memory:
 
@@ -224,16 +249,27 @@ The dangling-pointer risk (§5) was going to be caught by `/tools sync-status` �
 
 3. **Documented habit + a one-line health check.** `dvc status -c` ("Cache and remote are in sync" = safe) before ending a session. Belt-and-suspenders behind the hook.
 
-### 7.6 Install & environment **[TBD]**
+### 7.7 Install & environment **[TBD]**
 
 - Is `dvc` installable lab-wide (pip in a shared venv / conda / an environment module)? Pin one version across users (the pilot used 3.67.1). **[TBD]**
 - A `setup-dvc-server.sh` (plain bash, no Claude Code) should do, idempotently: set `cache.dir` / `cache.type` / `cache.shared`, add the remote, run `dvc install`, install the check hook, and `dvc pull`. This is the server analog of the laptop `templates/setup-machine.sh`.
 
 ---
 
-## 8. Open questions / next steps
+## 8. Audiences & where the guide lives
 
-1. **Pin the scribe facts in §7.4** — clone model (one shared clone per project vs. per-user clones), filesystem layout of `projects/`/`data/`/`users/`, backup of `<LAB_ROOT>/data/`, per-project group naming, whether canonical datasets get DVC-tracked. These gate the concrete config.
-2. **Write `setup-dvc-server.sh`** (§7.6) and the `pre-push` check hook (§7.5) — the self-contained setup + guardrail, replacing the Claude Code `/tools sync-status` idea on the server.
-3. Decide whether the lab guide lives in `docs/` here, or a CEL-owned repo (likely the latter, since it's institution-specific and server-coupled).
-4. Resolve the pilot's separate LFS loose end (pre-LFS PDF churn) — unrelated to DVC, tracked in the pilot CHANGELOG.
+The guide's home is the lab's existing MkDocs site, the **`cel_resource_hub` repo** — a DVC page belongs in `docs/workflow-tips/` as a sibling to `data-safety.md`, `gitignore-setup.md`, `local-server-sync.md`, `reproducible-pipelines.md` (match the hub's first-person, admonition-heavy voice; ADR 0003 "personal-project-voice"). It should cross-link the egress story to `data-safety.md`/`local-server-sync.md#…pre-push-hook`.
+
+Two audiences (per Christina), which the page should serve as two tracks:
+
+1. **Kramer (lab data manager, has access to *all* lab data).** Awareness-level: DVC *could* version/dedup/integrity-check the whole `<lab>/data/` store. Caveats: tracking the canonical store in place changes how everyone reads it; and since most of the lab doesn't use git, this likely means **`dvc init --no-scm`** (DVC without git) or a steward-owned git repo of pointers — which trades away the "time-travel to the data at draft X" benefit. Frame as "here's the tool, your call."
+2. **Project teams maintaining data in project folders.** Concrete: per-project DVC (the §7.4 architecture), remote on Scribe, pointers safe on public GitHub. For the FileZilla (non-git) majority, `--no-scm` or a single git-using steward per project.
+
+## 9. Open questions / next steps
+
+1. **Pin the remaining scribe facts (§7.5)** — datastore backup details, the per-project access/group mechanism on `<lab>/data/`, and whether canonical datasets get DVC-tracked centrally. These gate the concrete config; clone model + filesystem are already resolved.
+2. **Decide the git posture for the guide** — recommend per-project `--no-scm` (simplest for non-git users) vs. a steward-owned pointer repo (keeps versioning). This shapes both tracks above.
+3. **Write the two self-contained scripts** (§7.6): the **egress guard** (Guard A — remote-stays-on-Scribe) and the **dangling-pointer check** (Guard B), plus a `setup-dvc-server.sh` (§7.7). These replace the Claude Code `/tools sync-status` idea server-side.
+4. **Patch the lab's existing `.githooks/pre-push`** to allow `*.dvc` pointers + `data/.gitignore` (safe) while still blocking real data (§7.3 rule 3).
+5. **Draft the DVC page in `cel_resource_hub`** once 1–2 are settled.
+6. Resolve the pilot's separate LFS loose end (pre-LFS PDF churn) — unrelated to DVC, tracked in the pilot CHANGELOG.
