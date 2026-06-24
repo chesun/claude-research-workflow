@@ -269,7 +269,7 @@ Two audiences (per Christina), which the page should serve as two tracks:
 
 1. **Pin the remaining scribe facts (§7.5)** — datastore backup details, the per-project access/group mechanism on `<lab>/data/`, and whether canonical datasets get DVC-tracked centrally. These gate the concrete config; clone model + filesystem are already resolved.
 2. **Decide the git posture for the guide** — recommend per-project `--no-scm` (simplest for non-git users) vs. a steward-owned pointer repo (keeps versioning). This shapes both tracks above.
-3. **Write the two self-contained scripts** (§7.6): the **egress guard** (Guard A — remote-stays-on-Scribe) and the **dangling-pointer check** (Guard B), plus a `setup-dvc-server.sh` (§7.7). These replace the Claude Code `/tools sync-status` idea server-side.
+3. ✅ **DONE (2026-06-23)** — the three self-contained scripts are built and tested (13/13 cases against the BDD pilot + a throwaway repo): `templates/dvc/{dvc-egress-guard,dvc-sync-check,setup-dvc-server}.sh` (+ `README.md`). Egress guard (Guard A), dangling-pointer check (Guard B), idempotent setup. Bug found & fixed in testing: never parse `dvc remote list` (it wraps URLs to terminal width) — use `dvc config --list`. These replace the Claude Code `/tools sync-status` idea server-side.
 4. **Patch the lab's existing `.githooks/pre-push`** to allow `*.dvc` pointers + `data/.gitignore` (safe) while still blocking real data (§7.3 rule 3).
 5. **Draft the DVC page in `cel_resource_hub`** once 1–2 are settled.
 6. Resolve the pilot's separate LFS loose end (pre-LFS PDF churn) — unrelated to DVC, tracked in the pilot CHANGELOG.
