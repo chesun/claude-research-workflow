@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# .githooks/pre-push — DVC-aware data-egress guard for CEL projects.
+#
+# A repo gets ONE pre-push hook, so this combines both protections:
+#   (1) Block restricted DATA from leaving via git — the lab's existing guard
+#       (faithful to va_consolidated/.githooks/pre-push) WITH a carve-out so
+#       DVC's safe metadata is allowed through: *.dvc pointers (hashes, not data),
+#       data/.gitignore (DVC writes it), and the MANIFEST/PROVENANCE/CHANGELOG
+#       data-doc contract. Real data files under data/ or estimates/ stay blocked.
+#   (2) Block restricted data leaving via the DVC channel (`dvc push` to an
+#       off-server remote) and warn on un-pushed blobs — by calling the two DVC
+#       guards installed alongside this hook (dvc-egress-guard.sh, dvc-sync-check.sh).
+#
+# Install (per machine):  git config core.hooksPath .githooks
+# Override (audited via shell history):  git push --no-verify
+set -uo pipefail
+
+HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# ---- (2) DVC-channel guards — run first (cheapest, and the most dangerous channel) ----
+[ -x "$HOOK_DIR/dvc-egress-guard.sh" ] && { "$HOOK_DIR/dvc-egress-guard.sh" || exit 1; }
+[ -x "$HOOK_DIR/dvc-sync-check.sh" ]  && { "$HOOK_DIR/dvc-sync-check.sh"  || true; }
+
+# ---- (1) git-channel data-egress block, with DVC carve-out ----
+forbidden_pattern='^(data|estimates)/'
+# Allowed even though the parent dir is blocked:
+#   .gitkeep (original) · *.dvc pointers · .gitignore · the data-doc contract md
+allowed_pattern='(^(data|data/raw|data/cleaned|estimates)/\.gitkeep$)|(^(data|estimates)/.*\.dvc$)|(^(data|estimates)/(.*/)?\.gitignore$)|(^data/(MANIFEST|PROVENANCE|CHANGELOG)\.md$)'
+
+zero='0000000000000000000000000000000000000000'
+violations=0
+violation_log=""
+
+# githooks(5): <local ref> <local sha> <remote ref> <remote sha>
+while read -r local_ref local_sha remote_ref remote_sha; do
+    [ "$local_sha" = "$zero" ] && continue
+    if [ "$remote_sha" = "$zero" ]; then
+        files=$(git rev-list "$local_sha" --not --remotes 2>/dev/null \
+                | xargs -r -I {} git show --name-only --pretty=format: {} 2>/dev/null \
+                | sort -u | grep -v '^$' || true)
+    else
+        files=$(git diff --name-only "${remote_sha}..${local_sha}" 2>/dev/null || true)
+    fi
+    [ -z "$files" ] && continue
+    bad_files=$(printf '%s\n' "$files" | grep -E "$forbidden_pattern" | grep -vE "$allowed_pattern" || true)
+    if [ -n "$bad_files" ]; then
+        violations=1
+        violation_log="${violation_log}
+  ref: ${local_ref} -> ${remote_ref}
+$(printf '%s\n' "$bad_files" | sed 's/^/    /')"
+    fi
+done
+
+if [ "$violations" -ne 0 ]; then
+    {
+        echo ""
+        echo "ERROR: refusing to push — restricted data files in the commit range:"
+        echo "$violation_log"
+        echo ""
+        echo "Allowed through: *.dvc pointers, data/.gitignore, and the"
+        echo "MANIFEST/PROVENANCE/CHANGELOG contract. Actual data files are NOT."
+        echo ""
+        echo "Remediation:  git rm --cached <file>  then re-commit (--amend or rebase)."
+        echo "Emergency override (audited):  git push --no-verify"
+    } >&2
+    exit 1
+fi
+exit 0

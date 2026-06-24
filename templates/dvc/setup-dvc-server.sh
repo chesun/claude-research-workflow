@@ -57,30 +57,38 @@ echo "✓ remote 'storage' → $REMOTE_PATH"
 # 4. verify the egress guard is satisfied for this configuration
 DVC_ALLOWED_REMOTE_PREFIX="$ALLOWED" "$here/dvc-egress-guard.sh"
 
-# 5. wire the guards into the repo's pre-push hook — SAFELY.
-#    Respect core.hooksPath (the CEL convention is `.githooks/`), and NEVER
-#    clobber an existing pre-push (e.g. the lab's data-egress hook). Create one
-#    if absent; otherwise print the lines to add by hand.
+# 5. install the DVC-aware pre-push hook + guard scripts into the repo's hooks dir.
+#    core.hooksPath-aware (CEL convention is `.githooks/`); NEVER clobbers an
+#    existing pre-push (e.g. the lab's data-egress hook) — instructs instead.
 hookdir="$(git config --get core.hooksPath || true)"
-[ -n "$hookdir" ] || hookdir="$(git rev-parse --git-path hooks)"
-hook="$hookdir/pre-push"
-guard_block="# --- DVC guards (added by setup-dvc-server.sh) ---
-DVC_ALLOWED_REMOTE_PREFIX=\"$ALLOWED\" \"$here/dvc-egress-guard.sh\" || exit 1   # block off-server remotes
-\"$here/dvc-sync-check.sh\" || true                                              # warn on unpushed data"
+if [ -z "$hookdir" ]; then
+  if [ -d .githooks ]; then
+    # lab convention: tracked hooks in .githooks/ — target it and make git use it
+    hookdir=".githooks"; git config core.hooksPath .githooks
+    echo "  set core.hooksPath=.githooks (lab convention) so hooks fire"
+  else
+    hookdir="$(git rev-parse --git-path hooks)"
+  fi
+fi
+mkdir -p "$hookdir"
+# guard scripts live next to the hook so it can call them via $(dirname) (idempotent)
+cp "$here/dvc-egress-guard.sh" "$here/dvc-sync-check.sh" "$hookdir/"
+chmod +x "$hookdir/dvc-egress-guard.sh" "$hookdir/dvc-sync-check.sh"
 
+hook="$hookdir/pre-push"
 if [ ! -e "$hook" ]; then
-  mkdir -p "$hookdir"
-  { printf '#!/usr/bin/env bash\nset -e\n\n'; printf '%s\n' "$guard_block"; } > "$hook"
-  chmod +x "$hook"
-  echo "✓ created pre-push hook with DVC guards → $hook"
+  cp "$here/githooks-pre-push" "$hook"; chmod +x "$hook"
+  echo "✓ installed DVC-aware pre-push hook + guards → $hookdir/"
 elif grep -q 'dvc-egress-guard.sh' "$hook" 2>/dev/null; then
-  echo "✓ DVC guards already present in $hook"
+  echo "✓ DVC already wired into $hook"
 else
   echo "ℹ️  $hook already exists (e.g. the lab's data-egress hook) — NOT overwriting."
-  echo "    Add these lines to it so DVC is guarded too:"
-  echo "    ----"
-  printf '%s\n' "$guard_block" | sed 's/^/    /'
-  echo "    ----"
+  echo "    Make it DVC-aware (reference: $here/githooks-pre-push):"
+  echo "      1) extend its allowed_pattern to permit *.dvc, data/.gitignore, and"
+  echo "         the MANIFEST/PROVENANCE/CHANGELOG contract (so pointers can push);"
+  echo "      2) add near the top (guard scripts were just copied into $hookdir/):"
+  echo '           "$(dirname "$0")/dvc-egress-guard.sh" || exit 1'
+  echo '           "$(dirname "$0")/dvc-sync-check.sh" || true'
 fi
 
 echo "✅ DVC server setup complete."

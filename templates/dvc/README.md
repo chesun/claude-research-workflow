@@ -2,7 +2,12 @@
 
 Three plain-bash scripts for running DVC on a shared analysis server **without Claude Code** — built for the CEL Scribe setup but parameterized for any site. They make `dvc push` safe for restricted data and catch the dangling-pointer failure mode. Design rationale: `quality_reports/dvc-setup-learnings.md` (esp. §7).
 
-All three require `bash` + `dvc` (and `setup-dvc-server.sh` requires a git repo). Tested against the `belief_distortion_discrimination` pilot and throwaway git repos — including the git-prerequisite block, idempotent re-runs, and the never-clobber-an-existing-hook path (2026-06-23).
+All require `bash` + `dvc` (and `setup-dvc-server.sh` requires a git repo). Validated 2026-06-23: 14 carve-out cases (real data blocked; pointers/`.gitignore`/contract/code allowed) + a 15-step end-to-end Scribe simulation (git + on-server remote + the real hook: pointer pushes through, `dvc push` to on-server remote, real-data push blocked, off-server remote blocked, old-version restore survives `dvc gc -A`).
+
+## Operational gotchas (worth surfacing in the guide)
+
+- **Read-only working files.** With a hardlink/symlink cache, DVC-tracked files are checked out **read-only** to protect the cache. To edit one in place, `dvc unprotect <path>` first (or just have your script regenerate it). Then `dvc add` the new version.
+- **Hook path ordering.** `setup-dvc-server.sh` installs into `.githooks/` when that dir exists (and sets `core.hooksPath`). If you set `core.hooksPath` *after* running setup, hooks installed into `.git/hooks/` won't fire. Configure the hooks path (or have `.githooks/`) before/at setup.
 
 ## The scripts
 
@@ -10,7 +15,8 @@ All three require `bash` + `dvc` (and `setup-dvc-server.sh` requires a git repo)
 |---|---|---|
 | `dvc-egress-guard.sh` | **Data egress.** Restricted data leaving the server via a misconfigured (off-site) DVC remote — the channel the git pre-push hook can't see. | Refuses (exit 1) if any DVC remote is not under the approved prefix. |
 | `dvc-sync-check.sh` | **Dangling pointer.** A `.dvc` pointer committed/used but the bytes never `dvc push`ed (cache exists only locally). | Warns (exit 0), or blocks (exit 1) with `DVC_SYNC_BLOCK=1`. |
-| `setup-dvc-server.sh` | — | Idempotent per-project setup (**git repo required**): `dvc init`, hardlink+group-shared cache, on-server remote, egress verification, and safe pre-push hook wiring. |
+| `setup-dvc-server.sh` | — | Idempotent per-project setup (**git repo required**): `dvc init`, hardlink+group-shared cache, on-server remote, egress verification, and safe pre-push hook wiring (targets `.githooks/` per lab convention). |
+| `githooks-pre-push` | Both, in one hook | DVC-aware replacement for the lab's `.githooks/pre-push`: blocks real data on the git channel **with a carve-out** for `*.dvc` / `data/.gitignore` / the doc contract, and calls the two guards above. Install for a new project; for an existing lab hook, apply the carve-out + add the two guard calls. |
 
 ## Configuration
 
