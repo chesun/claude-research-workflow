@@ -174,6 +174,13 @@ NEVER_SURNAMES = frozenset({
     "methodology", "methodologies", "handbook", "handbooks", "encyclopedia",
     "review", "reviews", "annual", "bulletin", "bulletins",
     "journal", "journals", "volume", "volumes", "issue", "issues",
+    # ADR / workflow status words. These appear capitalized right before an
+    # ISO date ("Decided 2026-06-03", "Superseded by #0020 (2026)") in ADR
+    # headers and in prose that quotes them. The all-caps filter catches
+    # COMPLETED/DRAFT-style markers but not these mixed-case status words.
+    "decided", "proposed", "superseded", "supersedes", "pending",
+    "resolved", "updated", "revised", "committed", "delivered", "drafted",
+    "status",
 })
 
 
