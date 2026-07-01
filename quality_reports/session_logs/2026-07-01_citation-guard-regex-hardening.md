@@ -18,9 +18,13 @@ Catch-up + agenda session, then execute the citation-guard regex hardening umbre
 | **ISO-date/range guard** — `(?![-–—/]\d)` after year in AUTHOR_YEAR; kills "Word YYYY-MM-DD" class structurally | DONE, committed | `53c0a99` |
 | Blocklist cluster 2: `deferred`, `open` + changes-table verbs (added/new/fixed/removed/inserted/replaced/changed/extended/deleted/dropped/copied/merged/patched) | DONE, committed (9 tests) | `48bd093` |
 | **Comma-list lead-author drop** (user-reported mid-session): 3-slot regex restarted mid-list — `Bohren, Imas, Rosenberg (2019)` → `imas_rosenberg_2019` (test string, not a framing claim); AEA 4-author form also affected. Fixed: single repeated `authors` group + `AUTHOR_SEP` split in Python; handles any author count. Diagnosis row in verification ledger. | DONE, committed (5 tests) | `c40a3ec` |
-| Unicode proposal (`quality_reports/plans/proposals/2026-05-07_primary-source-hook-unicode-fix.md`): `_ascii_fold` (NFD + precomposed map) at top of `extract_citations`; hyphen→underscore fallback in `matching_notes_files` (startswith check) + `paper_pdf_exists_for` (split stem surnames on `[_-]`); fold citation-line text when scanning; rule-doc unicode paragraph | TODO (after cluster 2) | — |
-| Rule-doc updates (`primary-source-first.md`): date guard + new blocklist categories + unicode paragraph | TODO (with respective commits or one docs commit) | — |
-| Housekeeping: TODO umbrella update, mark proposal implemented | TODO (final commit) | — |
+| Unicode proposal implemented: `_ascii_fold` (NFD + precomposed map) before extraction; hyphen→underscore fallback in `matching_notes_files` + `paper_pdf_exists_for`; citation-metadata lines folded. Verified: 116-check suite (16 new), stop-hooks 22/22, py_compile, end-to-end PreToolUse run blocks accented citation with folded stem `muller_2020` (previously a silent enforcement MISS — accents aborted the match entirely) | DONE, committed | `a4084f1` |
+| Rule-doc updates (`primary-source-first.md`): blocklist categories + structural-guards subsection + unicode paragraph | DONE, committed | `1eb45b3` |
+| Housekeeping: TODO umbrella updated, proposal marked IMPLEMENTED | DONE | (this commit) |
+
+## Umbrella outcome
+
+All four fix classes landed 2026-07-01. Suite: 116 checks + 22 stop-hooks, all green. **Open:** propagate the 6 hook commits (`aaba644`…`1eb45b3`) to overlays + consumers; bdm_bic natively has only the status-word fix. After propagation, remove BDD's retroactive `primary-source-ok` overrides for the accented citations the unicode bug forced.
 
 ## Key implementation facts (for continuation)
 

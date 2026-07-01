@@ -1,6 +1,7 @@
 # Proposal: Unicode-aware citation parsing in `primary_source_lib.py`
 
 **Date:** 2026-05-07
+**Status:** IMPLEMENTED 2026-07-01 (workflow commit `a4084f1`) — `_ascii_fold` with precomposed map (Change 1 + 1b) applied in `extract_citations`; hyphen→underscore fallback landed in `matching_notes_files` + `paper_pdf_exists_for` (shared lib, not per-hook helpers); regression tests + rule-doc paragraph included. Remaining per-project step: remove retroactive `primary-source-ok` overrides in BDD once the fix propagates.
 **Source repo:** copy this to the main workflow repo (`claude-code-my-workflow` or wherever the canonical hooks live), apply the fix, and re-sync to projects.
 **Affected files:**
 
