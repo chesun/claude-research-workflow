@@ -177,6 +177,35 @@ assert_no_match("The window Sample 2018-2022 covers five cohorts.", "'Sample 201
 assert_matches("We follow Adams (2014) throughout.", {"adams_2014"}, "real citation unaffected by date guard")
 assert_matches("Estimates match Adams (2014b) closely.", {"adams_2014"}, "letter-suffix citation unaffected by date guard")
 
+print("\n=== Comma-separated author lists keep the lead author ===")
+# Regression: the 3-slot regex restarted mid-list and dropped the lead
+# author ('Bohren, Imas, Rosenberg (2019)' -> imas_rosenberg_2019).
+assert_matches(
+    "As shown in Bohren, Imas, Rosenberg (2019), beliefs distort.",
+    {"bohren_imas_rosenberg_2019"},
+    "comma-only 3-author list keeps lead author",
+)
+assert_matches(
+    "See Smith, Jones, Brown, and Lee (2024) for details.",
+    {"smith_jones_brown_lee_2024"},
+    "AEA 4-author Oxford form keeps lead author",
+)
+assert_matches(
+    "Per Adams, Baker, Clark, Davis, and Evans (2020), effects persist.",
+    {"adams_baker_clark_davis_evans_2020"},
+    "5-author list captured in full",
+)
+assert_matches(
+    "Following Chakraborty & Kendall 2025, we elicit beliefs.",
+    {"chakraborty_kendall_2025"},
+    "ampersand pair still extracts",
+)
+assert_matches(
+    "Results echo Brown et al. (2025) closely.",
+    {"brown_2025"},
+    "et al. still extracts lead author only",
+)
+
 print("\n=== Hyphenated method-name compound (should split into stem) ===")
 assert_matches(
     "Following the Chetty-Friedman-Rockoff (2014) approach...",

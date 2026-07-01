@@ -109,17 +109,33 @@ KNOWN_SURNAMES = _load_surname_allowlist()
 #    never immediately followed by dash/slash + digit. This kills the whole
 #    "CapitalizedWord YYYY-MM-DD" false-positive class structurally —
 #    including words no blocklist will ever enumerate.
+#
+# 4. **Author list is a single repeated group, split in Python.** The old
+#    pattern had exactly three author slots (`first`/`second`/`third`) with
+#    the third requiring an Oxford `", and"`. Comma-only lists
+#    (`Bohren, Imas, Rosenberg (2019)`) and the AEA 4-author form
+#    (`Smith, Jones, Brown, and Lee (2024)`) didn't fit, so the match
+#    anchored at the lead author FAILED and the regex restarted mid-list —
+#    silently dropping the lead author (`imas_rosenberg_2019`,
+#    `jones_brown_lee_2024`). Capturing the whole list as one span and
+#    splitting on `,`/`and`/`&` in `extract_citations` handles any author
+#    count and keeps the lead author as the head that filters apply to.
 AUTHOR_YEAR = re.compile(
     r"""
     \b
-    (?P<first>[A-Z][A-Za-z\-']*[A-Za-z])
-    (?:\s*(?:,|and|&)\s*(?P<second>[A-Z][A-Za-z\-']*[A-Za-z]))?
-    (?:\s*(?:,\s*and|&)\s*(?P<third>[A-Z][A-Za-z\-']*[A-Za-z]))?
+    (?P<authors>
+        [A-Z][A-Za-z\-']*[A-Za-z]
+        (?:(?:\s*,\s*(?:and\s+)?|\s+and\s+|\s*&\s*)[A-Z][A-Za-z\-']*[A-Za-z])*
+    )
     (?:\s+et\s+al\.?)?
     (?:\s+\(?|\(|,\s*\(?)(?P<year>(?:19|20)\d{2})(?![-–—/]\d)[a-z]?\)?
     """,
     re.VERBOSE,
 )
+
+# Splits a captured author-list span into individual surname tokens.
+# Mirrors the separator alternation inside AUTHOR_YEAR.
+AUTHOR_SEP = re.compile(r"\s*(?:,\s*(?:and\s+)?|\s+and\s+|\s*&\s*)\s*")
 
 # Escape hatch: <!-- primary-source-ok: stem1, stem2 -->
 # Use non-greedy `.+?` with the explicit `-->` terminator so stems containing
@@ -307,18 +323,17 @@ def extract_citations(text: str) -> list[tuple[str, str]]:
     allowlist_active = bool(KNOWN_SURNAMES)
 
     for match in AUTHOR_YEAR.finditer(text):
-        first = match.group("first") or ""
-        second = match.group("second") or ""
-        third = match.group("third") or ""
+        authors_span = match.group("authors") or ""
         year = match.group("year") or ""
 
         # Defense in depth: strip trailing hyphens/apostrophes from surname
         # captures. Real surnames don't end in `-` or `'`. If one slips through
         # (e.g., from a malformed compound the year-separator filter didn't
         # catch), strip rather than propagate to the stem.
-        first = first.rstrip("-'")
-        second = second.rstrip("-'")
-        third = third.rstrip("-'")
+        names = [n.rstrip("-'") for n in AUTHOR_SEP.split(authors_span) if n]
+        if not names:
+            continue
+        first, rest = names[0], names[1:]
 
         # Filter 1: hard-coded blocklist — independent of allowlist
         if first.lower() in NEVER_SURNAMES:
@@ -349,7 +364,7 @@ def extract_citations(text: str) -> list[tuple[str, str]]:
         # Filter 4: allowlist + surname collection
         if len(first_parts) > 1:
             # Decomposed compound; treat each part as a surname slot
-            all_parts = first_parts + [p for p in [second, third] if p]
+            all_parts = first_parts + rest
             if allowlist_active:
                 if first_parts[0].lower() not in KNOWN_SURNAMES:
                     continue
@@ -361,9 +376,9 @@ def extract_citations(text: str) -> list[tuple[str, str]]:
             if allowlist_active:
                 if first.lower() not in KNOWN_SURNAMES:
                     continue
-                surnames = [s for s in [first, second, third] if s and s.lower() in KNOWN_SURNAMES]
+                surnames = [s for s in [first] + rest if s.lower() in KNOWN_SURNAMES]
             else:
-                surnames = [s for s in [first, second, third] if s]
+                surnames = [first] + rest
 
         if not surnames:
             continue
