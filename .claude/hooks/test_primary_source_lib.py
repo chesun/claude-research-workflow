@@ -154,6 +154,17 @@ assert_matches(
     "three surnames + year",
 )
 
+print("\n=== ADR status words + changes-table verbs (should not match) ===")
+assert_no_match("Status: Decided (2026) per the ADR.", "'Decided (2026)'")
+assert_no_match("Marked Superseded (2026) by ADR-0021.", "'Superseded (2026)'")
+assert_no_match("Left as Deferred (2026) in the tracker.", "'Deferred (2026)'")
+assert_no_match("Still Open (2026) in the backlog.", "'Open (2026)'")
+assert_no_match("Row reads Added (2026) in the changes table.", "'Added (2026)'")
+assert_no_match("Cell says Fixed (2026) with a link.", "'Fixed (2026)'")
+assert_no_match("Entry Merged (2026) into main.", "'Merged (2026)'")
+assert_no_match("Item Dropped (2026) from scope.", "'Dropped (2026)'")
+assert_no_match("Line Patched (2026) in hotfix.", "'Patched (2026)'")
+
 print("\n=== ISO-date / range guard: year opening a date is not a citation ===")
 # Structural guard: (?![-–—/]\d) after the year. Mid-sentence capitalized
 # words followed by full dates must not extract — no blocklist entry needed.

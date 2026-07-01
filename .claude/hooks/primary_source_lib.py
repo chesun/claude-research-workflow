@@ -188,7 +188,13 @@ NEVER_SURNAMES = frozenset({
     # COMPLETED/DRAFT-style markers but not these mixed-case status words.
     "decided", "proposed", "superseded", "supersedes", "pending",
     "resolved", "updated", "revised", "committed", "delivered", "drafted",
-    "status",
+    "status", "deferred", "open",
+    # Changes-table verbs. Table cells and changelog lines routinely open
+    # with a capitalized verb followed by a date-like string ("Added
+    # 2026-07-01", "Fixed (2026)"). The ISO-date guard in AUTHOR_YEAR
+    # catches the full-date forms; these entries catch the bare-year forms.
+    "added", "new", "fixed", "removed", "inserted", "replaced", "changed",
+    "extended", "deleted", "dropped", "copied", "merged", "patched",
 })
 
 
