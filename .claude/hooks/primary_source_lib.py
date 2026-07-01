@@ -101,6 +101,14 @@ KNOWN_SURNAMES = _load_surname_allowlist()
 # `Cameron-Miller and Eyting- (2024)` (which after the year-separator fix
 # alone still parsed because ` (` is a valid separator). Constraint 1
 # prevents `Eyting-` from being captured at all.
+#
+# 3. **Year must not open a full date or range.** `(?![-–—/]\d)` after the
+#    year digits rejects matches where the "year" is really the leading
+#    component of an ISO date (`Kickoff 2026-09-01`), a slashed date
+#    (`2026/07/15`), or a dash range (`2019–2021`). Real citation years are
+#    never immediately followed by dash/slash + digit. This kills the whole
+#    "CapitalizedWord YYYY-MM-DD" false-positive class structurally —
+#    including words no blocklist will ever enumerate.
 AUTHOR_YEAR = re.compile(
     r"""
     \b
@@ -108,7 +116,7 @@ AUTHOR_YEAR = re.compile(
     (?:\s*(?:,|and|&)\s*(?P<second>[A-Z][A-Za-z\-']*[A-Za-z]))?
     (?:\s*(?:,\s*and|&)\s*(?P<third>[A-Z][A-Za-z\-']*[A-Za-z]))?
     (?:\s+et\s+al\.?)?
-    (?:\s+\(?|\(|,\s*\(?)(?P<year>(?:19|20)\d{2})[a-z]?\)?
+    (?:\s+\(?|\(|,\s*\(?)(?P<year>(?:19|20)\d{2})(?![-–—/]\d)[a-z]?\)?
     """,
     re.VERBOSE,
 )

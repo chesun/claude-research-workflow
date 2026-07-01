@@ -154,6 +154,18 @@ assert_matches(
     "three surnames + year",
 )
 
+print("\n=== ISO-date / range guard: year opening a date is not a citation ===")
+# Structural guard: (?![-–—/]\d) after the year. Mid-sentence capitalized
+# words followed by full dates must not extract — no blocklist entry needed.
+assert_no_match("The milestone Kickoff 2026-09-01 was set by the team.", "'Kickoff 2026-09-01' (ISO date)")
+assert_no_match("See the entry Baseline 2026-01-15 in the ledger.", "'Baseline 2026-01-15' (ISO date)")
+assert_no_match("Per the row Snapshot 2026/07/15 in the table.", "'Snapshot 2026/07/15' (slashed date)")
+assert_no_match("The panel Coverage 2019–2021 spans three years.", "'Coverage 2019–2021' (en-dash range)")
+assert_no_match("The window Sample 2018-2022 covers five cohorts.", "'Sample 2018-2022' (hyphen range)")
+# Real citations unaffected, including the letter-suffix form.
+assert_matches("We follow Adams (2014) throughout.", {"adams_2014"}, "real citation unaffected by date guard")
+assert_matches("Estimates match Adams (2014b) closely.", {"adams_2014"}, "letter-suffix citation unaffected by date guard")
+
 print("\n=== Hyphenated method-name compound (should split into stem) ===")
 assert_matches(
     "Following the Chetty-Friedman-Rockoff (2014) approach...",
