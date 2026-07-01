@@ -23,6 +23,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import unicodedata
 from pathlib import Path
 from typing import Iterable
 
@@ -250,6 +251,36 @@ def is_enforceable(rel_path: str) -> bool:
     return any(re.search(p, rel_path) for p in ENFORCEABLE_PATTERNS)
 
 
+# Precomposed Latin letters with no combining-mark NFD decomposition.
+# Covers the cases that matter for academic econ citations (Polish stroke,
+# Nordic ø, German ß, French/Old English ligatures, Icelandic eth/thorn).
+_PRECOMPOSED_MAP = str.maketrans({
+    "ł": "l", "Ł": "L",
+    "ø": "o", "Ø": "O",
+    "ß": "ss",
+    "æ": "ae", "Æ": "Ae",
+    "œ": "oe", "Œ": "Oe",
+    "ð": "d", "Ð": "D",
+    "þ": "th", "Þ": "Th",
+})
+
+
+def _ascii_fold(text: str) -> str:
+    """NFD-decompose, strip combining marks, then map precomposed letters.
+
+    "Székely" → "Szekely", "García-Pérez" → "Garcia-Perez", "Müller" →
+    "Muller", "Łukasz" → "Lukasz". The AUTHOR_YEAR char classes are
+    ASCII-only, so an accented character mid-name previously aborted the
+    match and the regex restarted after it — "Székely-Rizzo 2013" parsed
+    as rizzo_2013 (wrong author, wrong stem), and the hook then demanded
+    a notes file that will never exist. Reading-notes filenames already
+    use ASCII stems, so folding before extraction makes both ends agree.
+    """
+    nfd = unicodedata.normalize("NFD", text)
+    stripped = "".join(c for c in nfd if unicodedata.category(c) != "Mn")
+    return stripped.translate(_PRECOMPOSED_MAP)
+
+
 def _mask_code_spans(text: str) -> str:
     """Replace inline-code and code-fenced content with same-length whitespace.
 
@@ -317,7 +348,7 @@ def extract_citations(text: str) -> list[tuple[str, str]]:
        surname must appear in it. If empty (default for new projects),
        all matches that pass filters 1–3 are accepted.
     """
-    text = _mask_code_spans(text)
+    text = _mask_code_spans(_ascii_fold(text))
     citations: list[tuple[str, str]] = []
     seen: set[str] = set()
     allowlist_active = bool(KNOWN_SURNAMES)
@@ -434,11 +465,21 @@ def matching_notes_files(stem: str, reading_notes_dir: Path) -> list[Path]:
         return []
 
     stem_lower = stem.lower()
+    # Hyphen→underscore fallback: a 2-part hyphenated dual-author citation
+    # (`szekely-rizzo_2013`) conventionally maps to an underscore-separated
+    # filename (`szekely_rizzo_2013.md`). Accept either form on the filename
+    # check, and split surname tokens on both separators so the citation-line
+    # pattern matches regardless of which convention the notes file uses.
+    # If a project has BOTH `goldsmith-pinkham_2020.md` and
+    # `goldsmith_pinkham_2020.md`, both match — the hook only needs existence.
+    stem_underscored = stem_lower.replace("-", "_")
     parts = stem_lower.split("_")
     if len(parts) < 2:
         return []
     year = parts[-1]
-    surnames = parts[:-1]
+    surnames = [t for s in parts[:-1] for t in s.split("-") if t]
+    if not surnames:
+        return []
 
     surname_pattern = r"\b" + r"\b.*\b".join(re.escape(s) for s in surnames) + r"\b"
     citation_match_pattern = re.compile(
@@ -448,7 +489,7 @@ def matching_notes_files(stem: str, reading_notes_dir: Path) -> list[Path]:
 
     matches: list[Path] = []
     for f in reading_notes_dir.glob("*.md"):
-        if f.name.lower().startswith(stem_lower):
+        if f.name.lower().startswith((stem_lower, stem_underscored)):
             matches.append(f)
             continue
         try:
@@ -458,7 +499,9 @@ def matching_notes_files(stem: str, reading_notes_dir: Path) -> list[Path]:
         for line in text.splitlines():
             if not CITATION_LINE.match(line):
                 continue
-            if citation_match_pattern.search(line):
+            # Fold the line so accented citation metadata ("**Citation:**
+            # Székely-Rizzo (2013)") matches the ASCII surname pattern.
+            if citation_match_pattern.search(_ascii_fold(line)):
                 matches.append(f)
                 break
     return matches
@@ -486,10 +529,15 @@ def paper_pdf_exists_for(stem: str, papers_dir: Path) -> bool:
     if len(parts) < 2:
         return False
     year = parts[-1]
-    surnames = set(parts[:-1])
+    # Split surnames on hyphens too: filename tokens are split on all
+    # non-alphanumerics, so a hyphenated stem surname (`szekely-rizzo`)
+    # could never equal a single filename token.
+    surnames = {t for s in parts[:-1] for t in s.split("-") if t}
+    if not surnames:
+        return False
 
     for f in papers_dir.glob("*.pdf"):
-        tokens = set(re.split(r"[^a-z0-9]+", f.name.lower()))
+        tokens = set(re.split(r"[^a-z0-9]+", _ascii_fold(f.name.lower())))
         tokens.discard("")
         if year in tokens and surnames.issubset(tokens):
             return True

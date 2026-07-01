@@ -467,6 +467,60 @@ assert "adams_2014" in result and "smith_2020" not in result, (
 )
 print("PASS: real citation extracts when example is on a separate line")
 
+print("\n=== Unicode fold: accented surnames extract with ASCII stems ===")
+assert_matches("As Müller (2020) shows, effects persist.", {"muller_2020"}, "diacritic single surname 'Müller'")
+assert_matches(
+    "Per Bénabou and Tirole (2003), confidence matters.",
+    {"benabou_tirole_2003"},
+    "diacritics in two-author citation 'Bénabou and Tirole'",
+)
+# The original bug: diacritic mid-name aborted the match and the regex
+# restarted at the second name — 'Székely-Rizzo 2013' parsed as rizzo_2013.
+result = stems("The estimator in Székely-Rizzo (2013) is consistent.")
+assert "szekely-rizzo_2013" in result and "rizzo_2013" not in result, (
+    f"FAIL: expected szekely-rizzo_2013 only, got {result}"
+)
+print("PASS: 'Székely-Rizzo (2013)' folds to szekely-rizzo_2013 (not rizzo_2013)")
+assert_matches("Following Łukasz (2024), we proceed.", {"lukasz_2024"}, "precomposed 'Ł' folds (char map)")
+assert_matches("Per García-Pérez (2019), unemployment falls.", {"garcia-perez_2019"}, "hyphenated diacritic surname")
+
+print("\n=== Notes/PDF lookup: hyphen→underscore fallback ===")
+import tempfile
+
+with tempfile.TemporaryDirectory() as _td:
+    _nd = Path(_td)
+    (_nd / "szekely_rizzo_2013.md").write_text(
+        "# Notes\n**Citation:** Székely-Rizzo (2013). Energy distance.\n",
+        encoding="utf-8",
+    )
+    assert lib.notes_exist_for("szekely-rizzo_2013", _nd), (
+        "FAIL: hyphen stem should resolve to underscore filename"
+    )
+    print("PASS: hyphen stem szekely-rizzo_2013 resolves to szekely_rizzo_2013.md")
+    assert lib.notes_exist_for("szekely_rizzo_2013", _nd), "FAIL: direct stem should resolve"
+    print("PASS: direct underscore stem still resolves")
+    assert not lib.notes_exist_for("garcia_2020", _nd), "FAIL: unrelated stem must not resolve"
+    print("PASS: unrelated stem does not resolve")
+    # Accented citation-metadata line matches via per-line fold
+    (_nd / "compiled_reading_notes.md").write_text(
+        "## Batch\n**Citation:** Bénabou and Tirole (2003), self-confidence.\n",
+        encoding="utf-8",
+    )
+    assert lib.notes_exist_for("benabou_tirole_2003", _nd), (
+        "FAIL: accented **Citation:** line should match ASCII stem"
+    )
+    print("PASS: accented citation-metadata line matches ASCII stem")
+
+with tempfile.TemporaryDirectory() as _td:
+    _pd = Path(_td)
+    (_pd / "szekely_rizzo_2013_energy.pdf").write_bytes(b"%PDF-1.4")
+    assert lib.paper_pdf_exists_for("szekely-rizzo_2013", _pd), (
+        "FAIL: hyphen stem should match underscore-named PDF"
+    )
+    print("PASS: hyphen stem matches underscore-named PDF")
+    assert not lib.paper_pdf_exists_for("smith_2020", _pd), "FAIL: unrelated PDF stem must not match"
+    print("PASS: unrelated PDF stem does not match")
+
 print("\n=== Residual: real surname at sentence start with empty allowlist ===")
 # Documented as unavoidable noise; user uses escape hatch.
 result = stems("Smith 2020 published a related result.")
