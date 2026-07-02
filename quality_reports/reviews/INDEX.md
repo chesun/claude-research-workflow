@@ -6,6 +6,10 @@ When writing a new review, consult this index first. If an `Active` entry exists
 
 ---
 
+## 2026-07
+
+- [2026-07-01_primary-source-hook-fp-analysis.md](2026-07-01_primary-source-hook-fp-analysis.md) — primary-source hook false-positive analysis + ranked improvement roadmap (probe-verified), Active
+
 ## 2026-05
 
 - [2026-05-30_phase4-evidence-gating_verifier_review.md](2026-05-30_phase4-evidence-gating_verifier_review.md) — Phase 4 evidence-gating docs-only non-destructiveness audit, PASS, Active
