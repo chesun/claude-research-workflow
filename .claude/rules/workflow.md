@@ -77,7 +77,7 @@ Format: Status (DRAFT/APPROVED/COMPLETED), approach, files to modify, verificati
 
 ### Enforcement
 
-"Save to disk" (step 5) is hook-enforced, not just advisory. The Stop hook `.claude/hooks/plan-persist-check.py` fires at turn-end: if plan mode was used this session (an `ExitPlanMode` call, or a write to the harness `~/.claude/plans/` file) but no `quality_reports/plans/*.md` was written, it blocks the turn-end with a remediation message. The records copy can only be written *after* plan mode exits (during plan mode the only writable file is the harness plan file), so the gate is at Stop, not at plan-exit. It respects `stop_hook_active`, so it nudges at most once per turn and never loops. To satisfy it: after approval, copy the plan to `quality_reports/plans/YYYY-MM-DD_<slug>.md` and add an `INDEX.md` line.
+Convention, not a hook. After a plan is approved, copy it to `quality_reports/plans/YYYY-MM-DD_<slug>.md` and add an `INDEX.md` line so it survives context compaction. The former `plan-persist-check.py` Stop hook was pruned 2026-09-16.
 
 ---
 
@@ -274,7 +274,7 @@ When approaching context limits, ensure:
 3. Active plan is saved to disk
 4. Open questions are documented in session log
 
-The pre-compact hook will remind you of this checklist.
+Compaction is automatic near the context limit; the former `pre-compact.py` reminder hook was pruned 2026-09-16. Keep the session log and any active plan current as you go so a compaction never loses them.
 
 **After Compression:**
 First message should be: "Resuming after compression. Last task: [read most recent plan + git log]. Status: [next step]."

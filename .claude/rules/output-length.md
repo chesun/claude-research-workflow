@@ -13,4 +13,4 @@ When a response would exceed **15 lines** of terminal output, write it to a mark
 
 ## Enforcement
 
-Advisory, not blocking — the Stop hook `.claude/hooks/output-length-check.py` fires at turn-end and, when the final response exceeds 15 non-blank lines AND no `.md` file was written that turn, injects a reminder (`additionalContext`) to export. It never blocks: a genuinely conversational long answer can proceed. The point is that the reminder *reaches the model* (the prose rule alone did not bite — it scrolled out of context). Turns that already wrote a `.md` are exempt. Threshold lives in `LINE_THRESHOLD` in the hook if it proves noisy.
+Guidance, not a hook. Apply the 15-line rule as you write: export long structured output to a `.md` and leave short confirmations, errors, and follow-up questions inline. The former `output-length-check.py` Stop hook was pruned 2026-09-16.

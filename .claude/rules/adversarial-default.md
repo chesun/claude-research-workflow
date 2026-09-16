@@ -200,7 +200,7 @@ A diagnosis — "bug/error X is caused by line B in file C" — is a positive cl
 **Diagnosis protocol — before asserting a cause for a bug/error:**
 1. `grep` the ledger for a `diagnosis:` row on that file or symptom. If a fresh (`File hash` matches) `DIAGNOSED`/`RULED-OUT` row exists, cite it — do **not** re-guess. This is the institutional-memory check; the recorded answer often already exists.
 2. If no fresh row exists, investigate (read the code / run a repro / grep), then **record** a `diagnosis:` row with the evidence.
-3. Asserting a cause with neither prior-record consultation nor in-session investigation is exactly the failure the `diagnostic-claim-audit.py` Stop hook blocks (see § Hook enforcement).
+3. Asserting a cause with neither prior-record consultation nor in-session investigation is the failure this protocol exists to prevent: investigate, or cite a recorded `diagnosis:` row, before asserting a cause.
 
 ---
 
@@ -221,15 +221,9 @@ This rule reinforces — does not replace — the following:
 
 ---
 
-## Hook enforcement
+## Diagnostic-claim discipline
 
-The stance above was prose-only until 2026-05-28 — and prose without a trigger doesn't bind (the same gap `derive-dont-guess` had). The diagnostic-claim slice now has a deterministic trigger:
-
-- **`.claude/hooks/diagnostic-claim-audit.py`** (Stop hook, block-once). At turn-end it scans the current turn's assistant prose for **bug/error causation claims** (a causal connective — "caused by", "root cause", "fails because", "the bug is", … — co-occurring with a defect indicator or a `file:line`). If such a claim was made but the turn shows **no investigation** (`Read`/`Grep`/`Glob`/`Bash`) **and** the session never consulted `.claude/state/verification-ledger.md`, it blocks the stop once with a remediation: investigate, or read the recorded `diagnosis:` finding. It respects `stop_hook_active` (nudges at most once per turn; a false positive costs one cycle, never a loop).
-- **Honest limit:** the hook checks the *procedure* (did you investigate / consult), not the *truth* of the claim — a causal claim is not mechanically verifiable, and evidence is matched at turn granularity, not tied to the specific cited file. It catches the dominant failure (a diagnosis with zero investigation and no prior-record consult), not every wrong diagnosis.
-- **Escape hatch:** `<!-- diagnosis-ok: <reason> -->` in the turn's prose (e.g. when restating a previously-recorded finding, or a cause confirmed outside this repo). Auditable: `grep -R "diagnosis-ok" quality_reports/`.
-
-This complements — does not replace — the critic enforcement below; the hook fires in ad-hoc usage where no critic is dispatched.
+The diagnosis protocol above is a working discipline, not a hook. The former `diagnostic-claim-audit.py` Stop hook — which blocked turn-end when a bug/error causation claim was made with no investigation that turn and no consult of the verification ledger — was pruned 2026-09-16. Claude 5 investigates before asserting a cause without the nag; the protocol still binds as discipline, and the critic enforcement below still applies when a critic is dispatched.
 
 ## Critic enforcement
 

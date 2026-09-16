@@ -241,7 +241,7 @@ The manifest lives at `.claude/file-classes.toml` on `main` (itself Class A so i
 
 Patterns are repo-relative paths or globs:
 
-- `.claude/hooks/context-monitor.py` — single file
+- `.claude/hooks/derive-check-advisory.py` — single file
 - `.claude/rules/*.md` — all rules
 - `templates/data-*.md` — globbed templates
 - `.claude/skills/tools/SKILL.md` — a single skill file

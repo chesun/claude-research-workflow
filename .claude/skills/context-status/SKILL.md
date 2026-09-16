@@ -23,13 +23,9 @@ and preservation state.
 
 ## Workflow
 
-### Step 1: Check Context Monitor Cache
+### Step 1: Check Context Usage
 
-Read the context monitor cache to get the current estimate:
-
-```bash
-cat ~/.claude/sessions/*/context-monitor-cache.json 2>/dev/null | head -20
-```
+Claude Code manages context natively (automatic compaction near the limit) and surfaces usage in-session, so there is no cache file to read — report usage from the harness's context indicator when shown. (This skill is a retire candidate now that context management is native.)
 
 ### Step 2: Find Active Plan
 
