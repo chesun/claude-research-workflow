@@ -46,6 +46,8 @@ code → red-team + correctness; plans/ADRs → fit-for-purpose + efficiency; ru
 
 ## Fail-open vs fail-closed (a real decision for a PreToolUse gate)
 
+> **Reversed 2026-09-22 (owner):** the gate now **fails closed, escapably** — see `decisions/0002_*` Amendment and `.claude/rules/independent-review.md`. Silent fail-open needed vigilance to notice a disabled gate. Fail-closed is scoped to a confirmed gated commit (never bricks other Bash) and `REVIEW_WAIVE=1` (parsed before any git call) is the escape. The paragraph below records the original fail-open reasoning.
+
 A `commit-msg` git hook can fail closed cheaply (a broken guard blocks the commit; you use `--no-verify`). A `PreToolUse` hook that fails closed on an internal error would **block all git commits in the session with no `--no-verify` escape** — a session-lockout risk. So this hook **fails OPEN on internal error** (exit 0, log to stderr): a guard bug must not make the repo uncommittable. It exits 2 **only** on the deliberate policy result (a gated code path with no receipt). This matches the workflow's "session hooks fail open" stance and is the safe default here; the cost is that a guard bug silently disables the gate until noticed.
 
 ## Cautions / known limits

@@ -8,6 +8,7 @@ on stdin. Run:  python .claude/hooks/test_review_receipt_check.py
 from __future__ import annotations
 
 import importlib.util
+import io
 import json
 import os
 import subprocess
@@ -82,6 +83,9 @@ def main() -> int:
         ("REVIEW_WAIVE=1 git commit -m w", True, True),
         ('git commit -m "document REVIEW_WAIVE=1 escape"', True, False),
         ("git.exe commit -m x", True, False),
+        ("ls | git commit -m x", True, False),
+        ("(git commit -m x)", True, False),
+        ("{ git commit -m x; }", True, False),
         ("git status", False, False),
         ("git log --grep commit", False, False),
         ("echo commit && ls", False, False),
@@ -97,6 +101,7 @@ def main() -> int:
         (".claude/hooks/tests/test_foo.py", "code"),
         (".claude/hooks/lib/helper.py", "code"),
         ("bin/sub/tool.sh", "code"),
+        ("bin/mytool", "code"),
         (".githooks/pre-commit", "code"),
         (".claude/rules/x.md", "doc"),
         (".claude/agents/coder.md", "doc"),
@@ -110,6 +115,47 @@ def main() -> int:
     for path, exp in cls:
         check(f"classify({path})", rrc.classify(path) == exp,
               f"got {rrc.classify(path)}")
+
+    # --- fail-closed behaviour (in-process, monkeypatched) ---
+    # git_checked raises GitError on a failing git call (the fail-closed substrate)
+    try:
+        rrc.git_checked("rev-parse", "--verify",
+                        "refs/heads/definitely-no-such-branch-xyz")
+        check("git_checked raises on a failing git call", False, "no raise")
+    except rrc.GitError:
+        check("git_checked raises GitError on a failing git call", True)
+    except Exception as e:
+        check("git_checked raises GitError on a failing git call", False, repr(e))
+
+    def run_main_inproc(command, *, staged, config_true=True):
+        old = (sys.stdin, rrc.staged_changes, rrc.git_soft, rrc._log_failure)
+        try:
+            sys.stdin = io.StringIO(json.dumps(
+                {"tool_name": "Bash", "tool_input": {"command": command}}))
+            rrc.staged_changes = staged
+            rrc.git_soft = (lambda *a: "true"
+                            if "review.required" in a and config_true
+                            else "")
+            rrc._log_failure = lambda *a, **k: None  # no repo side effects
+            return rrc.main()
+        finally:
+            (sys.stdin, rrc.staged_changes, rrc.git_soft,
+             rrc._log_failure) = old
+
+    def boom():
+        raise rrc.GitError("simulated git failure")
+
+    rc = run_main_inproc("git commit -m x", staged=boom)
+    check("gated commit + git error → FAIL CLOSED (exit 2)", rc == 2,
+          f"got {rc}")
+
+    rc = run_main_inproc("REVIEW_WAIVE=1 git commit -m x", staged=boom)
+    check("waiver short-circuits BEFORE the failing git call → exit 0",
+          rc == 0, f"got {rc}")
+
+    rc = run_main_inproc("git commit -m x", staged=boom, config_true=False)
+    check("review.required not set → not gated, no fail-closed (exit 0)",
+          rc == 0, f"got {rc}")
 
     tmp = Path(tempfile.mkdtemp(prefix="rrc-tests-"))
     try:
@@ -204,6 +250,29 @@ def main() -> int:
         p = run_hook(r, "git status")
         check("non-commit command → allowed (exit 0)",
               p.returncode == 0, p.stderr)
+
+        # review.required=1 (git --bool truthy, not literal "true") opts in
+        r = make_repo(tmp, "boolopt")
+        sh("git", "config", "review.required", "1", cwd=r)
+        add(r, ".claude/hooks/new.py", "print(1)\n")
+        p = run_hook(r, "git commit -m x")
+        check("review.required=1 opts in → blocks unreviewed code (exit 2)",
+              p.returncode == 2, p.stderr)
+
+        # _log_failure actually writes the durable log (pins the Path import;
+        # a NameError would be swallowed and the log silently never created)
+        r = make_repo(tmp, "logtest")
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(r)
+            rrc._log_failure("simulated reason", "git commit -m x")
+        finally:
+            os.chdir(old_cwd)
+        logf = r / ".claude" / "state" / "review-gate-failures.log"
+        check("_log_failure writes the audit log (Path imported)",
+              logf.exists()
+              and "simulated reason" in logf.read_text(encoding="utf-8"),
+              "log not written")
 
         # fail-open: malformed stdin → allow
         p = subprocess.run([sys.executable, str(HOOK)], cwd=str(tmp),

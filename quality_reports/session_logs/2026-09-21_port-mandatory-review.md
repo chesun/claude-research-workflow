@@ -33,3 +33,18 @@ No Criticals, so no extra verify pass beyond the two regression tests that pin t
 
 - Behavioral-overlay mirror of the modernize prune (Track A step 3), the live-project update (step 4), and retiring the propagation automation (step 5) remain open from the modernize plan.
 - The `/review-build` cost-line logging is a manual step in the skill; automating it is a future nicety.
+
+## 2026-09-22 — fail mode reversed to fail-closed (owner), reviewed + fixed
+
+Owner rejected silent fail-open (needs vigilance to notice a disabled gate). Reworked the hook to **fail closed, escapably**, scoped so exit 2 is reachable only from a confirmed gated + opt-in + non-waived commit; the `REVIEW_WAIVE=1` waiver is parsed before any git call (so no lockout), and errors before the commit is confirmed gated still allow (the hook runs on every Bash call, must not brick the shell). New `GitError`/`git_checked` substrate makes the depended-on git calls fail closed; `last_commit_date` stays tolerant (git log exits non-zero on an empty repo). A loud banner + a durable `.claude/state/review-gate-failures.log` replace the silent disable.
+
+**Self-caught before review:** the raising substrate first turned the empty-repo `git log` (no commits yet) into a false fail-closed that would block the first commit in any repo; fixed by keeping the freshness lookup tolerant.
+
+**Two blind lenses** (`2026-09-22_review-receipt-check-failclosed_{redteam,correctness}_review.md`): red-team 80/100, correctness 75/100. Both explicitly confirmed the fail-closed cannot brick non-gated Bash and cannot lock out despite the waiver. Findings fixed + pinned by tests (29 → 45 cases):
+- **High** (correctness) / Medium (red-team): `_log_failure` used `Path` but `pathlib` was never imported → NameError swallowed → the audit log the design promised was never written. Added the import; a test now writes and reads the real log.
+- **Medium** (red-team): extensionless `bin/` scripts (`bin/mytool`) escaped the gate; added an extensionless-bin pattern + classify test.
+- **Low**: pipeline/subshell/brace-wrapped commits weren't detected (now split on `|` + strip leading `({`); `review.required=1` didn't opt in (now read via `git config --bool`). Both pinned.
+
+**Accepted (reason):** `last_commit_date` tolerance is broader than the empty-repo case — a transient `git log` failure silently weakens freshness (a secondary check), never receipt existence; acceptable and documented. Cost: two lenses ≈ 226k agent tokens.
+
+Docs reconciled to fail-closed: rule `independent-review.md`, ADR-0002 dated Amendment (body intact), plan note.

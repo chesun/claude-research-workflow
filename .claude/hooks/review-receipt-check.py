@@ -27,6 +27,7 @@ import re
 import shlex
 import subprocess
 import sys
+from pathlib import Path
 
 for _s in (sys.stdout, sys.stderr):
     try:
@@ -38,6 +39,7 @@ _EXT = r"\.(?:py|pyw|ps1|psm1|sh)$"
 GATED_CODE = [re.compile(p, re.I) for p in (
     r"^\.claude/hooks/(?:[^/]+/)*[^/]+" + _EXT,   # allow nested (tests/, lib/)
     r"^bin/(?:[^/]+/)*[^/]+" + _EXT,
+    r"^bin/(?:[^/]+/)*[^/.]+$",   # extensionless bin/ scripts (e.g. bin/mytool)
     r"^\.githooks/[^/]+$",
 )]
 ADVISE_DOC = [re.compile(p, re.I) for p in (
@@ -76,6 +78,29 @@ def git_soft_bytes(*args: str) -> bytes:
         return b""
 
 
+class GitError(Exception):
+    """A git call that the gate depends on failed — evaluation is unreliable."""
+
+
+def git_checked_bytes(*args: str) -> bytes:
+    """git that RAISES GitError on failure. Used on the calls the block
+    decision depends on, so a git failure fails CLOSED (via main's handler)
+    rather than silently returning empty and letting a gated commit through.
+    """
+    try:
+        p = subprocess.run(("git",) + args, capture_output=True)
+    except Exception as exc:
+        raise GitError(f"git {' '.join(args[:3])}: {exc}") from exc
+    if p.returncode != 0:
+        raise GitError(f"git {' '.join(args[:3])} exit {p.returncode}: "
+                       + p.stderr.decode('utf-8', 'replace').strip())
+    return p.stdout
+
+
+def git_checked(*args: str) -> str:
+    return git_checked_bytes(*args).decode("utf-8", "replace")
+
+
 # --- command parsing ---------------------------------------------------------
 
 _ENV = re.compile(r"^\w+=")
@@ -100,7 +125,11 @@ def parse_commit(command: str) -> "tuple[bool, bool]":
     """
     is_commit = False
     waived = False
-    for seg in re.split(r"&&|\|\||;|\n", command):
+    # Split on &&, ||, single | (pipelines), ; and newlines; then strip any
+    # leading subshell/brace/paren so `(git commit)`, `{ git commit; }` and
+    # `ls | git commit` are still detected rather than silently missed.
+    for seg in re.split(r"&&|[|;\n]", command):
+        seg = seg.lstrip("({ \t")
         try:
             toks = shlex.split(seg, posix=True)
         except Exception:
@@ -126,9 +155,9 @@ def parse_commit(command: str) -> "tuple[bool, bool]":
 # --- staged changes + classification ----------------------------------------
 
 def staged_changes() -> "list[tuple[str, str, str | None]]":
-    raw = git_soft_bytes("-c", "core.quotePath=false", "diff", "--cached",
-                         "--name-status", "-z", "-M",
-                         "--diff-filter=ACMRD").decode("utf-8", "replace")
+    raw = git_checked_bytes("-c", "core.quotePath=false", "diff", "--cached",
+                            "--name-status", "-z", "-M",
+                            "--diff-filter=ACMRD").decode("utf-8", "replace")
     parts = raw.split("\x00")
     out: list[tuple[str, str, str | None]] = []
     i = 0
@@ -154,22 +183,22 @@ def classify(path: str) -> "str | None":
 # --- receipts ----------------------------------------------------------------
 
 def indexed_reviews() -> "list[tuple[str, str]]":
-    raw = git_soft_bytes("-c", "core.quotePath=false", "ls-files", "--cached",
-                         "-z", REVIEW_DIR).decode("utf-8", "replace")
+    raw = git_checked_bytes("-c", "core.quotePath=false", "ls-files", "--cached",
+                            "-z", REVIEW_DIR).decode("utf-8", "replace")
     paths = [p for p in raw.split("\x00")
              if p and p.lower().endswith(".md")
              and os.path.basename(p).lower() not in GENERIC_BASENAMES]
     out = []
     for p in paths:
-        body = git_soft("cat-file", "-p", f":{p}")
+        body = git_checked("cat-file", "-p", f":{p}")
         if body:
             out.append((p, "\n".join(body.splitlines()[:HEADER_LINES])))
     return out
 
 
 def basename_counts() -> "dict[str, int]":
-    raw = git_soft_bytes("-c", "core.quotePath=false", "ls-files", "--cached",
-                         "-z").decode("utf-8", "replace")
+    raw = git_checked_bytes("-c", "core.quotePath=false", "ls-files", "--cached",
+                            "-z").decode("utf-8", "replace")
     counts: dict[str, int] = {}
     for p in raw.split("\x00"):
         if p:
@@ -198,6 +227,11 @@ def last_commit_date(*paths: str) -> "_dt.date | None":
     for p in paths:
         if not p:
             continue
+        # Tolerant on purpose: `git log` exits non-zero on an empty repo
+        # ("no commits yet") and that legitimately means "no prior commit for
+        # this path" → None → freshness is vacuously satisfied. A failure here
+        # only weakens freshness (a secondary check), never receipt existence,
+        # so it must NOT fail closed and block a legitimate first commit.
         s = git_soft("log", "-1", "--format=%cs", "--", p).strip()
         try:
             d = _dt.date.fromisoformat(s) if s else None
@@ -233,46 +267,97 @@ def has_receipt(path: str, old_path: "str | None",
     return False
 
 
+def _log_failure(reason: str, command: str) -> None:
+    """Durable, greppable record of a gate error so it is auditable even if
+    the stderr banner scrolls away."""
+    try:
+        root = git_soft("rev-parse", "--show-toplevel").strip() or "."
+        d = Path(root) / ".claude" / "state"
+        d.mkdir(parents=True, exist_ok=True)
+        rec = {
+            "ts": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
+            "reason": reason, "command": command[:200],
+        }
+        with (d / "review-gate-failures.log").open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(rec) + "\n")
+    except Exception:
+        pass
+
+
+def _fail_closed(reason: str, command: str) -> int:
+    """A gated commit whose receipt could not be evaluated. Block LOUDLY and
+    tell the user the escape — the waiver is parsed before any fallible call,
+    so this is never a lockout, only a demand to look."""
+    _log_failure(reason, command)
+    print("\n" + "=" * 64, file=sys.stderr)
+    print("review-receipt: GATE ERROR — COMMIT BLOCKED (fail-closed)",
+          file=sys.stderr)
+    print(f"  The gate could not evaluate this commit: {reason}",
+          file=sys.stderr)
+    print("  Fix the guard (see .claude/state/review-gate-failures.log), or "
+          "proceed deliberately with: REVIEW_WAIVE=1 git commit ...",
+          file=sys.stderr)
+    print("=" * 64 + "\n", file=sys.stderr)
+    return 2
+
+
 def main() -> int:
+    # Reading the event and parsing the command are string-only and cannot
+    # fail on a gate-relevant path. If they do, this is NOT a gated commit we
+    # can identify, and this hook runs on EVERY Bash call — so allow, to avoid
+    # bricking all shell use. Fail-closed is scoped strictly to a confirmed
+    # gated commit (below), never to unrelated Bash.
     try:
         data = json.load(sys.stdin)
     except Exception:
-        return 0  # can't read event → fail open
+        return 0
     if data.get("tool_name") != "Bash":
         return 0
     command = (data.get("tool_input") or {}).get("command") or ""
     is_commit, waived = parse_commit(command)
     if not is_commit:
         return 0
-    if git_soft("config", "review.required").strip().lower() != "true":
+    # Waiver is honoured BEFORE any git call, so a broken guard is always
+    # escapable — this is what makes fail-closed safe (no lockout).
+    if waived:
+        print("review-receipt: code review WAIVED via REVIEW_WAIVE.",
+              file=sys.stderr)
+        return 0
+    # `--bool` normalises truthy forms (1/yes/on/true) so `review.required=1`
+    # opts in too; unset returns non-zero → "" → not gated.
+    if git_soft("config", "--bool", "review.required").strip().lower() != "true":
         return 0
 
-    changes = staged_changes()
-    code, docs = [], []
-    for status, path, old in changes:
-        kind = classify(path)
-        if kind == "code":
-            code.append((path, old))
-        elif kind == "doc":
-            docs.append((path, old))
-    if not code and not docs:
-        return 0
+    # From here we KNOW it is a gated, opt-in, non-waived commit. Any failure
+    # to evaluate it fails CLOSED (block + escape), never silently open.
+    try:
+        code, docs = [], []
+        for _status, path, old in staged_changes():
+            kind = classify(path)
+            if kind == "code":
+                code.append((path, old))
+            elif kind == "doc":
+                docs.append((path, old))
+        if not code and not docs:
+            return 0
 
-    reviews = indexed_reviews()
-    counts = basename_counts()
-    today = _dt.date.today()
-
-    code_missing = [p for p, old in code
-                    if not has_receipt(p, old, reviews, counts, today)]
-    doc_missing = [p for p, old in docs
-                   if not has_receipt(p, old, reviews, counts, today)]
+        reviews = indexed_reviews()
+        counts = basename_counts()
+        today = _dt.date.today()
+        code_missing = [p for p, old in code
+                        if not has_receipt(p, old, reviews, counts, today)]
+        doc_missing = [p for p, old in docs
+                       if not has_receipt(p, old, reviews, counts, today)]
+    except GitError as exc:
+        return _fail_closed(str(exc), command)
+    except Exception as exc:
+        return _fail_closed(f"unexpected: {exc}", command)
 
     if doc_missing:
         print("review-receipt: ADVISORY — no independent-review receipt for "
               "these doc changes (not blocking): "
               + ", ".join(doc_missing), file=sys.stderr)
-
-    if code_missing and not waived:
+    if code_missing:
         print("\nreview-receipt: COMMIT BLOCKED — no independent-review "
               "receipt for staged code:", file=sys.stderr)
         for p in code_missing:
@@ -284,9 +369,6 @@ def main() -> int:
         print("  Run /review-build <path>, or waive once with a visible "
               "prefix: REVIEW_WAIVE=1 git commit ...", file=sys.stderr)
         return 2
-    if code_missing and waived:
-        print(f"review-receipt: code review WAIVED for {len(code_missing)} "
-              f"path(s) via REVIEW_WAIVE.", file=sys.stderr)
     return 0
 
 
@@ -295,7 +377,12 @@ if __name__ == "__main__":
         sys.exit(main())
     except SystemExit:
         raise
-    except Exception as exc:  # FAIL OPEN — never lock the session out
-        print(f"review-receipt: internal error, allowing commit: {exc}",
-              file=sys.stderr)
+    except Exception as exc:
+        # Backstop for an error BEFORE the commit was confirmed gated (this
+        # hook runs on every Bash call). Allow, to avoid bricking all shell
+        # use, but log so it is not silent. The scoped fail-closed above is
+        # what guards a confirmed gated commit.
+        print(f"review-receipt: pre-check error, allowing this Bash call: "
+              f"{exc}", file=sys.stderr)
+        _log_failure(f"pre-check error: {exc}", "")
         sys.exit(0)
