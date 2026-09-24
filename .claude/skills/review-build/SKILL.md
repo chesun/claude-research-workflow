@@ -28,6 +28,7 @@ Produce the review receipt(s) the commit gate (`review-receipt-check.py`) reads.
 Rules for every dispatch:
 
 - **Fresh general-purpose agent, never a fork** — the reviewer must not inherit this session's context, or it is not independent.
+- **Dispatch with `model: fable`** (ADR-0003) — the reviewer is never on a weaker model than the author; the alias, not a dated ID.
 - **Blind to the other lens** — do not tell it what the sibling lens is doing.
 - **Read-only except its one report.** It may read the repo and run read-only commands; it writes only its review file.
 - **Assume the artefact is defective** until evidence shows otherwise (`adversarial-default.md`). Every finding carries evidence: `file:line` or a runnable repro. Synthetic sentinels only — never real client/personal data.

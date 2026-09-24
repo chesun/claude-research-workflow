@@ -1,6 +1,6 @@
 # TODO — claude-code-my-workflow
 
-Last updated: 2026-07-01
+Last updated: 2026-09-24
 
 Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracker tasks (TaskCreate) are working memory; this file is the persistent cross-session record.
 
@@ -9,6 +9,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracke
 - *(nothing actively in flight)*
 
 ## Up Next
+- [ ] **Model-routing experiment read-out** (ADR-0003, added 2026-09-24) — reviewers/critics on `fable`, workers on `opus`, `writer` on `fable`. For the next few builds record findings by severity and fix rounds per review (session log + review reports); revisit the `writer` exception after the voice-preservation build. Verify both aliases resolve on any new account or machine.
 - [ ] **Context-tightening — remaining levers** (plan `quality_reports/plans/2026-05-28_context-tightening-plan.md`):
   - DONE + MERGED to main 2026-05-28 (merge `448b3d0`): Lever 1 (8 convention rules path-scoped) + low-risk Lever 3 (dropped dead logging requirements; epistemic-table dedup). Always-on rules **165,455 → 116,366 B (−49,089 B / ~12.3k tokens / ~30%)**. Smoke check verified both directions. Branch `audit/workflow-context-tightening` retained (can delete). Not yet pushed to origin.
   - DEFERRED (await approval): Lever 2 (references/ split for data-version-control — held until DVC is used in a live repo) and the hook-rule prose trims (#13–16 in the plan, ~+7%). Lever 3 item E (revision.md diagram, verification↔SSOT overlap) judged not worth it.

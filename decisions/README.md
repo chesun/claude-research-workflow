@@ -90,6 +90,8 @@ What this commits us to. What it rules out. Open questions it creates.
 | ID | Title | Date | Status | Scope |
 |----|-------|------|--------|-------|
 | [0001](0001_lfs-dvc-bulk-migration-go.md) | D6 pilot exit: GO for bulk LFS (+ selective DVC) migration | 2026-07-03 | Decided | Infrastructure — data storage & versioning |
+| [0002](0002_mandatory-independent-review.md) | Independent adversarial review required before committing load-bearing code | 2026-09-21 | Decided | Methodology / enforcement |
+| [0003](0003_model-routing-fable-review-opus-execution.md) | Model routing: reviewers and critics on `fable`, workers on `opus` | 2026-09-24 | Decided | Methodology / enforcement |
 
 ---
 

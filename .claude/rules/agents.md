@@ -20,6 +20,10 @@
 | writer | writer-critic | Manuscript polish, LaTeX quality, hedging |
 | storyteller | storyteller-critic | Talk structure, audience calibration, visual quality |
 
+### Model routing (ADR-0003)
+
+Critics, referees, `editor`, `verifier`, and `tikz-reviewer` carry `model: fable` in their frontmatter; workers (`coder`, `data-engineer`, `explorer`, `librarian`, `storyteller`) carry `model: opus`; `writer` stays on `fable` while voice preservation is built; `orchestrator` inherits. The reviewer is never on a weaker model than the author. Aliases only, never dated model IDs.
+
 ### Peer Review (Special Case)
 
 Peer Review uses a different structure — the Orchestrator dispatches two independent referees:
