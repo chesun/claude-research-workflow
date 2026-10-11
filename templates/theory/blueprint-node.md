@@ -20,7 +20,9 @@ Header (exactly these keys; label, kind, status and uses are required):
   status        conjecture -> survived-search -> proved -> checked -> formalized -> verified
                 off-ladder (terminal): refuted | conditional | superseded
   uses          labels this node depends on, as [a, b] (use [] for none)
-  supersedes / superseded_by   label of the predecessor / successor node (conditional and superseded need superseded_by)
+  supersedes / superseded_by   label of the predecessor / successor node. When a claim needs an extra hypothesis, the
+                original node becomes conditional (or superseded if reworded) with superseded_by naming a NEW
+                claim node at conjecture that states the repaired result; the repair climbs as that new node.
   lean          Lean declaration name (phase 2), empty until formalized
   paper_ref     path:line of the matching result in the paper, used by theorist-critic's cross-check
 

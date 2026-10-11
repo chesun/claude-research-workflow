@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Status:** DRAFT — awaiting user review
+**Status:** APPROVED (user, 2026-10-11) — Tasks 0–8 executed on branch `theory-workflow-phase1`; Tasks 9–12 (BDD pilot) pending
 
 **Goal:** Ship the blueprint, prove-or-refute exploration, and blind two-verifier checking on `main`, then pilot them on `belief_distortion_discrimination` (BDD) theory v2.
 
@@ -286,7 +286,7 @@ paper_ref: theory/quadratic_loss_model_paper_v2.tex:249
 - [ ] **Step 1:** In BDD:
   - commit any work in progress;
   - `git tag pre-theory-workflow-2026-10`;
-  - copy this repo's four theory files (agents, skill, `proof-verifier`) into BDD's `.claude/`, and `bin/blueprint_check.py` into BDD's `bin/`;
+  - copy this repo's four theory files (`theorist`, `theorist-critic` and `proof-verifier` agents, and the `/theory` skill) into BDD's `.claude/`; `bin/blueprint_check.py` and `bin/test_blueprint_check.py` into BDD's `bin/`; and `templates/theory/blueprint-node.md` into BDD's `templates/theory/` (the agents read it);
   - add `sympy`, `hypothesis`, `z3-solver`, `scipy`, pinned to the versions that install, to `requirements.txt`, and install into `myvenv`.
 - [ ] **Step 2:** Verify: `myvenv`'s python imports all four packages, and `python3 bin/blueprint_check.py` with no arguments exits 2 (usage), confirming the install.
 - [ ] **Step 3:** In a BDD session, run `/theory explore` seeded with `theory/quadratic_loss_model_paper_v2.tex`.

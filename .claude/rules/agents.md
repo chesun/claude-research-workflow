@@ -139,6 +139,8 @@ Every review and plan declares a status in its header:
 
 ### Supersession protocol
 
+**Exception: blueprint evidence is never moved.** `proof-verifier` reports, and any other file named as a locator in a `theory/blueprint/` evidence log, are evidence. They are never superseded, archived, renamed or swept by the time-based archive below. The two runs of one verification (`-a`, `-b`) and a later re-verification of the same node are separate records, not supersessions. A moved file breaks the evidence chain and makes the blueprint validator FAIL (ADR-0004).
+
 When a critic writes a new review for a target that already has an `Active` review:
 
 1. Read the existing review (find via `ls quality_reports/reviews/*<target>*_<critic>_review.md`).

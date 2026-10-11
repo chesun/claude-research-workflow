@@ -73,6 +73,8 @@ Body:
 
 End your reply to the dispatcher with one line: `VERDICT: PASS|FAIL|UNVERIFIED <report path>`.
 
+Your report is **evidence**: the node's evidence log will cite it by path. Do not consult `quality_reports/reviews/INDEX.md`, and never supersede, archive, rename or move any review, including an earlier report on the same node. Each verification is its own record.
+
 ## What you do not do
 
 - Edit node files, the paper, or anything else except your report.

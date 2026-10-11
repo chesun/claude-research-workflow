@@ -89,9 +89,16 @@ def statement_hash(text: str) -> str:
     return hashlib.sha256(_normalize(text).encode("utf-8")).hexdigest()[:12]
 
 
-def proof_hash(text: str) -> str:
-    """Same normalization and digest as statement_hash, applied to the proof text."""
-    return statement_hash(text)
+def proof_hash(text: str, uses=()) -> str:
+    """Hash of what a verifier checked: the normalized proof plus the sorted `uses` labels.
+
+    Covering `uses` means a checked node cannot be repointed at different
+    dependencies without re-verification. With no uses it equals statement_hash(text).
+    """
+    body = _normalize(text)
+    if uses:
+        body += "\n\x00uses:" + ",".join(sorted(uses))
+    return hashlib.sha256(body.encode("utf-8")).hexdigest()[:12]
 
 
 def label_to_filename(label: str) -> str:
@@ -300,7 +307,7 @@ def _report_problem(path: Path, label: str, proof_h: str | None) -> str | None:
         return "is not a proof-verifier report (no '**Reviewer:** proof-verifier' line)"
     if f.get("Target", "") != label:
         return f"targets {f.get('Target', '(none)')!r}, not {label!r}"
-    if f.get("Score", "").split()[:1] != ["PASS"]:
+    if f.get("Score", "").strip() != "PASS":
         return f"verdict is {f.get('Score', '(none)')!r}, not PASS"
     if not proof_h or f.get("Proof", "") != proof_h:
         return f"was written for proof {f.get('Proof', '(none)')!r}, not the logged proof {proof_h!r}"
@@ -487,8 +494,8 @@ def _check_node(n: Node, nodes: dict[str, Node], bp: Path, root: Path | None,
         if GAP_RE.search(n.proof):
             errors.append(f"{L}: status {n.status!r} but the proof still contains a [GAP: ...] marker")
         logged = [e.proof_hash for e in n.log if e.proof_hash]
-        if logged and logged[-1] != proof_hash(n.proof):
-            errors.append(f"{L}: proof changed after it was logged (hash now {proof_hash(n.proof)}); "
+        if logged and logged[-1] != proof_hash(n.proof, n.uses):
+            errors.append(f"{L}: proof changed after it was logged (hash now {proof_hash(n.proof, n.uses)}); "
                           f"move the node back down and re-verify")
 
     if n.supersedes and n.supersedes not in nodes:
@@ -616,7 +623,7 @@ def main(argv: list[str]) -> int:
         except NodeError as e:
             print(f"ERROR: {e}")
             return 1
-        print(f"stmt:{statement_hash(n.statement)} proof:{proof_hash(n.proof)}")
+        print(f"stmt:{statement_hash(n.statement)} proof:{proof_hash(n.proof, n.uses)}")
         return 0
     write = "--write-status" in args
     args = [a for a in args if a != "--write-status"]

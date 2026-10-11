@@ -47,7 +47,7 @@ Dispatch **theorist** to create one `variant` node for each assumption in the no
 
 Blind two-verifier check of a node at `proved`. **You** (the dispatcher) build the blind input, so the verifiers never open the node file:
 
-1. Read `theory/blueprint/<label with ':' replaced by '-'>.md`. Confirm the status is `proved` (otherwise stop and say why).
+1. Read `theory/blueprint/<label with ':' replaced by '-'>.md`. Confirm the status is `proved`, and that every claim, variant or imported node in its `uses` is already `checked` or above (definitions and assumptions must be `stated`). Otherwise stop, say which dependency is not ready, and point to `develop`: a node cannot be `checked` on unchecked foundations. (If verifier reports already exist for the current proof hash, they stay valid; append the `-> checked` line once the dependencies are checked.)
 2. Build the input text:
    - the `## Statement`;
    - the `## Proof` with every `[GAP:` line removed (a `proved` node should have none);
@@ -73,7 +73,7 @@ Run `python3 bin/blueprint_check.py theory/blueprint --write-status`. Show the v
 
 ### `/theory review [file]`
 
-Dispatch **theorist-critic** on the paper's theory section (default: the `.tex` that the most nodes' `paper_ref`s point to). Besides its 16-item checklist and architecture checks, it cross-checks every result in the paper against the blueprint.
+First run **status** so `theory/blueprint/STATUS.md` is current. Then dispatch **theorist-critic** on the paper's theory section (default: the `.tex` that the most nodes' `paper_ref`s point to). Besides its 16-item checklist and architecture checks, it cross-checks every result in the paper against the blueprint.
 
 Flags (narrow the critic's focus):
 - `--proofs`: proof presentation (proof correctness is carried by the blueprint, not this review);

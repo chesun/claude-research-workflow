@@ -64,7 +64,7 @@ def write_node(d: Path, label: str, kind: str = "claim", status: str | None = No
     for e in log:
         frm, to, actor, loc = e[:4]
         hh = e[4] if len(e) > 4 and e[4] else h
-        ph = e[5] if len(e) > 5 else (bc.proof_hash(proof) if to in ("proved", "checked") else None)
+        ph = e[5] if len(e) > 5 else (bc.proof_hash(proof, uses) if to in ("proved", "checked") else None)
         date = e[6] if len(e) > 6 else "2026-10-12"
         suffix = f" proof:{ph}" if ph else ""
         lines.append(f"- {date} | {frm} -> {to} | {actor} | {loc} | stmt:{hh}{suffix}")
@@ -179,7 +179,7 @@ PROOF = "Proof text."
 
 
 def write_reports(root: Path, label: str, proof: str = PROOF, verdict: str = "PASS",
-                  runs: str = "ab", target: str | None = None) -> str:
+                  runs: str = "ab", target: str | None = None, uses=()) -> str:
     """Verifier reports with the header the validator reads; returns ';'-joined locators."""
     locs = []
     for s in runs:
@@ -187,16 +187,16 @@ def write_reports(root: Path, label: str, proof: str = PROOF, verdict: str = "PA
         (root / "quality_reports" / "reviews" / name).write_text(
             f"# {label} Review — proof-verifier\n**Date:** 2026-10-12\n"
             f"**Reviewer:** proof-verifier (blind)\n**Target:** {target or label}\n"
-            f"**Score:** {verdict}\n**Proof:** {bc.proof_hash(proof)}\n**Status:** Active\n\nBody.\n",
+            f"**Score:** {verdict}\n**Proof:** {bc.proof_hash(proof, uses)}\n**Status:** Active\n\nBody.\n",
             encoding="utf-8")
         locs.append(f"quality_reports/reviews/{name}")
     return ";".join(locs)
 
 
 def climb(target: str, root: Path | None = None, label: str | None = None,
-          proof: str = PROOF) -> list[tuple]:
+          proof: str = PROOF, uses=()) -> list[tuple]:
     """A valid evidence log climbing the ladder from new to `target`."""
-    reports = write_reports(root, label, proof) if root is not None else PLAIN
+    reports = write_reports(root, label, proof, uses=uses) if root is not None else PLAIN
     steps = [("new", "conjecture", "theorist", ""),
              ("conjecture", "survived-search", "theorist", CHECK),
              ("survived-search", "proved", "theorist", ""),
@@ -216,7 +216,7 @@ def claim_at(bp: Path, label: str, target: str, uses=(), root: Path | None = Non
     if root is None:
         root = bp.parent.parent
     return write_node(bp, label, status=target, uses=uses,
-                      log=climb(target, root, label, kw["proof"] or PROOF), **kw)
+                      log=climb(target, root, label, kw["proof"] or PROOF, uses), **kw)
 
 
 def verdict(bp: Path, root: Path | None = None):
@@ -716,6 +716,30 @@ def test_mutation_killers(tmp: Path) -> None:
         p.write_text(txt, encoding="utf-8")
         ok, msg = raises(lambda: bc.parse_node(p))
         check(f"mk_missing_required_{key}", ok, msg)
+
+
+def test_final_review_fixes(tmp: Path) -> None:
+    """Fixes from the 2026-10-11 whole-branch review."""
+    # Important 1: the proof hash covers `uses`, so a checked node cannot be repointed silently.
+    root, bp = mkrepo(tmp)
+    p = claim_at(bp, "prop:a", "checked", uses=["asm:x"])
+    write_node(bp, "asm:x", kind="assumption")
+    write_node(bp, "asm:y", kind="assumption")
+    rep0 = verdict(bp, root)
+    p.write_text(p.read_text(encoding="utf-8").replace("uses: [asm:x]", "uses: [asm:y]"), encoding="utf-8")
+    rep = verdict(bp, root)
+    check("fr_uses_changed_after_checked", rep0.verdict == "PASS" and fails_naming(rep, "prop:a"),
+          f"{rep0.verdict} {rep0.errors} / {rep.errors}")
+    check("fr_proof_hash_depends_on_uses",
+          bc.proof_hash("P", ["a:b"]) != bc.proof_hash("P", ["a:c"])
+          and bc.proof_hash("P", ["a:b", "a:c"]) == bc.proof_hash("P", ["a:c", "a:b"])
+          and bc.proof_hash("P") == bc.statement_hash("P"))
+    # Re-graded Minor 1: the template's placeholder Score line is not a PASS.
+    root, bp = mkrepo(tmp)
+    reports = write_reports(root, "prop:a", "P.", verdict="PASS | FAIL | UNVERIFIED")
+    write_node(bp, "prop:a", status="checked", proof="P.", log=checked_log(root, "prop:a", "P.", reports))
+    rep = verdict(bp, root)
+    check("fr_score_placeholder_not_pass", fails_naming(rep, "prop:a"), str(rep.errors))
 
 
 # --- Task 3: CLI + STATUS.md -----------------------------------------------------

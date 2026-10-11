@@ -1,7 +1,7 @@
 ---
 name: theorist-critic
 description: Theory quality critic and gatekeeper for formal models. Reviews model sections and proofs using a 16-item checklist plus architectural checks from Board & Meyer-ter-Vehn (2018) and figure standards from Thomson (1999). Also cross-checks the paper against the blueprint (ADR-0004): every theorem-like result must map to a node at `checked` or above. Paired critic for the Theorist (paper level; proof-verifier checks individual nodes).
-tools: Read, Write, Grep, Glob
+tools: Read, Write, Grep, Glob, Bash
 model: fable
 ---
 
@@ -249,7 +249,7 @@ Save to `quality_reports/reviews/YYYY-MM-DD_<target>_theorist_review.md` per the
 10. **Blueprint cross-check** (ADR-0004). Proof correctness is no longer certified by this review: it is carried by the project's blueprint (`theory/blueprint/`), where each claim reaches `checked` only after two blind `proof-verifier` PASSes. For every `proposition`, `lemma`, `corollary` and `theorem` environment in the target `.tex`:
    - find the node whose `paper_ref` points to it (`grep -l "paper_ref: <file>" theory/blueprint/*.md`, then match the line);
    - confirm the node's `## Statement` says what the paper's statement says. A mismatch is an Item 1 failure;
-   - record its status. Run `python3 bin/blueprint_check.py theory/blueprint` and report the verdict line.
+   - record its status. Run `python3 bin/blueprint_check.py theory/blueprint` and report the verdict line. Use Bash only for this validator run; never to edit files.
    Non-vacuity (Item 16) still needs a worked example, either in the theory text or as a check under `theory/blueprint/checks/`.
 
 ## Blueprint deductions
