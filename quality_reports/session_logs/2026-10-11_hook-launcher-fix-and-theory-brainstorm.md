@@ -291,3 +291,15 @@ Accepted, not fixed:
 - whether Claude Code accepts a next-line plain description is unconfirmed (no YAML parser on this machine).
 
 No third cycle: the round-2 fixes are scoped and do not change the design.
+
+## 8. Lean setup spike (2026-10-12): blocked at step 1
+
+Machine state: no elan, lake, lean or uv; no proxy variables; WinHTTP is direct; 284 GB free on C:.
+
+Downloading the official installer `https://elan.lean-lang.org/elan-init.ps1` (into an empty folder under `C:\Users\christina.sun\lean\_downloads\elan\`, to be read before running) returned the corporate web filter's block page: "Website blocked … Threat found: Sandbox Suspicious". Nothing was downloaded or installed.
+
+This is an organisational security control, so no alternative mirror or download route was tried. Phase 2 cannot proceed on this machine until the owner chooses a path: request an allow-listing from IT, run the Lean lane on a personal machine, or defer phase 2 (spec §4 allows deferral).
+
+The owner chose to ask IT for an allow-list. A request draft was written outside the repo because it names the employer's IT service. HEAD probes found every host reachable: lean-lang.org, the GitHub releases, cache.mathlib.org (the current Mathlib cache host; lakecache.blob.core.windows.net is the legacy one), and PyPI. So the block is Zscaler's sandbox verdict on the downloaded files, not a host block.
+
+**Overlay defect found by the new lint.** `bin/agent_lint.py` run on the `behavioral` tree flagged `theorist.md` and `theorist-critic.md`: the `: ` description defect fixed on main in `a3a22b5` had never reached the overlay, so both agents were silently unregistered there. The four theory agent and skill files were synced from main (`10a0036`, pushed), and the overlay now lints clean (45 files). `bin/` and `templates/theory/` are still absent on the overlay; they come with the full Class A sync (Track A step 3, about 200 files behind main).

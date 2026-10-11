@@ -6,16 +6,16 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Active (doing now)
 
-- [ ] (none: next is the Lean lane, below)
+- [ ] **Theory phase 2, step 0: Lean setup spike** (spec §4): elan + a Mathlib project under `C:\Users\christina.sun\lean\` (outside OneDrive, `core.autocrlf=input`); test toolchain and Mathlib-cache downloads through the proxy, `lake build`, `#print axioms`, `leanchecker`, and `lean-lsp-mcp` on native Windows. The outcome decides whether phase 2 proceeds or is deferred. **BLOCKED 2026-10-12:** the corporate web filter blocks the elan installer ("Sandbox Suspicious"); the owner to choose between an IT allow-listing, a personal machine, or deferral (session log 2026-10-11 §8).
 
 ## Up Next
 
-- [ ] **Theory workflow — phase 2: Lean lane** (spec `quality_reports/specs/2026-10-11_theory-proof-workflow-spec.md` §4): setup spike first (elan + Mathlib outside OneDrive, `lean-lsp-mcp` and `leanchecker` on native Windows), then `formalizer`, fidelity cards, `bin/lean_check.py`. Pilot: BDD `prop:nstar-interior`.
+- [ ] **Theory workflow — phase 2: Lean lane** (spec `quality_reports/specs/2026-10-11_theory-proof-workflow-spec.md` §4): after the setup spike (Active): `formalizer`, fidelity cards, `bin/lean_check.py`. Pilot: BDD `prop:nstar-interior`.
 - [ ] **BDD theory: remaining claims** — 7 nodes still at `conjecture` (the wedge, gap-closure and bias results). Run `/theory develop` in BDD. The wedge proof's unstated step (b_t > 0 for t < T−1) was flagged by the known-answer theorist.
 - [ ] **BDD: install the phase-2 tools and declare mentions** — copy `bin/blueprint_tools.py` and the updated `bin/blueprint_check.py`; the new checks give ~32 warnings on 51 nodes, mostly variant statements naming their parent claim or dropped assumption. Each needs a judgment (dependency → `uses`, or `<!-- mentions: -->`); adding to `uses` changes the proof hash of a proved node.
 - [ ] **BDD tidy-ups**: three refuted variant nodes (`var:cogcons-wedge-{held-belief,terminal-belief,update}-cost`) still list the superseded `lem:martingale` in `uses`. Six PDFs under `master_supporting_docs/literature/papers/recursive/` show as modified only because they were committed as plain files under an LFS rule; decide whether to renormalize them to LFS.
 - [ ] **Modernize Track A, remaining steps** (plan `quality_reports/plans/2026-09-16_modernize-and-simplify-plan.md`):
-  - step 3: mirror the hook prune and Python ports onto the `behavioral` overlay; the overlay's own Class-B rules still call `theorist` overlay-only;
+  - step 3: mirror the hook prune and Python ports onto the `behavioral` overlay; the overlay's own Class-B rules still call `theorist` overlay-only. The overlay is ~200 files behind main and lacks `bin/blueprint_check.py`, `bin/blueprint_tools.py`, `bin/agent_lint.py` and `templates/theory/` (its `/theory` skill references them). Run `bin/agent_lint.py` on each branch after the sync;
   - step 4: one-time `.claude/` update of the live projects (`bdm_bic`, `belief_distortion_discrimination`);
   - step 5: retire `/tools propagate`, `sync-overlays` and `consumers.toml`.
 - [ ] **Model-routing experiment read-out** (ADR-0003/0004). Pilot evidence so far: verifier fable vs opus near-identical; opus slightly stricter in calibration round 1 and about twice as fast (session log 2026-10-11 §6). Revisit the `writer` exception after the voice build.
@@ -24,6 +24,8 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 - [ ] **`/tools sync-status` script** (§7.5 of the LFS/DVC plan): the subcommand exists only as prose steps.
 
 ## Waiting On
+
+- [ ] **IT allow-list for Lean** (requested by the owner, 2026-10-12): Zscaler's sandbox blocks the elan installer; hosts elan.lean-lang.org, GitHub releases for leanprover/elan and leanprover/lean4, github.com/leanprover-community, cache.mathlib.org. Unblocks the Lean setup spike.
 
 - [ ] **Paper wording, BDD Props 1–2** — the author (or the writer) rewords `theory/quadratic_loss_model_paper_v2.tex` from the checked nodes `prop:nstar-interior` and `prop:vol-commit-equiv-int`; the martingale lemma also needs its edge-case wording (`lem:martingale-horizon`).
 - [ ] **Work-repo fixes** (in a session opened in the consulting repo; prompt given 2026-10-11): guard launchers that trust the Store stub; recognising the `personal` repo class. Pushing from this machine depends on the second.
