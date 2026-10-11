@@ -121,7 +121,7 @@ The Orchestrator selects agents based on what the task requires:
 | Data engineering | data-engineer + coder-critic |
 | Identification strategy (applied-micro overlay) | strategist + strategist-critic |
 | Experimental design (behavioral overlay) | designer + designer-critic |
-| Formal theory/model (behavioral overlay) | theorist + theorist-critic |
+| Formal theory/model | theorist + proof-verifier (per node) + theorist-critic (paper) |
 | R/Stata/Python scripts | coder + coder-critic |
 | Paper manuscript | writer + writer-critic |
 | Peer review | Orchestrator → domain-referee + methods-referee |

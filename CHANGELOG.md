@@ -8,6 +8,13 @@ All notable changes to this fork are documented here. The format follows [Keep a
 
 ### Added
 
+- **Theory workflow on a blueprint (ADR-0004).** Theory is developed as a dependency graph of small nodes in `theory/blueprint/`. Each node has an immutable statement, a status ladder (`conjecture → survived-search → proved → checked → formalized → verified`, plus `refuted`, `conditional`, `superseded`) and an append-only evidence log.
+  - `bin/blueprint_check.py` (stdlib only) enforces the graph, status and evidence rules, returning PASS / UNVERIFIED / FAIL, and writes a `STATUS.md` with a Mermaid dependency graph.
+  - `theorist` and `theorist-critic` move from the behavioral overlay to `main`. `theorist` works under prove-or-refute: examples and counterexample search first, then assumption variants, and it may raise a node only as far as `proved`.
+  - New blind `proof-verifier` critic: it sees only a node's statement, its cleaned proof, and the statements of the nodes it uses. Two must PASS for `checked`.
+  - `theorist-critic` cross-checks every result in the paper against the blueprint.
+  - `/theory` modes: explore, node, variants, verify (with a `--model` override), status, review, develop.
+  - A Lean formalization lane (with user-signed fidelity cards) is planned as phase 2.
 - **Evidence-gating discipline** — operationalizes `adversarial-default`: a verdict is only as good as the evidence behind it, and the verification mechanism scales to how checkable the claim is. Prompted by a real incident where a critic passed a contaminated "no-logic-change" mechanical refactor. Built phase by phase, each phase adversarially reviewed by a multi-agent workflow and independently re-verified; those reviews caught real defects at every phase. Design of record: `quality_reports/reviews/2026-05-28_whole-picture-critic-gates-dispatch.md` §7; build plan: `quality_reports/plans/2026-05-29_evidence-gating-build-plan.md`.
   - **Tier-1 recorder** (`.claude/hooks/normdiff_lib.py` + `evidence-gate-recorder.py`, PostToolUse): records a normalized-content diff (`no-logic-change` ledger row) on each edit to a research artifact. Silent, non-blocking, fail-open. Language-agnostic core plus per-language normalizers (Stata/R/Python/LaTeX). Scope is per-repo configurable via an `**Analysis roots:**` header in CLAUDE.md (default-fallback, path-traversal-hardened). `/tools normdiff` CLI.
   - **The gate** (`.claude/agents/coder-critic.md`): consults the ledger at review time; a recorded residue forbids a clean-refactor PASS. Verdict vocabulary `{PASS, UNVERIFIED, FAIL}`. Gate on claims, not actions: evidence is gathered continuously, gating happens when a claim is made.

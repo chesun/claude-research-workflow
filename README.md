@@ -12,7 +12,7 @@ You describe what you want — an identification strategy, a data analysis, a pa
 
 ## Three branches, three surfaces
 
-- **`main` (universal).** Paradigm-agnostic research template. 17 agents, 14 skills, ~18 rules. Everything a general empirical project needs: discovery, data engineering, analysis, writing, peer review, submission.
+- **`main` (universal).** Paradigm-agnostic research template. 20 agents, 18 skills, ~18 rules. Everything a general empirical project needs: discovery, data engineering, analysis, writing, peer review, submission.
 - **`applied-micro`** (overlay). Adds identification-strategy tooling for observational/administrative-data research: `strategist` + `strategist-critic` agents, `/strategize`, `/balance`, `/event-study` skills, `air-gapped-workflow` rule.
 - **`behavioral`** (overlay). Adds experimental-economics and formal-theory tooling: `theorist`, `designer`, `otree-specialist`, `qualtrics-specialist` agents, `/theory`, `/design`, `/otree`, `/qualtrics`, `/preregister` skills, `experiment-design-principles` rule, experiments/theory folder trees.
 
@@ -116,7 +116,9 @@ Every creator has a paired critic. Critics never edit files — they score and r
 - `orchestrator` — dispatches agents, manages escalation, tracks scores
 - `verifier` — LaTeX compile, script execution, AEA replication audit
 
-Overlays add: `strategist` (applied), `designer`/`theorist`/`otree-specialist`/`qualtrics-specialist` (behavioral).
+- `theorist` + `proof-verifier` + `theorist-critic`: theory built node by node on a blueprint, with prove-or-refute exploration and two blind proof checks per node (`/theory`, ADR-0004)
+
+Overlays add: `strategist` (applied), `designer`/`otree-specialist`/`qualtrics-specialist` (behavioral).
 
 ### Quality Gates
 
@@ -148,18 +150,18 @@ Pre-compact hook saves state to disk. Session logs capture incremental progress.
 
 ## What's Included
 
-### Agents (`.claude/agents/` — 17 universal)
+### Agents (`.claude/agents/` — 20 universal)
 
-Creators: librarian, explorer, data-engineer, coder, writer, storyteller
-Critics: librarian-critic, explorer-critic, coder-critic, writer-critic, storyteller-critic, tikz-reviewer
+Creators: librarian, explorer, data-engineer, coder, writer, storyteller, theorist
+Critics: librarian-critic, explorer-critic, coder-critic, writer-critic, storyteller-critic, tikz-reviewer, proof-verifier, theorist-critic
 Peer review: domain-referee, methods-referee, editor
 Infrastructure: orchestrator, verifier
 
 Overlays add their own paradigm-specific agents.
 
-### Skills (`.claude/skills/` — 14 universal)
+### Skills (`.claude/skills/` — 18 universal)
 
-Pipeline: `/new-project`, `/discover`, `/analyze`, `/write`, `/review`, `/revise`, `/talk`, `/submit`
+Pipeline: `/new-project`, `/discover`, `/analyze`, `/theory`, `/write`, `/review`, `/revise`, `/talk`, `/submit`
 Utilities: `/commit`, `/context-status`, `/learn`, `/challenge`, `/deep-audit`, `/tools`
 
 `/tools` is a multi-subcommand router (compile, validate-bib, journal, deploy, learn, upgrade).

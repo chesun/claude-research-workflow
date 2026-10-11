@@ -158,6 +158,7 @@ See `quality.md` for weighted aggregation formula and per-target deduction table
 | `/new-project [topic]` | Full pipeline: idea → paper (orchestrated) |
 | `/discover [mode] [topic]` | Discovery: interview, literature, data, ideation |
 | `/analyze [dataset]` | End-to-end data analysis |
+| `/theory [mode] [label]` | Theory on a blueprint: prove-or-refute nodes, blind two-verifier checks, paper cross-check (ADR-0004) |
 | `/write [section]` | Draft paper sections (anti-hedging, notation protocol) |
 | `/humanize [path]` | Strip AI writing patterns from any external-facing doc (paper, slide, README, blog, cover/response letter) |
 | `/review [file/--flag]` | Quality reviews (routes by target) |
@@ -167,7 +168,7 @@ See `quality.md` for weighted aggregation formula and per-target deduction table
 | `/challenge [file --mode]` | Devil's advocate: `--paper`, `--fresh`, etc. |
 | `/tools [subcommand]` | Utilities: commit, compile, validate-bib, context-status, learn, sync-status, propagate, sync-overlays, list-consumers |
 
-Overlay branches add paradigm-specific skills: `applied-micro` adds `/strategize`, `/balance`, `/event-study`; `behavioral` adds `/design`, `/theory`, `/otree`, `/qualtrics`, `/preregister`.
+Overlay branches add paradigm-specific skills: `applied-micro` adds `/strategize`, `/balance`, `/event-study`; `behavioral` adds `/design`, `/otree`, `/qualtrics`, `/preregister`.
 
 ---
 

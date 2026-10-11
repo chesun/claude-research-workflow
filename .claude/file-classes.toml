@@ -92,8 +92,6 @@ branches = ["behavioral"]
 patterns = [
   ".claude/agents/designer.md",
   ".claude/agents/designer-critic.md",
-  ".claude/agents/theorist.md",
-  ".claude/agents/theorist-critic.md",
   ".claude/agents/otree-specialist.md",
   ".claude/agents/qualtrics-specialist.md",
   ".claude/references/domain-profile-behavioral.md",
@@ -105,7 +103,6 @@ patterns = [
   ".claude/skills/otree/SKILL.md",
   ".claude/skills/preregister/SKILL.md",
   ".claude/skills/qualtrics/SKILL.md",
-  ".claude/skills/theory/SKILL.md",
   "experiments/comprehension/.gitkeep",
   "experiments/designs/.gitkeep",
   "experiments/instructions/.gitkeep",
