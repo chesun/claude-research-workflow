@@ -393,7 +393,10 @@ def _check_node(n: Node, nodes: dict[str, Node], bp: Path, root: Path | None,
         errors.append(f"{L}: statement changed after it was logged (hash now {current_hash}); "
                       f"statements are immutable, create a new node instead")
 
-    checks_dir = (bp / "checks").resolve()
+    node_checks = f"checks/{L.replace(':', '-')}/"
+    checks_dir = (bp / node_checks).resolve()
+    reviews_dir = (root / "quality_reports" / "reviews").resolve() if root else None
+    today = date.today()
     prev_to = None
     prev_date = None
     last_proved_hash = None
@@ -406,6 +409,8 @@ def _check_node(n: Node, nodes: dict[str, Node], bp: Path, root: Path | None,
             d = date.fromisoformat(e.date)
             if prev_date is not None and d < prev_date:
                 errors.append(f"{where}: date {e.date} is earlier than the previous entry")
+            if d > today:
+                warnings.append(f"{where}: date {e.date} is in the future")
             prev_date = d
         except ValueError:
             errors.append(f"{where}: invalid date {e.date!r}")
@@ -451,7 +456,7 @@ def _check_node(n: Node, nodes: dict[str, Node], bp: Path, root: Path | None,
                     except ValueError:
                         pass
                 if not in_checks:
-                    unmet(f"needs an existing check file under {bp.name}/checks/")
+                    unmet(f"needs an existing check file under {bp.name}/{node_checks}")
             elif e.to == "proved":
                 if e.actor != "theorist":
                     errors.append(f"{where}: only the theorist may set 'proved' (actor {e.actor!r})")
@@ -469,7 +474,11 @@ def _check_node(n: Node, nodes: dict[str, Node], bp: Path, root: Path | None,
                         problems.append(f"{full.name} is the same file as another report")
                         continue
                     seen.add(ident)
-                    prob = _report_problem(full, L, e.proof_hash)
+                    try:
+                        full.relative_to(reviews_dir)
+                        prob = _report_problem(full, L, e.proof_hash)
+                    except (ValueError, TypeError):
+                        prob = "is not under quality_reports/reviews/"
                     if prob:
                         problems.append(f"{full.name} {prob}")
                     else:

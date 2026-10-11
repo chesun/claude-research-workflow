@@ -16,7 +16,8 @@ e.g. prop:example -> prop-example.md. Validate with:
 Header (exactly these keys; label, kind, status and uses are required):
   label         lowercase "prefix:name", e.g. prop:nstar, lem:band, asm:objective, def:vstop
   kind          definition | assumption        -> status: stated | superseded
-                claim | variant | imported     -> status ladder below (imported stops at checked)
+                claim | variant | imported     -> status ladder below (imported stops at checked; its check file
+                quotes the source from the reading notes, and its proof section cites where the result is proved)
   status        conjecture -> survived-search -> proved -> checked -> formalized -> verified
                 off-ladder (terminal): refuted | conditional | superseded
   uses          labels this node depends on, as [a, b] (use [] for none)

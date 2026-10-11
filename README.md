@@ -14,7 +14,7 @@ You describe what you want — an identification strategy, a data analysis, a pa
 
 - **`main` (universal).** Paradigm-agnostic research template. 20 agents, 18 skills, ~18 rules. Everything a general empirical project needs: discovery, data engineering, analysis, writing, peer review, submission.
 - **`applied-micro`** (overlay). Adds identification-strategy tooling for observational/administrative-data research: `strategist` + `strategist-critic` agents, `/strategize`, `/balance`, `/event-study` skills, `air-gapped-workflow` rule.
-- **`behavioral`** (overlay). Adds experimental-economics and formal-theory tooling: `theorist`, `designer`, `otree-specialist`, `qualtrics-specialist` agents, `/theory`, `/design`, `/otree`, `/qualtrics`, `/preregister` skills, `experiment-design-principles` rule, experiments/theory folder trees.
+- **`behavioral`** (overlay). Adds experimental-economics tooling: `designer`, `otree-specialist`, `qualtrics-specialist` agents, `/design`, `/otree`, `/qualtrics`, `/preregister` skills, `experiment-design-principles` rule, experiments folder tree. Theory tooling (`theorist`, `proof-verifier`, `/theory`) is on `main`.
 
 Main is the trunk. The two overlays are thin diffs maintained on their own branches. Universal improvements land on main and flow to both overlays via rebase.
 

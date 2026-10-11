@@ -43,6 +43,8 @@ No component can be below 80 for submission. A perfect literature review can't c
 
 ### When Components Are Missing
 
+The table lists every possible component, so its weights sum to more than 100% (115% with the theory row). The aggregate always divides by the sum of the weights of the components actually scored, so the effective weights sum to 100%. Without a theory component, the table above sums to exactly 100%.
+
 Not every project uses all components. If a component hasn't been scored:
 - It's excluded from the weighted average
 - Remaining weights are renormalized

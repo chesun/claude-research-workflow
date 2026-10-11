@@ -65,7 +65,7 @@ def write_node(d: Path, label: str, kind: str = "claim", status: str | None = No
         frm, to, actor, loc = e[:4]
         hh = e[4] if len(e) > 4 and e[4] else h
         ph = e[5] if len(e) > 5 else (bc.proof_hash(proof, uses) if to in ("proved", "checked") else None)
-        date = e[6] if len(e) > 6 else "2026-10-12"
+        date = e[6] if len(e) > 6 else "2026-01-15"  # fixed past date
         suffix = f" proof:{ph}" if ph else ""
         lines.append(f"- {date} | {frm} -> {to} | {actor} | {loc} | stmt:{hh}{suffix}")
     fields = {
@@ -164,8 +164,8 @@ def mkrepo(tmp: Path) -> tuple[Path, Path]:
     root = tmp / f"repo{_repo_n}"
     (root / ".git").mkdir(parents=True)
     bp = root / "theory" / "blueprint"
-    (bp / "checks" / "a").mkdir(parents=True)
-    (bp / "checks" / "a" / "s.py").write_text("print('ok')\n", encoding="utf-8")
+    (bp / "checks" / "prop-a").mkdir(parents=True)
+    (bp / "checks" / "prop-a" / "s.py").write_text("print('ok')\n", encoding="utf-8")
     rev = root / "quality_reports" / "reviews"
     rev.mkdir(parents=True)
     for r in ("r1.md", "r2.md"):
@@ -173,7 +173,17 @@ def mkrepo(tmp: Path) -> tuple[Path, Path]:
     return root, bp
 
 
-CHECK = "theory/blueprint/checks/a/s.py"
+CHECK = "theory/blueprint/checks/prop-a/s.py"  # the check file for prop:a
+
+
+def check_loc(root: Path | None, label: str) -> str:
+    """Create (if root is given) and return the check-file locator in a node's own folder."""
+    rel = f"theory/blueprint/checks/{label.replace(':', '-')}/s.py"
+    if root is not None:
+        f = root / rel
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text("print('ok')\n", encoding="utf-8")
+    return rel
 PLAIN = "quality_reports/reviews/r1.md;quality_reports/reviews/r2.md"  # files, but not verifier reports
 PROOF = "Proof text."
 
@@ -197,8 +207,9 @@ def climb(target: str, root: Path | None = None, label: str | None = None,
           proof: str = PROOF, uses=()) -> list[tuple]:
     """A valid evidence log climbing the ladder from new to `target`."""
     reports = write_reports(root, label, proof, uses=uses) if root is not None else PLAIN
+    chk = check_loc(root, label) if label else CHECK
     steps = [("new", "conjecture", "theorist", ""),
-             ("conjecture", "survived-search", "theorist", CHECK),
+             ("conjecture", "survived-search", "theorist", chk),
              ("survived-search", "proved", "theorist", ""),
              ("proved", "checked", "proof-verifier", reports),
              ("checked", "formalized", "user", ""),
@@ -382,7 +393,7 @@ def test_task2(tmp: Path) -> None:
     root, bp = mkrepo(tmp)
     write_node(bp, "prop:a", status="survived-search",
                log=[("new", "conjecture", "theorist", ""),
-                    ("conjecture", "survived-search", "theorist", "theory\\blueprint\\checks\\a\\s.py:3-5")])
+                    ("conjecture", "survived-search", "theorist", "theory\\blueprint\\checks\\prop-a\\s.py:3-5")])
     rep = verdict(bp, root)
     check("locator_backslash_and_linesuffix", rep.verdict == "PASS", str(rep.errors + rep.warnings))
 
@@ -444,6 +455,7 @@ def test_task2(tmp: Path) -> None:
 
 def checked_log(root: Path, label: str, proof: str, reports: str | None = None) -> list[tuple]:
     base = climb("proved", proof=proof)
+    base[1] = base[1][:3] + (check_loc(root, label),)
     return base + [("proved", "checked", "proof-verifier",
                     reports if reports is not None else write_reports(root, label, proof))]
 
@@ -467,7 +479,7 @@ def test_review_fixes(tmp: Path) -> None:
     root, bp = mkrepo(tmp)
     write_node(bp, "prop:a", status="survived-search",
                log=[("new", "conjecture", "theorist", ""),
-                    ("conjecture", "survived-search", "theorist", "theory/blueprint/checks/a")])
+                    ("conjecture", "survived-search", "theorist", "theory/blueprint/checks/prop-a")])
     rep = verdict(bp, root)
     check("rt_directory_locator_rejected", fails_naming(rep, "prop:a"), str(rep.errors))
 
@@ -514,11 +526,18 @@ def test_review_fixes(tmp: Path) -> None:
     # Low: a hard link is not a second report.
     root, bp = mkrepo(tmp)
     one = write_reports(root, "prop:a", "P.", runs="a")
-    os.link(root / one, root / "quality_reports" / "reviews" / "linked_review.md")
+    try:
+        os.link(root / one, root / "quality_reports" / "reviews" / "linked_review.md")
+        have_links = True
+    except (OSError, NotImplementedError, AttributeError):
+        have_links = False  # filesystem without hard links: skip rather than crash the suite
     write_node(bp, "prop:a", status="checked", proof="P.",
                log=checked_log(root, "prop:a", "P.", f"{one};quality_reports/reviews/linked_review.md"))
     rep = verdict(bp, root)
-    check("rt_hardlink_not_distinct", fails_naming(rep, "prop:a"), str(rep.errors))
+    if have_links:
+        check("rt_hardlink_not_distinct", fails_naming(rep, "prop:a"), str(rep.errors))
+    else:
+        check("rt_hardlink_not_distinct (skipped: no hard links on this filesystem)", True)
 
     # Medium: gap markers in any case/spacing; comment-only proofs are empty.
     for i, gap in enumerate(("[gap: x]", "[ GAP : x ]", "[Gap:x]")):
@@ -605,8 +624,8 @@ def test_review_fixes(tmp: Path) -> None:
 
     # Medium: no enclosing repo -> UNVERIFIED, not a misleading FAIL; --repo-root fixes it.
     nr = tmp / "norepo" / "theory" / "blueprint"
-    (nr / "checks" / "a").mkdir(parents=True)
-    (nr / "checks" / "a" / "s.py").write_text("x\n", encoding="utf-8")
+    (nr / "checks" / "prop-a").mkdir(parents=True)
+    (nr / "checks" / "prop-a" / "s.py").write_text("x\n", encoding="utf-8")
     write_node(nr, "prop:a", status="survived-search",
                log=[("new", "conjecture", "theorist", ""),
                     ("conjecture", "survived-search", "theorist", CHECK)])
@@ -740,6 +759,35 @@ def test_final_review_fixes(tmp: Path) -> None:
     write_node(bp, "prop:a", status="checked", proof="P.", log=checked_log(root, "prop:a", "P.", reports))
     rep = verdict(bp, root)
     check("fr_score_placeholder_not_pass", fails_naming(rep, "prop:a"), str(rep.errors))
+
+
+def test_deferred_minors(tmp: Path) -> None:
+    """Deferred minors from the whole-branch review, fixed before merge."""
+    # Minor 7: a check file must sit in the node's own checks/<label>/ folder.
+    root, bp = mkrepo(tmp)
+    write_node(bp, "prop:b", status="survived-search",
+               log=[("new", "conjecture", "theorist", ""),
+                    ("conjecture", "survived-search", "theorist", CHECK)])  # prop:a's folder
+    rep = verdict(bp, root)
+    check("dm_check_file_in_own_folder", fails_naming(rep, "prop:b"), str(rep.errors))
+    # Minor 8: verifier reports count only from quality_reports/reviews/.
+    root, bp = mkrepo(tmp)
+    locs = write_reports(root, "prop:a", "P.")
+    moved = []
+    for i, loc in enumerate(locs.split(";")):
+        dst = root / "theory" / "blueprint" / "checks" / "prop-a" / f"r{i}.md"
+        dst.write_text((root / loc).read_text(encoding="utf-8"), encoding="utf-8")
+        moved.append(f"theory/blueprint/checks/prop-a/r{i}.md")
+    write_node(bp, "prop:a", status="checked", proof="P.",
+               log=checked_log(root, "prop:a", "P.", ";".join(moved)))
+    rep = verdict(bp, root)
+    check("dm_reports_only_from_reviews", fails_naming(rep, "prop:a"), str(rep.errors))
+    # Minor 9: a future date is flagged (UNVERIFIED), not silently accepted.
+    root, bp = mkrepo(tmp)
+    write_node(bp, "prop:a", log=[("new", "conjecture", "theorist", "", "", None, "2099-01-01")])
+    rep = verdict(bp, root)
+    check("dm_future_date_warns", rep.verdict == "UNVERIFIED" and not rep.errors
+          and any("future" in w for w in rep.warnings), f"{rep.verdict} {rep.errors} {rep.warnings}")
 
 
 # --- Task 3: CLI + STATUS.md -----------------------------------------------------
