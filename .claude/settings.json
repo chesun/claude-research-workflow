@@ -53,7 +53,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/notify.py",
+            "command": "export PYTHONIOENCODING=utf-8; for p in python3 python py; do \"$p\" -c '' </dev/null 2>/dev/null && exec \"$p\" \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/notify.py; done; echo 'hook notify.py: no working Python (tried python3, python, py)' >&2; exit 1",
             "timeout": 5
           }
         ]
@@ -65,17 +65,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-files.py",
+            "command": "export PYTHONIOENCODING=utf-8; for p in python3 python py; do \"$p\" -c '' </dev/null 2>/dev/null && exec \"$p\" \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-files.py; done; echo 'hook protect-files.py: no working Python (tried python3, python, py)' >&2; exit 1",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/primary-source-check.py",
+            "command": "export PYTHONIOENCODING=utf-8; for p in python3 python py; do \"$p\" -c '' </dev/null 2>/dev/null && exec \"$p\" \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/primary-source-check.py; done; echo 'hook primary-source-check.py: no working Python (tried python3, python, py)' >&2; exit 1",
             "timeout": 10
           },
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stata-comment-balance-check.py",
+            "command": "export PYTHONIOENCODING=utf-8; for p in python3 python py; do \"$p\" -c '' </dev/null 2>/dev/null && exec \"$p\" \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stata-comment-balance-check.py; done; echo 'hook stata-comment-balance-check.py: no working Python (tried python3, python, py)' >&2; exit 1",
             "timeout": 10
           }
         ]
@@ -85,12 +85,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/destructive-action-guard.py",
+            "command": "export PYTHONIOENCODING=utf-8; for p in python3 python py; do \"$p\" -c '' </dev/null 2>/dev/null && exec \"$p\" \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/destructive-action-guard.py; done; echo 'hook destructive-action-guard.py: no working Python (tried python3, python, py)' >&2; exit 1",
             "timeout": 10
           },
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/review-receipt-check.py",
+            "command": "export PYTHONIOENCODING=utf-8; for p in python3 python py; do \"$p\" -c '' </dev/null 2>/dev/null && exec \"$p\" \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/review-receipt-check.py; done; echo 'hook review-receipt-check.py: no working Python (tried python3, python, py)' >&2; exit 1",
             "timeout": 15
           }
         ]
@@ -102,7 +102,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/post-rewrite-verify.py",
+            "command": "export PYTHONIOENCODING=utf-8; for p in python3 python py; do \"$p\" -c '' </dev/null 2>/dev/null && exec \"$p\" \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/post-rewrite-verify.py; done; echo 'hook post-rewrite-verify.py: no working Python (tried python3, python, py)' >&2; exit 1",
             "timeout": 5
           }
         ]
@@ -112,12 +112,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/derive-check-advisory.py",
+            "command": "export PYTHONIOENCODING=utf-8; for p in python3 python py; do \"$p\" -c '' </dev/null 2>/dev/null && exec \"$p\" \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/derive-check-advisory.py; done; echo 'hook derive-check-advisory.py: no working Python (tried python3, python, py)' >&2; exit 1",
             "timeout": 10
           },
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/evidence-gate-recorder.py",
+            "command": "export PYTHONIOENCODING=utf-8; for p in python3 python py; do \"$p\" -c '' </dev/null 2>/dev/null && exec \"$p\" \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/evidence-gate-recorder.py; done; echo 'hook evidence-gate-recorder.py: no working Python (tried python3, python, py)' >&2; exit 1",
             "timeout": 10
           }
         ]
@@ -128,7 +128,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/primary-source-audit.py",
+            "command": "export PYTHONIOENCODING=utf-8; for p in python3 python py; do \"$p\" -c '' </dev/null 2>/dev/null && exec \"$p\" \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/primary-source-audit.py; done; echo 'hook primary-source-audit.py: no working Python (tried python3, python, py)' >&2; exit 1",
             "timeout": 15
           }
         ]
