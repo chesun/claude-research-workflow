@@ -303,3 +303,15 @@ This is an organisational security control, so no alternative mirror or download
 The owner chose to ask IT for an allow-list. A request draft was written outside the repo because it names the employer's IT service. HEAD probes found every host reachable: lean-lang.org, the GitHub releases, cache.mathlib.org (the current Mathlib cache host; lakecache.blob.core.windows.net is the legacy one), and PyPI. So the block is Zscaler's sandbox verdict on the downloaded files, not a host block.
 
 **Overlay defect found by the new lint.** `bin/agent_lint.py` run on the `behavioral` tree flagged `theorist.md` and `theorist-critic.md`: the `: ` description defect fixed on main in `a3a22b5` had never reached the overlay, so both agents were silently unregistered there. The four theory agent and skill files were synced from main (`10a0036`, pushed), and the overlay now lints clean (45 files). `bin/` and `templates/theory/` are still absent on the overlay; they come with the full Class A sync (Track A step 3, about 200 files behind main).
+
+**Spike resumed (same day).** The owner reported that the filter flags harmless sites at random (it also blocks Adobe Acrobat), and confirmed with IT that alternative sources are fine. The owner had first downloaded a SourceForge mirror; it held macOS arm64 (Mach-O) binaries, unusable here, and was not used. Instead the official GitHub release was used: `elan-x86_64-pc-windows-msvc.zip` v4.2.4, whose SHA-256 matched GitHub's published asset digest (`fad2e980…6c111`). It was installed per-user with `--default-toolchain none`.
+
+Results, all PASS:
+- **Toolchain:** `lake +leanprover-community/mathlib4:lean-toolchain new spike math` in `C:\Users\christina.sun\lean\spike` (`core.autocrlf=input`) fetched Lean v4.35.0-rc4 from GitHub releases, the Mathlib v4.35.0-rc4 sources, and the prebuilt cache (9,004 files).
+- **Build:** two small lemmas (quadratic-loss minimum; concavity of −x²) build under `lake build --wfail` (exit 0). Mathlib now expects the module system, so files start with `module` and `public import`, and `set_option linter.style.header false` is needed for scratch files.
+- **Axioms:** `#print axioms` gives exactly [propext, Classical.choice, Quot.sound] for both.
+- **`sorry`:** fails with `-DwarningAsError=true` ("declaration uses `sorry`", exit 1).
+- **`leanchecker`:** exit 0, 51 s.
+- **`lean-lsp-mcp` 0.31.0** (pinned, own venv at `C:\Users\christina.sun\lean\_tools\lean-lsp-mcp`): the stdio handshake works on native Windows, with 22 tools including hosted search (leansearch, loogle, leanfinder, hammer premise). `lean_diagnostic_messages` on the spike file returns success with no items.
+
+Outcome: phase 2 proceeds. Not yet done: registering the MCP server with Claude Code (a settings change for the owner to approve), the phase-2 plan, and the machine-local Lean-path setting.
