@@ -8,7 +8,7 @@
 - A **strictly personal** research-workflow template (fork of Pedro Sant'Anna's `claude-code-my-workflow` via Hugo Sant'Anna's `clo-author`), re-targeted to research papers. Public release v0.1.0/v0.1.1 (2026-04-28).
 - Three branches: `main` (universal trunk), plus `applied-micro` and `behavioral` overlays on origin.
 - Remote: personal `chesun` account; git identity is the personal address. `main` matches `origin/main` (0 ahead/0 behind); working tree clean.
-- **The the employer consulting work has been split out** to the sibling repo `../the consulting repo` (enterprise-remote only, local for now). The the employer/guard/Copilot work done here is archived on the local-only branches `work` (`101bf43`) and `copilot-port` (`0ac057d`). The plan was to drop Copilot and run on Claude Code only (2026-09-15).
+- **The consulting work has been split out** to a sibling consulting repo (enterprise-remote only, local for now). The guard and Copilot work done here is archived on two local-only branches, the work branch (`101bf43`) and `copilot-port` (`0ac057d`). The plan was to drop Copilot and run on Claude Code only (2026-09-15).
 - `CLAUDE.md` header placeholders (`[YOUR PROJECT NAME]` etc.) are intentionally unfilled. This is the template, not a project.
 
 ## 2. Arc of work (high level)
@@ -19,7 +19,7 @@
 | May 2026 | Destructive-action guardrails (after the 2026-04-25 `filter-repo` incident); class-aware propagation to 7 consumer repos + overlay sync; Stata block-comment fix; context-tightening (−30% always-on rules); derive-don't-guess advisory hook |
 | late May 2026 | Evidence-gating discipline (Tier-1 normdiff recorder, coder-critic gate, Tier-2 citation-existence, Tier-3 advisory), distributed to all consumers |
 | Jun–Jul 2026 | DVC pilot on BDD finished; lab DVC guide; citation-guard regex hardening (~344 tests, telemetry); **ADR-0001**: GO for bulk LFS (+ selective DVC) migration |
-| Sep 2026 | Job change, so the employer port on a Windows laptop and then the repo split. **Modernize-and-simplify for Claude 5** (gates vs nags): pruned 10 nag hooks, ported `notify`/`protect-files` to Python. **ADR-0002**: mandatory independent review gate (`review-receipt-check.py`, fail-closed-escapably). Infra survey (integrate/adapt/skip). **ADR-0003**: reviewers on `fable`, workers on `opus` |
+| Sep 2026 | Job change: a port to a Windows work laptop, then the repo split. **Modernize-and-simplify for Claude 5** (gates vs nags): pruned 10 nag hooks, ported `notify`/`protect-files` to Python. **ADR-0002**: mandatory independent review gate (`review-receipt-check.py`, fail-closed-escapably). Infra survey (integrate/adapt/skip). **ADR-0003**: reviewers on `fable`, workers on `opus` |
 
 ## 3. Decisions in force
 
