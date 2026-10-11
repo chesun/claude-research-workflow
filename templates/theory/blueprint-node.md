@@ -40,7 +40,11 @@ Rules the validator enforces:
   - A downgrade (e.g. a verifier FAIL) needs an existing evidence file, normally the failing report.
   - Locators must be regular files inside the repo. URLs, absolute paths and paths outside the repo
     give UNVERIFIED, never PASS. Windows device names (nul, con, ...) and directories are errors.
-  - Only blank lines and HTML comments may sit between the header and ## Statement.
+  - Only blank lines and HTML comments may sit between the header and ## Statement. A separate comment there whose
+    text starts "mentions:" lists, comma-separated, the nodes the node names without depending on them
+    (e.g. a comment holding "mentions: asm:objective, prop:other"). It is outside both hashes.
+  - A statement or proof that cites a node label found in neither uses nor mentions gives a warning (UNVERIFIED).
+    A label is read as the longest label-shaped token, so write "lem:b's bound", not "lem:b-based bound".
   - -> formalized / verified need actor user.
   - A node at checked or above may depend only on definitions/assumptions or on nodes at checked or above.
 
@@ -50,6 +54,15 @@ The first line's <from> is "new". Dates are real and never decrease. "proof:" is
 Get both hashes for a node file with:
   python3 bin/blueprint_check.py --hashes theory/blueprint/<node>.md
 (/theory writes these lines for you.)
+
+Maintenance tools (bin/blueprint_tools.py):
+  verify-input <node>.md [--out FILE]   blind verifier input for a proved node; refuses unless the node is proved,
+                                        gap-free, free of validator errors (its own or its dependencies'), rests on
+                                        ready dependencies, and cites only nodes in uses or mentions
+  dependents <node>.md                  nodes that use or cite this one
+  repoint <node>.md [--apply]           move a superseded/conditional node's dependents to its first live successor.
+                                        Dependents at proved+ drop to survived-search; checked+ nodes resting on them
+                                        drop to proved. Its log lines carry the actor blueprint-tools.
 -->
 ## Statement
 For every c > 0 and prior variance s0 > 0, the value function V(n) is strictly concave in n on n >= 0.

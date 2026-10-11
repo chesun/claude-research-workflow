@@ -207,3 +207,87 @@ The first blind verify split, one UNVERIFIED and one PASS-with-caveat, and both 
 **Caveat on numerical evidence:** the shared helper `checks/_lib/cogcons_dp.py` (40-node Gauss–Hermite) is not monotone in x and produced spurious shape violations. The known-answer variants used it, but their verdicts rest on written arguments; the helper served as search evidence only. Do not use it for shape claims.
 
 Status: **phase 1 COMPLETE.** Spec acceptance #1–#6 and #9 are met. #7–#8 belong to phase 2 (Lean).
+
+## 7. Pushes and phase 2 prep (2026-10-12)
+
+**Pushes.** Sixteen unpushed workflow commits named the employer, which the personal-repo guard blocks. On the owner's choice ("Rewrite each commit"), they were replayed onto `origin/main` with neutral wording, keeping author and date: 165 replacements, local history only. The unscrubbed tip is kept locally as `main-backup-unscrubbed-2026-10-12`. A follow-up commit (`7c729db`) reworded two lines the mechanical replacement had left awkward. Pushed: `main` (17 commits) and `behavioral` (4). BDD was classified `personal` (approved remote: the owner's GitHub account) and its 10 pilot commits pushed.
+
+**Phase 2 prep: four tools, built TDD.**
+1. Validator (`bin/blueprint_check.py`): a proof that cites an existing node label in neither `uses` nor a declared mention gives a warning (UNVERIFIED).
+2. `bin/blueprint_tools.py verify-input`: builds the blind verifier input and refuses unless the node is ready.
+3. `bin/blueprint_tools.py dependents` and `repoint [--apply]`.
+4. `bin/agent_lint.py`: frontmatter lint for agents and skills.
+
+Tests: 117 validator, 30 tools, 45 lint. Every mutation of the new logic was caught except one, the label lookahead, which exposed a real bug (below).
+
+Rulings (each with its cost if wrong):
+- **Mentions.** On BDD's 51 nodes the first cut of the cited-label check gave 13 warnings, 12 of them meta-mentions ("asm:X is not used", "contradicting prop:Y"). So a node can declare `<!-- mentions: a, b -->` in the preamble before `## Statement`, which is outside both hashes: declaring a mention never forces re-verification. Cost if wrong: a mention could hide a real dependency. That is mitigated by the blind verifier, who flags a step resting on an unseen statement as UNVERIFIED.
+- **Warning, not error** (as the TODO specified). `verify-input` turns it into a hard refusal, which is where it matters.
+- **Lookahead dropped from `CITED_RE`.** A surviving mutation showed the `(?![a-z0-9:])` lookahead missed "By lem:b: …". Test `cl_label_before_colon` went RED→GREEN.
+- **verify-input refuses rather than strips.** It refuses on a `[GAP:` marker instead of removing the line. It strips HTML comments so no motivation reaches the verifier. It accepts only `proved` nodes. Cost: re-verifying a `checked` node for a model comparison needs it moved down first.
+- **repoint rewrites only `uses`.** It demotes dependents at proved or above to `survived-search`, keeping their search evidence, with actor `blueprint-tools` and the old and new node files as locators. It never edits proof prose (the validator then flags the stale citation for the theorist) and never edits statements (only reported). Terminal dependents are skipped. Cost: the theorist edits proof prose by hand.
+- **Tools in a separate file** (`bin/blueprint_tools.py`), so the validator stays a validator. Projects copy both files.
+- **agent_lint** checks `model` against aliases only (ADR-0003) and accepts a skill without `name`. It passes all 38 files here and 45 in BDD, and it flags the pre-fix `theorist.md` from before the 2026-10-11 fix.
+
+BDD trial (read-only): `verify-input` correctly refuses `var:band-tie-continue` (cites `asm:tie-stop`). `dependents lem:martingale` lists its 3 refuted users plus 1 cite. A `repoint` dry run finds nothing live to move. BDD still needs a pass declaring its 12 mentions. That is a judgment call per node, recorded in TODO.
+
+**ADR-0002 review, round 1** (fable; red-team 72/100, correctness 84/100; about 25 min of agent time, 380k agent tokens). Highs:
+- `repoint` did not cascade to checked nodes resting on a demoted dependent;
+- statement citations were never checked;
+- `verify-input` ignored validator errors, flagged by both lenses.
+
+Mediums:
+- `repoint` was not atomic, and a lone-CR file crashed it;
+- a mention could hide a dependency;
+- verify-input omitted the definitions and assumptions under the used claims;
+- the lint judged an empty `description` by other keys' blocks;
+- the correctness lens found test gaps by mutation.
+
+Every finding is fixed, each with a RED→GREEN test (validator 119, tools 54, lint 60), except the accepted ones below. The fixes redesigned `repoint` (an in-memory plan, the successor chain, the cascade to `proved`, pre-flight refusals, write-all-or-restore) and `verify-input` (a validator gate over the `uses` closure, base statements, a context-only section), so round 2 is running.
+
+Rulings:
+- **Mentioned nodes appear as "context only, not premises".** They are no longer withheld. BDD's variant statements name their parent claim and the dropped assumption: 30 statement warnings, which the verifier needs in order to read the claim at all.
+- **The cascade demotes `checked` to `proved`, not further.** The proof and verifier reports stay valid, so the node can return to `checked` without re-verification.
+
+Accepted, not fixed:
+- `x-lem:b` (glued after a hyphen) stays uncited, by design;
+- `lem:b-based` reads as the label `lem:b-based` (longest match; a label-shaped token);
+- multi-line quoted scalars and flow lists, and trailing ` #` comments, stay flagged as house style, with messages that now say so;
+- YAML 1.1 implicit typing (`name: yes`) is not checked, because Claude Code's parser is unknown;
+- a demoted node keeps its `lean:` declaration, which is reported for the user to decide;
+- two mutation survivors are benign: the writability pre-check is a second layer behind restore-on-failure, and the cascade line's proof hash is informational.
+
+**ADR-0002 review, round 2** (fresh fable agents; red-team 74/100, correctness 87/100; about 25 min, 430k agent tokens). Round-1 fixes held under re-attack, including restore on an injected mid-batch write failure. The correctness lens traced the climb-back: a cascaded node returns to `checked` on its original verifier reports.
+
+Highs:
+- the cascade line wrote the current proof hash, so a checked node edited after logging went from FAIL to PASS;
+- the lint crashed on a `description:` whose text starts on the next line.
+
+Mediums:
+- the cascade was global, demoting unrelated pre-existing errors;
+- unparseable dependents were silently dropped;
+- a dependency cycle did not block verify-input;
+- the comment-leak check skipped mentioned statements;
+- several behaviours were unpinned (mutations survived).
+
+All fixed, each with a RED→GREEN test, or pinned (tools 74, lint 64, validator 119):
+- a cascade line carries no proof hash, and repoint refuses any node with validator errors of its own;
+- the cascade is scoped to what this repoint lowers;
+- unparseable files make repoint refuse and dependents warn;
+- a cycle among the closure blocks verify-input;
+- the context section is built from one list of shown labels, so nothing appears as both a premise and context; it includes labels named by the shown statements, and a mention of no node blocks;
+- the future-date refusal applies only to logged nodes;
+- `--out <dir>` is a usage error;
+- lint: next-line descriptions are checked as plain scalars, a per-file exception guard was added, `README.md` in agents is skipped, a comment on `name` is no longer double-flagged, and messages are corrected.
+
+Pins: cascade locator, fixpoint order, restore on write failure, successor-self, supersession loop, transitive validator error, imported readiness, context without status or proof.
+
+A spot mutation run killed 3/3 before Claude Code stopped it for low system memory. The other 8 mutations were not run.
+
+Accepted, not fixed:
+- the CLAIM_KINDS filter in the cascade is now redundant with the scoping (only claims are lowered), so it is not separately pinned;
+- a `checked` dependency whose reports sit outside the repo counts as ready, matching the validator's UNVERIFIED design;
+- the lint flags dotted or spaced keys and does not catch less-indented block-scalar lines (house style; nothing in the repo is affected);
+- whether Claude Code accepts a next-line plain description is unconfirmed (no YAML parser on this machine).
+
+No third cycle: the round-2 fixes are scoped and do not change the design.

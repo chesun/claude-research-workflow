@@ -42,6 +42,12 @@ SECTION_RE = re.compile(r"^## (Statement|Proof|Evidence log)\s*$")
 LOOKALIKE_RE = re.compile(r"^\s{0,3}#{1,6}\s*(statement|proof|evidence\s*log)\s*:?\s*$", re.I)
 COMMENT_RE = re.compile(r"<!--.*?-->", re.S)
 GAP_RE = re.compile(r"\[\s*gap\s*:", re.I)
+# `<!-- mentions: a, b -->` before `## Statement`: labels the node names without using them.
+# It sits outside both hashed sections, so declaring a mention never forces re-verification.
+MENTIONS_RE = re.compile(r"<!--\s*mentions\s*:(.*?)-->", re.S | re.I)
+# A node label cited in prose: not glued to a preceding word, longest match (lem:b-two, not lem:b).
+# A leading `_` is allowed so Markdown italics (_lem:b_) still count.
+CITED_RE = re.compile(r"(?<![A-Za-z0-9:-])([a-z]+:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)")
 
 
 class NodeError(Exception):
@@ -73,6 +79,7 @@ class Node:
     proof: str
     log: list[LogEntry] = field(default_factory=list)
     path: Path | None = None
+    mentions: list[str] = field(default_factory=list)
 
 
 def _normalize(text: str) -> str:
@@ -99,6 +106,23 @@ def proof_hash(text: str, uses=()) -> str:
     if uses:
         body += "\n\x00uses:" + ",".join(sorted(uses))
     return hashlib.sha256(body.encode("utf-8")).hexdigest()[:12]
+
+
+def cited_labels(text: str) -> set[str]:
+    """Label-shaped tokens in text, ignoring <!-- comments -->. Not all are nodes."""
+    return set(CITED_RE.findall(COMMENT_RE.sub(" ", text)))
+
+
+def undeclared_citations(n: "Node", nodes: dict) -> list[tuple[str, str]]:
+    """[(label, 'statement' | 'proof')]: existing nodes cited but in neither uses nor mentions."""
+    out, seen = [], set()
+    for where, text in (("statement", n.statement), ("proof", n.proof)):
+        for c in sorted(cited_labels(text)):
+            if (c in nodes and c != n.label and c not in n.uses and c not in n.mentions
+                    and c not in seen):
+                seen.add(c)
+                out.append((c, where))
+    return out
 
 
 def label_to_filename(label: str) -> str:
@@ -194,6 +218,15 @@ def parse_node(path: Path) -> Node:
     if COMMENT_RE.sub("", "\n".join(preamble)).strip():
         raise err("text between the header and '## Statement' (only blank lines or "
                   "<!-- comments --> are allowed there)")
+    mentions: list[str] = []
+    for block in MENTIONS_RE.findall("\n".join(preamble)):
+        for item in (x.strip() for x in block.split(",")):
+            if not item:
+                continue
+            if not LABEL_RE.match(item):
+                raise err(f"mentions: {item!r} is not a node label")
+            if item not in mentions:
+                mentions.append(item)
     if "Statement" not in sections:
         raise err("missing '## Statement' section")
     if "Evidence log" not in sections:
@@ -218,7 +251,7 @@ def parse_node(path: Path) -> Node:
         lean=header.get("lean"), paper_ref=header.get("paper_ref"),
         statement=_normalize("\n".join(sections["Statement"])),
         proof=_normalize("\n".join(sections.get("Proof", []))),
-        log=log, path=path,
+        log=log, path=path, mentions=mentions,
     )
 
 
@@ -522,6 +555,16 @@ def _check_node(n: Node, nodes: dict[str, Node], bp: Path, root: Path | None,
 
     # Terminal nodes are history: what they used no longer matters.
     if n.status not in TERMINAL:
+        # A statement or proof that leans on a node missing from `uses` escapes the dependency
+        # checks, and its blind verifier never sees that node's statement.
+        for c, where in undeclared_citations(n, nodes):
+            warnings.append(f"{L}: {where} cites {c}, which is not in uses; add it to uses, or "
+                            f"declare <!-- mentions: {c} --> above '## Statement' if it is only named")
+        for m in n.mentions:
+            if m == L:
+                warnings.append(f"{L}: mentions itself")
+            elif m not in nodes:
+                warnings.append(f"{L}: mentions {m}, but there is no such node")
         for u in n.uses:
             dep = nodes.get(u)
             if dep is None or u == L:

@@ -6,16 +6,13 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Active (doing now)
 
-- [ ] **Theory workflow — phase 2 prep** (from the phase-1 pilot read-out, session log 2026-10-11 §6). Four small tools, ADR-0002 review for anything in `bin/`:
-  1. `--verify-input <label>`: build the blind `/theory verify` input from a node (statement, cleaned proof, `uses` statements, proof hash).
-  2. A uses-vs-cited-labels check: the validator warns when a proof cites a `prefix:label` node that is missing from `uses` (this caused the `lem:band` UNVERIFIED).
-  3. A dependents-repoint tool: when a node becomes `conditional`/`superseded`, list and repoint its dependents, re-logging proved nodes because the proof hash covers `uses`.
-  4. An agent-frontmatter lint: `: ` inside `description:` silently unregistered two agents.
+- [ ] (none: next is the Lean lane, below)
 
 ## Up Next
 
 - [ ] **Theory workflow — phase 2: Lean lane** (spec `quality_reports/specs/2026-10-11_theory-proof-workflow-spec.md` §4): setup spike first (elan + Mathlib outside OneDrive, `lean-lsp-mcp` and `leanchecker` on native Windows), then `formalizer`, fidelity cards, `bin/lean_check.py`. Pilot: BDD `prop:nstar-interior`.
 - [ ] **BDD theory: remaining claims** — 7 nodes still at `conjecture` (the wedge, gap-closure and bias results). Run `/theory develop` in BDD. The wedge proof's unstated step (b_t > 0 for t < T−1) was flagged by the known-answer theorist.
+- [ ] **BDD: install the phase-2 tools and declare mentions** — copy `bin/blueprint_tools.py` and the updated `bin/blueprint_check.py`; the new checks give ~32 warnings on 51 nodes, mostly variant statements naming their parent claim or dropped assumption. Each needs a judgment (dependency → `uses`, or `<!-- mentions: -->`); adding to `uses` changes the proof hash of a proved node.
 - [ ] **BDD tidy-ups**: three refuted variant nodes (`var:cogcons-wedge-{held-belief,terminal-belief,update}-cost`) still list the superseded `lem:martingale` in `uses`. Six PDFs under `master_supporting_docs/literature/papers/recursive/` show as modified only because they were committed as plain files under an LFS rule; decide whether to renormalize them to LFS.
 - [ ] **Modernize Track A, remaining steps** (plan `quality_reports/plans/2026-09-16_modernize-and-simplify-plan.md`):
   - step 3: mirror the hook prune and Python ports onto the `behavioral` overlay; the overlay's own Class-B rules still call `theorist` overlay-only;
@@ -48,6 +45,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Done (recent)
 
+- [x] 2026-10-12 — **Theory phase 2 prep**: `bin/blueprint_tools.py` (verify-input, dependents, repoint with cascade), cited-label + mentions check in the validator, `bin/agent_lint.py`; two ADR-0002 review rounds, all findings fixed or accepted (session log 2026-10-11 §7). Also: history scrubbed and pushed; BDD classified personal and pushed.
 - [x] 2026-10-12 — **Theory workflow phase 1 COMPLETE** (ADR-0004; merged; plan `quality_reports/plans/2026-10-11_theory-workflow-phase1-plan.md` COMPLETED). The BDD pilot found 3 statement defects in the paper, rediscovered the referees' findings blind, and ended with 4 checked nodes (51 total); calibration met spec acceptance #2. Read-out: session log 2026-10-11 §6.
 - [x] 2026-10-11 — **Hook test suites pass on Windows** (all 8; citation-lib backslash paths and `sys.executable` runner; UTF-8 output; junction fallback; pinned pytest dev env). Reviewed under ADR-0002.
 - [x] 2026-10-11 — **Hooks were silently failing open** (the `python3` Store stub): the launcher now probes python3/python/py and forces UTF-8 output. App Execution Aliases turned off.

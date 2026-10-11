@@ -790,6 +790,96 @@ def test_deferred_minors(tmp: Path) -> None:
           and any("future" in w for w in rep.warnings), f"{rep.verdict} {rep.errors} {rep.warnings}")
 
 
+def test_phase2_cited_labels(tmp: Path) -> None:
+    """Phase 2 prep: a proof that cites a node missing from `uses` is flagged (lem:band, 2026-10-11)."""
+    def setup(proof: str, uses=("def:x",), status: str = "proved"):
+        root, bp = mkrepo(tmp)
+        write_node(bp, "def:x", kind="definition")
+        write_node(bp, "lem:b")
+        write_node(bp, "lem:b-two")
+        claim_at(bp, "prop:a", status, uses=list(uses), root=root, proof=proof)
+        return verdict(bp, root)
+
+    rep = setup("By lem:b and def:x, done.")
+    check("cl_cited_not_in_uses_warns",
+          rep.verdict == "UNVERIFIED" and not rep.errors
+          and any("prop:a" in w and "lem:b" in w and "uses" in w for w in rep.warnings),
+          f"{rep.verdict} {rep.errors} {rep.warnings}")
+    rep = setup("By `lem:b`, done.", uses=("def:x", "lem:b"), status="survived-search")
+    check("cl_cited_in_uses_silent", rep.verdict == "PASS", f"{rep.verdict} {rep.errors} {rep.warnings}")
+    rep = setup("As prop:a claims; see foo:bar and https://example.org.")
+    check("cl_self_and_unknown_tokens_ignored", rep.verdict == "PASS", f"{rep.verdict} {rep.warnings}")
+    rep = setup("Apply lem:b-two.")
+    check("cl_longest_label_wins",
+          any("cites lem:b-two," in w for w in rep.warnings) and not any("cites lem:b," in w for w in rep.warnings),
+          str(rep.warnings))
+    rep = setup("Apply lem:b-two.", uses=("def:x", "lem:b-two"), status="survived-search")
+    check("cl_prefix_label_not_matched", rep.verdict == "PASS", f"{rep.verdict} {rep.warnings}")
+    rep = setup("Done by lem:b's bound.")
+    check("cl_possessive_and_punctuation", any("lem:b" in w for w in rep.warnings), str(rep.warnings))
+    rep = setup("By lem:b: the bound holds.")
+    check("cl_label_before_colon", any("cites lem:b," in w for w in rep.warnings), str(rep.warnings))
+    rep = setup("Done. <!-- compare lem:b -->")
+    check("cl_comment_ignored", rep.verdict == "PASS", f"{rep.verdict} {rep.warnings}")
+    root, bp = mkrepo(tmp)
+    write_node(bp, "lem:b")
+    write_node(bp, "prop:a", status="refuted", proof="Uses lem:b.",
+               log=[("new", "conjecture", "theorist", ""), ("conjecture", "refuted", "theorist", CHECK)])
+    rep = verdict(bp, root)
+    check("cl_terminal_node_skipped", rep.verdict == "PASS", f"{rep.verdict} {rep.errors} {rep.warnings}")
+    # A declared mention (named, not depended on) is silent and leaves both hashes unchanged.
+    root, bp = mkrepo(tmp)
+    write_node(bp, "def:x", kind="definition")
+    write_node(bp, "lem:b")
+    write_node(bp, "lem:c")
+    p = claim_at(bp, "prop:a", "proved", uses=["def:x"], root=root,
+                 proof="lem:b is not used here; nor is lem:c.",
+                 raw_prefix="")
+    before = bc.parse_node(p)
+    txt = p.read_text(encoding="utf-8").replace("---\n## Statement", "---\n<!-- mentions: lem:b -->\n## Statement", 1)
+    p.write_text(txt, encoding="utf-8")
+    after = bc.parse_node(p)
+    rep = verdict(bp, root)
+    check("cl_mention_declared_silent",
+          after.mentions == ["lem:b"] and not any("cites lem:b," in w for w in rep.warnings)
+          and any("cites lem:c," in w for w in rep.warnings), f"{after.mentions} {rep.warnings}")
+    check("cl_mention_keeps_hashes",
+          (bc.statement_hash(before.statement), bc.proof_hash(before.proof, before.uses))
+          == (bc.statement_hash(after.statement), bc.proof_hash(after.proof, after.uses)))
+    txt = txt.replace("<!-- mentions: lem:b -->", "<!--\n  mentions: lem:b,\n  lem:c\n-->")
+    p.write_text(txt, encoding="utf-8")
+    check("cl_mentions_multiline", bc.parse_node(p).mentions == ["lem:b", "lem:c"]
+          and verdict(bp, root).verdict == "PASS", str(bc.parse_node(p).mentions))
+    p.write_text(txt.replace("lem:c\n-->", "Lem C\n-->"), encoding="utf-8")
+    ok, msg = raises(lambda: bc.parse_node(p))
+    check("cl_mentions_bad_label_rejected", ok and "mentions" in msg, msg)
+    check("cl_cited_labels_helper",
+          bc.cited_labels("x lem:b, lem:b-two; (def:x) <!-- asm:z --> Xlem:q x-lem:r a::lem:t _lem:s_") == {"lem:b", "lem:b-two", "def:x", "lem:s"},
+          str(bc.cited_labels("x lem:b, lem:b-two; (def:x) <!-- asm:z --> Xlem:q x-lem:r a::lem:t _lem:s_")))
+
+
+def test_phase2_review_fixes(tmp: Path) -> None:
+    """Fixes from the 2026-10-12 red-team and correctness reviews of the phase-2 tools."""
+    # High: a statement that names a node missing from `uses` is flagged like a proof citation.
+    root, bp = mkrepo(tmp)
+    write_node(bp, "asm:zz-sentinel", kind="assumption", statement="The sentinel assumption holds.")
+    claim_at(bp, "prop:a", "proved", uses=[], root=root, statement="Under asm:zz-sentinel, V is concave.",
+             proof="Immediate.")
+    rep = verdict(bp, root)
+    check("rf_statement_citation_warns",
+          any("prop:a" in w and "statement cites asm:zz-sentinel," in w for w in rep.warnings),
+          f"{rep.verdict} {rep.warnings}")
+    # Low: a mention that is the node itself or names no node is reported.
+    root, bp = mkrepo(tmp)
+    p = write_node(bp, "prop:a")
+    p.write_text(p.read_text(encoding="utf-8").replace("---\n## Statement",
+                 "---\n<!-- mentions: prop:a, lem:zz-nope -->\n## Statement", 1), encoding="utf-8")
+    rep = verdict(bp, root)
+    check("rf_mention_self_and_unknown_warn",
+          any("mentions itself" in w for w in rep.warnings)
+          and any("lem:zz-nope" in w and "no such node" in w for w in rep.warnings), str(rep.warnings))
+
+
 # --- Task 3: CLI + STATUS.md -----------------------------------------------------
 
 def run_cli(args: list[str]) -> tuple[int, str]:

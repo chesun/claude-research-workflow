@@ -8,6 +8,8 @@ When writing a new review, consult this index first. If an `Active` entry exists
 
 ## 2026-10
 
+- [2026-10-12_theory-phase2-tools-r2_red-team_review.md](2026-10-12_theory-phase2-tools-r2_red-team_review.md) — phase-2 theory tools (`bin/blueprint_tools.py`, `bin/agent_lint.py`, validator cited-label check), red team round 2, 74/100; all findings fixed or accepted (session log 2026-10-11 §7), Active
+- [2026-10-12_theory-phase2-tools-r2_correctness_review.md](2026-10-12_theory-phase2-tools-r2_correctness_review.md) — same, correctness round 2, 87/100; fixed or accepted (session log §7), Active
 - [2026-10-11_hooks-windows-tests_redteam_review.md](2026-10-11_hooks-windows-tests_redteam_review.md) — hook Windows test fixes, red team 78/100; High fixed (session log §5), Active
 - [2026-10-11_hooks-windows-tests_correctness_review.md](2026-10-11_hooks-windows-tests_correctness_review.md) — hook Windows test fixes, correctness 82/100; fixed/accepted (session log §5), Active
 - [2026-10-11_blueprint-check_redteam_review.md](2026-10-11_blueprint-check_redteam_review.md) — `bin/blueprint_check.py` red team, 58/100; all Critical/High/Medium fixed (session log 2026-10-11 §4), Active
