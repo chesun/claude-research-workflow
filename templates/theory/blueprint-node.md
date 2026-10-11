@@ -30,15 +30,22 @@ Rules the validator enforces:
   - Status moves up one rung at a time, down any number, or to a terminal status. Nothing leaves a terminal status.
   - status must equal the last log line's target.
   - -> survived-search needs a check file under theory/blueprint/checks/.
-  - -> proved needs actor theorist, a non-empty proof, and no [GAP: ...] marker.
-  - -> checked needs actor proof-verifier and two distinct verifier reports.
+  - -> proved needs actor theorist, a non-empty proof, no [GAP: ...] marker (any case), and the proof hash.
+  - -> checked needs actor proof-verifier, the same proof hash, and two distinct proof-verifier
+    reports whose headers name this label, Score PASS and that proof hash.
+  - While a node is proved or above, its proof must still match the last logged proof hash.
+  - A downgrade (e.g. a verifier FAIL) needs an existing evidence file, normally the failing report.
+  - Locators must be regular files inside the repo. URLs, absolute paths and paths outside the repo
+    give UNVERIFIED, never PASS. Windows device names (nul, con, ...) and directories are errors.
+  - Only blank lines and HTML comments may sit between the header and ## Statement.
   - -> formalized / verified need actor user.
   - A node at checked or above may depend only on definitions/assumptions or on nodes at checked or above.
 
 Evidence-log line format (one per status change; locators are repo-relative, separated by ';'):
-  - YYYY-MM-DD | <from> -> <to> | <actor> | <locator>[;<locator>] | stmt:<12-hex statement hash>
-The first line's <from> is "new". Get the hash with:
-  python3 -c "import sys; sys.path.insert(0,'bin'); import blueprint_check as b; print(b.statement_hash(open('STATEMENT.txt',encoding='utf-8').read()))"
+  - YYYY-MM-DD | <from> -> <to> | <actor> | <locator>[;<locator>] | stmt:<12-hex statement hash>[ proof:<12-hex proof hash>]
+The first line's <from> is "new". Dates are real and never decrease. "proof:" is required on -> proved and -> checked.
+Get both hashes for a node file with:
+  python3 bin/blueprint_check.py --hashes theory/blueprint/<node>.md
 (/theory writes these lines for you.)
 -->
 ## Statement

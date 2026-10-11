@@ -50,3 +50,51 @@ Primer for discussion: `quality_reports/2026-10-11_math-research-with-claude-pri
 **Pilot:** BDD cloned at `github_repos/belief_distortion_discrimination`, inside OneDrive (fine for the paper repo; the Lean project goes outside). Theory v2 has Assumption 1, Props 1–7, the band lemma and Cor 1. Its 2026-09-14 blind reviews confirmed the math and found the flow-vs-terminal belief-cost primitive, which becomes the known-answer test.
 
 **Spec written:** `quality_reports/specs/2026-10-11_theory-proof-workflow-spec.md` (DRAFT, awaiting user review).
+
+## 4. Phase 1 build (branch `theory-workflow-phase1`; plan `quality_reports/plans/2026-10-11_theory-workflow-phase1-plan.md`)
+
+User approved the spec ("if there is no major deviation from the walkthrough") and the plan, and chose native execution. Tasks 0–8 were built on a feature branch, `theory-workflow-phase1`; the overlay copy is on a local `behavioral` branch, not pushed. Rulings are in the executor ledger. The main ones:
+- `bin/` was held uncommitted until its review (ADR-0002);
+- the overlay was updated through a temp worktree;
+- the BDD pilot (Tasks 9–12) needs a session opened in the BDD repo.
+
+### ADR-0002 review of `bin/blueprint_check.py` + tests
+
+Two blind lenses on `fable`: red team 58/100 (`2026-10-11_blueprint-check_redteam_review.md`) and correctness 78/100 (`..._correctness_review.md`).
+
+**Fixed.** Each fix has a test that failed first; the suite went from 50 to 97 checks.
+- **Critical:** Windows device names (`nul`, `con`, …) counted as existing evidence files. They are now rejected, and locators must be regular files.
+- **High:**
+  - Directories satisfied every existence rule.
+  - Any two files counted as "two verifier reports". Reports must now carry `**Reviewer:** proof-verifier`, `**Target:** <label>`, `**Score:** PASS`, and `**Proof:** <hash>`, and they are de-duplicated by file identity, so hard links don't count twice.
+  - The proof was never hashed, so a checked proof could be replaced, and old reports could be reused after a re-climb. `-> proved` and `-> checked` now log ` proof:<hash>`; the current proof must match it; the checked hash must equal the proved hash; and reports must name that hash.
+  - Non-ASCII output crashed the command line on the cp1252 console. Its output is now reconfigured to UTF-8.
+- **Medium:**
+  - `[GAP:` matching is now case- and space-insensitive, and comment-only proofs count as empty.
+  - Look-alike section headings and stray text before `## Statement` are rejected.
+  - The cycle search is iterative (a 1,500-node chain passed).
+  - Empty statements are rejected.
+  - With no enclosing repo, the result is UNVERIFIED, not a misleading FAIL, and there is a new `--repo-root` flag.
+  - Masked and mutation-surviving tests were replaced by single-rule tests (E4 on verified, the imported cap, new→conjecture, G3 "stated", the E5 unknown successor, the Mermaid id, sorting, required keys).
+- **Low:**
+  - dates validated and non-decreasing;
+  - `superseded_by` may not be self or refuted, and `supersedes` must exist;
+  - drive-relative (`C:x`) and URL locators give UNVERIFIED;
+  - `STATUS.md` is written with LF and escapes pipes;
+  - quoted header values are accepted;
+  - new `--hashes <node>` helper.
+
+The format change reached the template, `theorist`, `proof-verifier` (a `**Proof:**` header line) and `/theory verify`.
+
+**Accepted, with reasons:**
+- **Actor field unauthenticated; statement and proof hashes self-attested; append-only not provable from a snapshot.** These are inherent to a file-based check. Git history is the backstop, and the review gate covers the tooling.
+- **Evidence content other than verifier-report headers is not read.** By design: the validator checks provenance, not mathematics.
+- **`imported` reading-notes rule not enforced by the script.** It is enforced by the theorist protocol and `primary-source-first.md`.
+- **The plan's `g2_duplicate_label` test is absent.** The guard is unreachable: labels are lowercase and map 1:1 to filenames.
+- **Case-insensitive-filesystem edge on macOS.** Labels are lowercase-only, and the filename comparison is exact.
+- **`|` cannot appear inside a locator.** The format reserves it.
+- **The test file needs Python 3.10 or later; the module runs on 3.7 or later.** The repo runs 3.14.
+- **The downgrade-needs-locator rule is stricter than the plan's S2.** Kept deliberately: the spec says a verifier FAIL records the failing report. It is now documented in the template.
+- **The no-repo warning echoes the path as given.** Harmless.
+
+**Cost:** two lenses, about 353k agent tokens in total (red team 157k / 9.6 min; correctness 196k / 14.3 min). Findings: 1 Critical, 4 High, about 9 Medium, about 19 Low.
