@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Status:** APPROVED (user, 2026-10-11) — Tasks 0–8 executed on branch `theory-workflow-phase1`; Tasks 9–12 (BDD pilot) pending
+**Status:** COMPLETED 2026-10-11 — Tasks 0–8 merged to main; Tasks 9–12 run in `belief_distortion_discrimination` (read-out: session log 2026-10-11 §6)
 
 **Goal:** Ship the blueprint, prove-or-refute exploration, and blind two-verifier checking on `main`, then pilot them on `belief_distortion_discrimination` (BDD) theory v2.
 

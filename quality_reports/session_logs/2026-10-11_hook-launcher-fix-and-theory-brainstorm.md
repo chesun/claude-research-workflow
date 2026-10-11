@@ -138,3 +138,72 @@ All eight suites now pass on Windows.
 - **Cost:** about 283k agent tokens.
 
 **Also found:** the destructive-action guard does not path-gate Windows OneDrive at all; it has macOS prefixes only. Recorded in TODO as separate work.
+
+## 6. Phase 1 pilot read-out (`belief_distortion_discrimination` theory v2; plan Tasks 9–12)
+
+**Setup.**
+- The BDD clone's index was missing, so git listed every file as staged for deletion. The cause was a filename containing `|`, which Windows cannot hold. The user renamed it upstream, and the index was rebuilt from HEAD without touching any file.
+- Tooling installed as commit `44d746b` (bin/ waiver: verbatim copies of code already reviewed in this repo).
+- Windows `.venv` with pinned theory tools in `theory/requirements-theory.txt`.
+- Restore tag: `pre-theory-workflow-2026-10`.
+
+**Blueprint.** `/theory explore` built 30 nodes, ending in `BLUEPRINT: PASS` (`aa0d2ff`). The blueprint now has 48 nodes:
+- 3 checked, 12 proved, 8 conjecture, 19 stated;
+- 3 conditional (the original statements that were repaired);
+- 3 refuted variants.
+
+**What the workflow found in the paper.** None of these were in the 2026-09-14 reviews, which reported the math "correct by re-derivation":
+1. **Prop 1 (`prop:nstar`) is false as stated.**
+   - "Negative otherwise" fails at σ_d = σ₀²/(2√c), where the derivative is 0.
+   - The strict comparative statics fail on the corner region, where n* ≡ 0.
+   - The paper's proof also never derives the corner case its statement asserts.
+
+   Found blind by both verifier models in calibration round 1; confirmed independently by the theorist with SymPy. The repair `prop:nstar-interior` is **checked** (4/4 blind PASS).
+2. **Prop 2 (`prop:vol-commit-equiv`) is ill-posed.** It equates the real-valued n* with an integer stopping time. At the paper's own parameters, n* = 9.75 while both regimes stop at 10. The repair `prop:vol-commit-equiv-int` gives the exact integer statement and the rounding rule (equality iff n* ∈ {0..T}), and is **checked** (4/4).
+3. **`lem:martingale` is false in one edge case.** "Not a martingale given θ" fails at T = 1, θ = μ₀. The repair `lem:martingale-horizon` is **checked** (4/4), with each part's probability measure explicit.
+4. **The known-answer test passed (spec #3).** Working blind in a scratch copy with no reviews, the variant step rediscovered the referees' central finding: terminal-belief cost collapses the wedge, and so do held-belief and update-step costs. It also showed that attributing the wedge to γ rests on normal-normal signals and a location-invariant loss, which is the methods referee's identification point. Eight assumptions proved superfluous, and an unstated step in the wedge proof (b_t > 0 for t < T−1) was flagged.
+
+**Calibration (spec #2).**
+- **Round 1 was invalid as a calibration** because the "correct" baseline inherited the false statement. Both models correctly FAILed it. On the planted errors opus caught 3/4 and fable 2/4, plus one fable noticed but rated non-failing. Both missed a weak plant.
+- **Round 2** (corrected statement, the theorist's proof, 12 runs): 4/4 planted errors caught on each model, and the correct proof PASSed on both. **Met.**
+
+**Model comparison (spec #9; small sample, a judgment rather than a statistic).**
+
+| | fable | opus |
+|---|---|---|
+| Round-1 planted errors caught | 2/4 (+1 noted as non-failing) | 3/4 |
+| Found the real statement defect (round 1) | yes, in 3 of 5 runs | yes, in 4 of 5 runs |
+| Round-2 planted errors caught | 4/4 | 4/4 |
+| Real verifications (3 nodes × 2 runs) | 6/6 PASS | 6/6 PASS |
+| Typical run | ~140–190 s, ~85–95k tokens | ~80–100 s, ~78–87k tokens |
+
+Opus was slightly stricter in round 1 and about twice as fast. Otherwise the two are indistinguishable. Keep two verifiers, and keep fable as the default for `checked`.
+
+**Acceptance criteria status:**
+- #1 validator suite: PASS (103).
+- #2: MET in round 2.
+- #3: MET.
+- #4: validator PASS on 48 nodes, with every v2 result a node.
+- #5 and #6: PASS (#6 as amended: overlay copies are byte-identical).
+- #9: recorded above.
+- #7 and #8: phase 2 (Lean).
+
+**What to change before phase 2:**
+- **Script the blind verify input.** It was built by a scratchpad script here; it belongs in `bin/` as `--verify-input <label>`.
+- **Tool the repointing of dependents** when a node becomes conditional. It took a dedicated theorist pass, plus re-logging of proved nodes, because the proof hash covers `uses`.
+- **Lint agent frontmatter in CI.** A `: ` in a `description:` silently unregistered two agents.
+- **Write the paper repairs.** Props 1 and 2 need rewording in `theory/quadratic_loss_model_paper_v2.tex`; that is the author's or the writer's job, not done here.
+
+**Other outcomes:**
+- The guard-hardening branch was SHELVED by the owner after three review cycles (see TODO).
+- `lem:band` (below).
+
+**`lem:band`.** It holds as stated; the theorist proved it by backward induction (`61b82bd`). Of three variants, γ = 0 was refuted, tie-continue proved, and objective-measure forecasts refuted (the band's symmetry rests on the subjective transition).
+
+The first blind verify split, one UNVERIFIED and one PASS-with-caveat, and both pointed at the same gap: the proof used `def:posterior` and `asm:normal-normal`, which were missing from `uses`, so the verifiers never saw them. The theorist completed `uses` and the hash was re-logged. Two fresh verifiers then gave 2/2 PASS, and the node is **checked** (`e486bab`). The final blueprint has **51 nodes: 4 checked**, 13 proved, 7 conjecture, 19 stated, 3 conditional, 5 refuted.
+
+**Lesson (add to the phase-2 list):** blind verification also tests the *dependency list*. A missing `uses` entry surfaced as UNVERIFIED, which is the intended behaviour. The theorist protocol should require `uses` to list every node the proof cites; the validator could check cited `prefix:label` tokens in the proof against `uses`.
+
+**Caveat on numerical evidence:** the shared helper `checks/_lib/cogcons_dp.py` (40-node Gauss–Hermite) is not monotone in x and produced spurious shape violations. The known-answer variants used it, but their verdicts rest on written arguments; the helper served as search evidence only. Do not use it for shape claims.
+
+Status: **phase 1 COMPLETE.** Spec acceptance #1–#6 and #9 are met. #7–#8 belong to phase 2 (Lean).
