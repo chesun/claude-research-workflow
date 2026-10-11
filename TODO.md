@@ -1,6 +1,6 @@
 # TODO — claude-code-my-workflow
 
-Last updated: 2026-09-24
+Last updated: 2026-10-11
 
 Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracker tasks (TaskCreate) are working memory; this file is the persistent cross-session record.
 
@@ -9,6 +9,9 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Active session-tracke
 - *(nothing actively in flight)*
 
 ## Up Next
+- [ ] **Theory/proof workflow (added 2026-10-11)** — spec `quality_reports/specs/2026-10-11_theory-proof-workflow-spec.md` (DRAFT, awaiting user review). Next: user review → ADR-0004 → phase 1 implementation plan (blueprint + validator, prove-or-refute exploration, blind `proof-verifier`, `theorist`/`theorist-critic` to `main`) → pilot on `belief_distortion_discrimination` theory v2. Phase 2 = Lean lane (setup spike first).
+- [ ] **Destructive-action guard false positive** (added 2026-10-11) — when `shlex` fails on a command (e.g. an apostrophe inside a heredoc commit message), the crude substring fallback in `.claude/hooks/destructive-action-guard.py` (~L429-435) blocks on any keyword (`update-ref -d`, `--force`, ...) and labels it `git filter-repo`. Repro: a heredoc `git commit -F -` whose body contains an apostrophe and `update-ref -d`. Fix needs a review receipt (ADR-0002). Workaround: commit with `-F <file>`.
+- [ ] **Work-machine guard launchers trust the Store stub** (added 2026-10-11; fix lives in the consulting repo, do it in a session there) — the machine-wide the employer git-hook launchers pick the interpreter with `command -v`, which finds the WindowsApps `python3` stub, so commits were refused (fail-closed) until the App Execution Aliases were turned off. Probe with `"$c" -c ''` instead, as `.claude/settings.json` now does.
 - [ ] **Model-routing experiment read-out** (ADR-0003, added 2026-09-24) — reviewers/critics on `fable`, workers on `opus`, `writer` on `fable`. For the next few builds record findings by severity and fix rounds per review (session log + review reports); revisit the `writer` exception after the voice-preservation build. Verify both aliases resolve on any new account or machine.
 - [ ] **Context-tightening — remaining levers** (plan `quality_reports/plans/2026-05-28_context-tightening-plan.md`):
   - DONE + MERGED to main 2026-05-28 (merge `448b3d0`): Lever 1 (8 convention rules path-scoped) + low-risk Lever 3 (dropped dead logging requirements; epistemic-table dedup). Always-on rules **165,455 → 116,366 B (−49,089 B / ~12.3k tokens / ~30%)**. Smoke check verified both directions. Branch `audit/workflow-context-tightening` retained (can delete). Not yet pushed to origin.

@@ -6,6 +6,15 @@ When writing a new review, consult this index first. If an `Active` entry exists
 
 ---
 
+## 2026-10
+
+- [2026-10-11_theory-survey_synthesis.md](2026-10-11_theory-survey_synthesis.md) — theory/proof workflow survey synthesis (design inputs for approach A), Active
+- [2026-10-11_theory-survey_A-mathlib-econ.md](2026-10-11_theory-survey_A-mathlib-econ.md) — Mathlib coverage + prior econ formalizations, Active
+- [2026-10-11_theory-survey_B-lean-tooling.md](2026-10-11_theory-survey_B-lean-tooling.md) — Lean toolchain on Windows + Claude integration, Active
+- [2026-10-11_theory-survey_C-practice.md](2026-10-11_theory-survey_C-practice.md) — how mathematicians use AI; blueprint + verification practice, Active
+- [2026-10-11_theory-survey_D-fidelity-checks.md](2026-10-11_theory-survey_D-fidelity-checks.md) — statement fidelity, non-vacuity, deterministic checks, Active
+- [2026-10-11_repo-catch-up-survey.md](2026-10-11_repo-catch-up-survey.md) — repo state brief; found hooks silently failing open (fixed same day), Active
+
 ## 2026-07
 
 - [2026-07-01_primary-source-hook-fp-analysis.md](2026-07-01_primary-source-hook-fp-analysis.md) — primary-source hook false-positive analysis + ranked improvement roadmap (probe-verified), Active
