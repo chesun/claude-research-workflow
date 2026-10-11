@@ -111,3 +111,30 @@ Final fresh review (`fable`): ready with fixes, no Critical. Fixed six Important
 - a placeholder Score line is not a PASS.
 
 Then, at the user's request, fixed the ten deferred minors (validator suite 103/103) and fast-forwarded `main` to `69083fc`; the merged result passes. Pre-existing Windows failures in four hook test suites are recorded in TODO. Status: COMPLETE for phase 1 tooling; the pilot is next.
+
+## 5. Hook test suites on Windows (branch `hooks-windows-tests`)
+
+**Starting point:** four suites failed on Windows (citation backslash paths, the cp1252 print in primary-source, pytest missing for derive, symlink privilege in the destructive guard).
+
+**Fixes:**
+- **Citation library:** normalizes `\` to `/` on Windows only, then runs the existing containment checks; POSIX behaviour is unchanged.
+- **Primary-source test:** forces UTF-8 output.
+- **Destructive-guard test:** falls back to a directory junction, but only on WinError 1314, and uses `as_posix()` paths in shell strings.
+- **Dev environment:** `requirements-dev.txt` plus `.venv` for pytest.
+
+All eight suites now pass on Windows.
+
+**ADR-0002 review:** red team 78, correctness 82.
+- **Fixed:**
+  - High (both lenses): the citation runner spawned a literal `python3` rather than the interpreter that had probed pytest, so a passing test reported MISSING under a venv. Now `sys.executable`; 26/26 under the venv.
+  - Medium: skipped cases were counted as passes. They are now reported separately ("22/26 passed, 4 skipped" without pytest).
+  - Medium: the junction fallback swallowed POSIX symlink errors. Narrowed to Windows WinError 1314.
+  - Medium: Pygments was unpinned. Now pinned.
+  - Low: removed the duplicate test; the POSIX branch asserts the rejection reason; UTF-8 guard on the citation suite.
+- **Accepted:**
+  - the guard summary has no explicit skip count (it prints which link kind was used);
+  - drive-letter citations give a "file does not exist: C" message (pre-existing, harmless);
+  - 8.3 and trailing-dot aliases resolve inside the repo (not an escape).
+- **Cost:** about 283k agent tokens.
+
+**Also found:** the destructive-action guard does not path-gate Windows OneDrive at all; it has macOS prefixes only. Recorded in TODO as separate work.

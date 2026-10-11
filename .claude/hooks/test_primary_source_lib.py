@@ -13,6 +13,14 @@ import importlib.util
 import sys
 from pathlib import Path
 
+# The tests print non-ASCII surnames (e.g. Łukasz); a Windows cp1252 console
+# cannot encode them, so force UTF-8 output rather than crash mid-suite.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 
 def _load_lib():
     lib_path = Path(__file__).resolve().parent / "primary_source_lib.py"
