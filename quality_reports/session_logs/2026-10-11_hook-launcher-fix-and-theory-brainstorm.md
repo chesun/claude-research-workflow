@@ -98,3 +98,16 @@ The format change reached the template, `theorist`, `proof-verifier` (a `**Proof
 - **The no-repo warning echoes the path as given.** Harmless.
 
 **Cost:** two lenses, about 353k agent tokens in total (red team 157k / 9.6 min; correctness 196k / 14.3 min). Findings: 1 Critical, 4 High, about 9 Medium, about 19 Low.
+
+### Whole-branch review and merge
+
+Final fresh review (`fable`): ready with fixes, no Critical. Fixed six Important findings, plus one Minor re-graded to Important because a template placeholder gave a false PASS:
+- the proof hash now covers `uses`;
+- the critic gets Bash, so it can run the validator;
+- one meaning for `conditional`;
+- verifier reports are never archived;
+- `verify` checks its dependencies first;
+- the pilot install list includes the template and tests;
+- a placeholder Score line is not a PASS.
+
+Then, at the user's request, fixed the ten deferred minors (validator suite 103/103) and fast-forwarded `main` to `69083fc`; the merged result passes. Pre-existing Windows failures in four hook test suites are recorded in TODO. Status: COMPLETE for phase 1 tooling; the pilot is next.
