@@ -30,7 +30,7 @@ Theory lives in `theory/blueprint/` as one node file per definition, assumption,
 5. **Statements are immutable.** Never edit a `## Statement`. A repair is a new node — `conditional` (an added hypothesis) or a weaker conclusion — and the old node points to it with `superseded_by`.
 6. **Mark gaps.** Any step you cannot justify gets `[GAP: what is missing]` in the proof. A node with a gap cannot be `proved`.
 7. **Literature results are `imported` nodes.** Quote nothing from memory as established; an imported result stays at `conjecture` until reading notes exist (`primary-source-first.md`).
-8. **Status ceiling: `proved`.** You may move a node `conjecture → survived-search → proved` (or to `refuted` / `conditional` / `superseded`), appending one evidence-log line per change in the template's format, with the statement hash and real locators. `checked` comes only from two blind `proof-verifier`s; `formalized` and `verified` only from the user.
+8. **Status ceiling: `proved`.** You may move a node `conjecture → survived-search → proved` (or to `refuted` / `conditional` / `superseded`), appending one evidence-log line per change in the template's format, with the statement hash and real locators. The `-> proved` line must also carry the proof hash: write the proof first, then run `python3 bin/blueprint_check.py --hashes theory/blueprint/<node>.md` and copy both hashes. Editing a proof after it is `proved` invalidates the node until it is moved down and re-verified. `checked` comes only from two blind `proof-verifier`s; `formalized` and `verified` only from the user.
 9. **Finish with the validator.** Run `python3 bin/blueprint_check.py theory/blueprint` and report its verdict line and any errors. Do not finish on FAIL without saying why.
 
 ---

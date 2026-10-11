@@ -59,8 +59,11 @@ Write one report to `quality_reports/reviews/YYYY-MM-DD_<label with ':' replaced
 **Reviewer:** proof-verifier (blind)
 **Target:** <label>
 **Score:** PASS | FAIL | UNVERIFIED
+**Proof:** <the proof hash the dispatcher gave you>
 **Status:** Active
 ```
+
+Copy the `**Proof:**` hash exactly as the dispatcher gives it. The blueprint validator accepts your PASS only for the node named in `**Target:**` and for the proof with that hash, so a report can never be reused for a different proof.
 
 Body:
 1. **What must be shown**, in your own words.

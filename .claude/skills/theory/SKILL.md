@@ -53,16 +53,16 @@ Blind two-verifier check of a node at `proved`. **You** (the dispatcher) build t
    - the `## Proof` with every `[GAP:` line removed (a `proved` node should have none);
    - for each label in `uses`, that node's kind and `## Statement` only.
    
-   Do not include the evidence log, `paper_ref`, the paper, or any other verdict.
+   Do not include the evidence log, `paper_ref`, the paper, or any other verdict. Do include the node's **proof hash** (from `python3 bin/blueprint_check.py --hashes <node file>`), which each verifier copies into its report's `**Proof:**` line.
 3. Dispatch **two** `proof-verifier` agents **in parallel** (one message, two Task calls), each a fresh agent with the same input. Pass `model` from `--model` (default `fable`), and give each a distinct run suffix (`-a`, `-b`) for its report filename. Neither agent is told about the other.
 4. Read the two `VERDICT:` lines.
    - **Both PASS:** append to the node's evidence log
-     `- YYYY-MM-DD | proved -> checked | proof-verifier | <report-a>;<report-b> | stmt:<hash>`
+     `- YYYY-MM-DD | proved -> checked | proof-verifier | <report-a>;<report-b> | stmt:<stmt hash> proof:<proof hash>`
      and set `status: checked`.
-   - **Any FAIL:** append `- YYYY-MM-DD | proved -> survived-search | proof-verifier | <failing report> | stmt:<hash>`, set `status: survived-search`, and hand the failing report to the theorist on the next `node` pass.
+   - **Any FAIL:** append `- YYYY-MM-DD | proved -> survived-search | proof-verifier | <failing report> | stmt:<stmt hash>`, set `status: survived-search`, and hand the failing report to the theorist on the next `node` pass.
    - **Split, or any UNVERIFIED:** dispatch a third verifier with the same input. If it still isn't two PASSes, leave the status unchanged and ask the user.
    
-   Get `<hash>` with `python3 -c "import sys; sys.path.insert(0,'bin'); import blueprint_check as b; print(b.parse_node(__import__('pathlib').Path(sys.argv[1])).log[-1].stmt_hash)" <node file>`, which reuses the hash already in the log, so it stays identical.
+   Get both hashes with `python3 bin/blueprint_check.py --hashes <node file>`.
 5. Run the validator. A FAIL here means the log edit was wrong: fix the log line, not the rule.
 
 For the fable-versus-opus comparison (ADR-0003/0004 experiment), run `verify` once with each model on the same node, and record the verdicts and findings by severity in the session log.
