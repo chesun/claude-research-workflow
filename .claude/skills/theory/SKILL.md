@@ -47,13 +47,22 @@ Dispatch **theorist** to create one `variant` node for each assumption in the no
 
 Blind two-verifier check of a node at `proved`. **You** (the dispatcher) build the blind input, so the verifiers never open the node file:
 
-1. Read `theory/blueprint/<label with ':' replaced by '-'>.md`. Confirm the status is `proved`, and that every claim, variant or imported node in its `uses` is already `checked` or above (definitions and assumptions must be `stated`). Otherwise stop, say which dependency is not ready, and point to `develop`: a node cannot be `checked` on unchecked foundations. (If verifier reports already exist for the current proof hash, they stay valid; append the `-> checked` line once the dependencies are checked.)
-2. Build the input text:
+1. Build the input with `python3 bin/blueprint_tools.py verify-input theory/blueprint/<label with ':' replaced by '-'>.md`. It refuses (exit 1, reasons listed) unless:
+   - the node is at `proved`, with no `[GAP:` marker;
+   - every claim, variant or imported node in its `uses` is `checked` or above, and every definition and assumption is `stated`;
+   - the validator reports no error on the node or on anything it rests on;
+   - every node label its statement or proof cites is in `uses` or declared as a mention.
+
+   On a refusal, stop, report the reasons, and point to `develop`: a node cannot be `checked` on unchecked foundations. (If verifier reports already exist for the current proof hash, they stay valid; append the `-> checked` line once the dependencies are checked.)
+2. The input it prints is the whole of what the verifiers see:
    - the `## Statement`;
-   - the `## Proof` with every `[GAP:` line removed (a `proved` node should have none);
-   - for each label in `uses`, that node's kind and `## Statement` only.
-   
-   Do not include the evidence log, `paper_ref`, the paper, or any other verdict. Do include the node's **proof hash** (from `python3 bin/blueprint_check.py --hashes <node file>`), which each verifier copies into its report's `**Proof:**` line.
+   - the `## Proof`;
+   - for each label in `uses`, that node's kind and `## Statement`;
+   - the statements of the definitions and assumptions those used results rest on;
+   - under "context only", the statements of any other node these texts name; they are not premises;
+   - the `**Target:**` and `**Proof:**` lines each verifier copies into its report header.
+
+   HTML comments are stripped. Add nothing to it: not the evidence log, `paper_ref`, the paper, or any other verdict.
 3. Dispatch **two** `proof-verifier` agents **in parallel** (one message, two Task calls), each a fresh agent with the same input. Pass `model` from `--model` (default `fable`), and give each a distinct run suffix (`-a`, `-b`) for its report filename. Neither agent is told about the other.
 4. Read the two `VERDICT:` lines.
    - **Both PASS:** append to the node's evidence log
@@ -70,6 +79,8 @@ For the fable-versus-opus comparison (ADR-0003/0004 experiment), run `verify` on
 ### `/theory status`
 
 Run `python3 bin/blueprint_check.py theory/blueprint --write-status`. Show the verdict line, any errors and warnings, and the status table from `theory/blueprint/STATUS.md`.
+
+A warning that a node "uses superseded node X" or "uses conditional node X" means its dependents were not moved to the successor. Run `python3 bin/blueprint_tools.py repoint theory/blueprint/<X>.md`, show the dry run, then apply it with `--apply` (the same authority as the theorist's own down-moves; the dry run goes in the report). Re-proving the demoted nodes is a `node` pass.
 
 ### `/theory review [file]`
 

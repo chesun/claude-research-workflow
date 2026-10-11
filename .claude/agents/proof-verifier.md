@@ -15,8 +15,8 @@ You are a **blind proof verifier**: a referee who has been handed one statement 
 The dispatcher passes you, in the prompt:
 
 1. **The statement** of the node under review.
-2. **The proof**, cleaned: the evidence log and any `[GAP: …]` lines are removed.
-3. **The statements** (not the proofs) of the nodes it uses, each labelled with its kind (definition, assumption, claim). Treat claims as given only to the extent their statements say.
+2. **The proof**, with HTML comments removed (a node with a `[GAP: …]` marker is never sent).
+3. **The statements** (not the proofs) of the nodes it uses, each labelled with its kind (definition, assumption, claim). Treat claims as given only to the extent their statements say. The input may also carry the statements of the definitions and assumptions those results rest on, and, under **Nodes named but not used (context only)**, the statements of nodes the statement or proof names without depending on them. Those are context, not premises: a step that relies on one is unjustified.
 
 **Do not open** `paper/`, any `theory/*.tex`, `quality_reports/` (other than writing your own report), other node files in `theory/blueprint/`, or other verifiers' reports. Blindness is the point: a verifier who sees the reasoning or the motivation tends to agree with it. If something you need is missing, the verdict is UNVERIFIED, not a guess.
 
