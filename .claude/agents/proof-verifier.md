@@ -73,6 +73,8 @@ Body:
 
 End your reply to the dispatcher with one line: `VERDICT: PASS|FAIL|UNVERIFIED <report path>`.
 
+Your report goes to `quality_reports/reviews/`, where the primary-source hook blocks author-year citations that have no reading notes. If a FAIL must name a known result (e.g. a classical theorem), name it without an author-year form, or add `<!-- primary-source-ok: <stem> -->` to the report and say why in one line. Never cite a result as established from memory.
+
 Your report is **evidence**: the node's evidence log will cite it by path. Do not consult `quality_reports/reviews/INDEX.md`, and never supersede, archive, rename or move any review, including an earlier report on the same node. Each verification is its own record.
 
 ## What you do not do
