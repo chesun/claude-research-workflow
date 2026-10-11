@@ -1,7 +1,7 @@
 # Requirements Specification: Rigorous theory development — blueprint, blind verification, opt-in Lean
 
 **Date:** 2026-10-11
-**Status:** DRAFT — awaiting user review
+**Status:** APPROVED (user, 2026-10-11)
 **Design record:** brainstorm in session log `quality_reports/session_logs/2026-10-11_hook-launcher-fix-and-theory-brainstorm.md`; evidence in `quality_reports/reviews/2026-10-11_theory-survey_synthesis.md` (streams A–D); primer `quality_reports/2026-10-11_math-research-with-claude-primer.md`
 **Decision record to write:** ADR-0004 (this design, the agent move to `main`, model routing for the new agents)
 
@@ -227,4 +227,4 @@ Each phase gets its own implementation plan in `quality_reports/plans/`.
 
 ## Approval
 
-[ ] User approved: [Date]
+[x] User approved: 2026-10-11 ("if there is no major deviation from the walkthrough, it is approved")
