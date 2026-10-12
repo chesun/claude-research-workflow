@@ -6,7 +6,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Active (doing now)
 
-- [ ] **Theory phase 2: Lean lane pilot** (plan `quality_reports/plans/2026-10-12_theory-workflow-phase2-lean-plan.md`, amended: soundness via Lean FRO comparator). Built and reviewed: `bin/lean_check.py`, validator rules, formalizer, cards, `/theory formalize`/`prove`. Next: install tools in BDD; new node `prop:nstar-interior-ac` (parts a–c) → theorist + 2 verifiers → `checked`; `/theory formalize`; owner signs the card; `prove`; read-out.
+- [ ] **Theory phase 2: Lean lane pilot** (plan `quality_reports/plans/2026-10-12_theory-workflow-phase2-lean-plan.md`, amended: soundness via Lean FRO comparator). Built and reviewed: `bin/lean_check.py`, validator rules, formalizer, cards, `/theory formalize`/`prove`. Done to the card: tools installed in BDD; `prop:nstar-interior-ac` (parts a–c) `checked`; formalize stage 1 + blind back-translation; card `theory/blueprint/cards/prop-nstar-interior-ac.md` drafted. **Waiting on the owner** to sign the card (after the practice cards); then `formalized`, `/theory prove`, read-out.
 - [ ] **Owner: practice cards** — `quality_reports/calibration/2026-10-12_lean-cards/` (≈20–30 min; answers sealed until done).
 
 ## Up Next

@@ -502,3 +502,22 @@ Noted, not blocking (verifier):
 - `meta`/`elab` binders are flagged by design.
 
 The BDD Lean project (`C:\Users\christina.sun\lean\bdd`) now has the canonical lakefile, and its real lakefile and manifest pass.
+
+## 10. Lean lane pilot, up to the owner's card (2026-10-12)
+
+- **Commits.** Workflow `eeea176`: the Lean lane. The review gate was waived once: its Target matcher has no directory support, so the reviewed fixture's `lean-toolchain` needed it; TODO item added. BDD `5f6826c`: tools installed; the validator now gives 34 warnings, all mention judgments, and no errors.
+- **Node `prop:nstar-interior-ac`** (decision A), created by the theorist:
+  - its statement is byte-identical to the parent's preamble plus (a)–(c), checked by `diff`;
+  - its proof is the parent's Steps 0–3;
+  - checks: exact SymPy 18/18, and a numeric search over 4,000 triples with exact-rational concavity;
+  - two blind proof-verifiers on fable both PASS (one ran 2,000 random draws, the other 20,000), so the node went to `checked` (BDD `957c9c7`).
+- **Formalize stage 1** (formalizer, opus; the lean-lsp MCP was unavailable mid-session, so it used shell `lake`):
+  - `Bdd/Statements/NstarAC.lean`: three helpers, three parts, four companions (nonvacuous, an interior sanity instance (1, 1, 1/4) → n* = 1 and V = −3/4, a boundary sanity instance (2, 4, 1) → 0 and −2, and a false variant without (b)'s proviso);
+  - "the maximizer" is expressed as `∃ nstar, ∀ n, isMaximizer n ↔ n = nstar`;
+  - `--statements-only` PASS, re-run by the dispatcher.
+- **Blind back-translation** (fable): it was given the Lean with every comment and docstring stripped, so that the docstrings' English could not leak. It matches the paper part by part, and its only notes are redundancies. Its glossary agrees with the formalizer's symbol for symbol. It was pasted into card section 8 (BDD `38bdac4`; Lean repo `f13e17d`).
+- **Waiting on the owner:**
+  1. the practice cards (calibration);
+  2. the pilot card: sections 3, 9 and 10, then Verdict and Signed off.
+
+  After that: `--statements-only --write-report`, the `checked -> formalized` line on approval, `/theory prove`, and the read-out.
