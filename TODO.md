@@ -6,7 +6,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Active (doing now)
 
-- [ ] **Theory workflow — phase 2: Lean lane, plan** (spec `quality_reports/specs/2026-10-11_theory-proof-workflow-spec.md` §4; spike PASSED, session log 2026-10-11 §8): write the phase-2 implementation plan (`formalizer`, fidelity cards, `bin/lean_check.py`, the machine-local Lean-path setting, MCP registration) for the owner's approval, then build. Pilot: BDD `prop:nstar-interior`. Owner decision pending: register `lean-lsp-mcp` with Claude Code (a settings change).
+- [ ] **Theory workflow — phase 2: Lean lane, plan** (spec `quality_reports/specs/2026-10-11_theory-proof-workflow-spec.md` §4; spike PASSED, session log 2026-10-11 §8): write the phase-2 implementation plan (`formalizer`, fidelity cards, `bin/lean_check.py`, the machine-local Lean-path setting, MCP registration) for the owner's approval, then build. Pilot: BDD `prop:nstar-interior`. `lean-lsp-mcp` registered at user scope (2026-10-12). Plan v2 APPROVED 2026-10-12 (`quality_reports/plans/2026-10-12_theory-workflow-phase2-lean-plan.md`): new node for parts (a)-(c); auditor calibration kept. Building inline from Task 0.
 
 ## Up Next
 
