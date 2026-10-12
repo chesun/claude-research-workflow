@@ -6,7 +6,8 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Active (doing now)
 
-- [ ] **Theory workflow — phase 2: Lean lane, plan** (spec `quality_reports/specs/2026-10-11_theory-proof-workflow-spec.md` §4; spike PASSED, session log 2026-10-11 §8): write the phase-2 implementation plan (`formalizer`, fidelity cards, `bin/lean_check.py`, the machine-local Lean-path setting, MCP registration) for the owner's approval, then build. Pilot: BDD `prop:nstar-interior`. `lean-lsp-mcp` registered at user scope (2026-10-12). Plan v2 APPROVED 2026-10-12 (`quality_reports/plans/2026-10-12_theory-workflow-phase2-lean-plan.md`): new node for parts (a)-(c); auditor calibration kept. Building inline from Task 0.
+- [ ] **Theory phase 2: Lean lane pilot** (plan `quality_reports/plans/2026-10-12_theory-workflow-phase2-lean-plan.md`, amended: soundness via Lean FRO comparator). Built and reviewed: `bin/lean_check.py`, validator rules, formalizer, cards, `/theory formalize`/`prove`. Next: install tools in BDD; new node `prop:nstar-interior-ac` (parts a–c) → theorist + 2 verifiers → `checked`; `/theory formalize`; owner signs the card; `prove`; read-out.
+- [ ] **Owner: practice cards** — `quality_reports/calibration/2026-10-12_lean-cards/` (≈20–30 min; answers sealed until done).
 
 ## Up Next
 
@@ -31,6 +32,11 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 - [ ] **csac2026 year-specific CLAUDE.md fields** — fill when the 2026 survey specifics are known.
 
 ## Backlog
+
+- [ ] **Review gate: accept directory targets** — `review-receipt-check.py` matches `**Target:**` by exact path or unique basename only, so files inside a reviewed directory (e.g. `bin/fixtures/lean_check/lean-toolchain`) need a waiver (used once, 2026-10-12). Needs an ADR-0002 review.
+
+- [ ] **lean_check trusted harness** (deferred 2026-10-12, owner's middle path): build the Challenge in an owner-controlled project with its own Mathlib, so the formalizer's lakefile/manifest/folders cannot matter; cap `set_option` resource values. Revisit if the pilot or later work shows the need.
+- [ ] **Lean project backup**: give the BDD Lean project (`~/lean/bdd`) a private remote (classify `personal`) once real proofs exist.
 
 - [ ] **Destructive-action guard on Windows OneDrive** — hardening SHELVED by the owner 2026-10-11 on branch `guard-windows-shared` (`d6d84c2`) after 3 review cycles. Four merge-blockers are listed in that branch's `quality_reports/reviews/2026-10-11_guard-windows-shared-r3_*`. Until then, `main`'s guard does not path-gate deletes inside OneDrive on Windows.
 - [ ] **Bulk LFS (+ selective DVC) migration** of the remaining research repos (ADR-0001: GO, forward-only, no history rewrites).

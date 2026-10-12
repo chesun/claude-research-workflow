@@ -203,17 +203,57 @@ def write_reports(root: Path, label: str, proof: str = PROOF, verdict: str = "PA
     return ";".join(locs)
 
 
+LEAN = "Pkg.Thing"
+LEAN_SHA = "ab" * 32
+
+
+def write_card(root: Path, label: str, lean: str = LEAN, sha: str = LEAN_SHA, verdict: str = "FAITHFUL",
+               signed: str = "CS 2026-10-12", node: str | None = None, statement: str = "S",
+               node_hash: str | None = None) -> str:
+    """A fidelity card; returns its repo-relative locator."""
+    rel = f"theory/blueprint/cards/{label.replace(':', '-')}.md"
+    f = root / rel
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_text(f"# Card\n**Node:** {node or label}\n"
+                 f"**Node statement hash:** {node_hash or bc.statement_hash(statement)}\n"
+                 f"**Lean:** {lean}\n**Statement SHA-256:** {sha}\n"
+                 f"**Verdict:** {verdict}\n**Signed off:** {signed}\n", encoding="utf-8")
+    return rel
+
+
+def write_lean_report(root: Path, label: str, mode: str = "full", verdict: str = "PASS", lean: str = LEAN,
+                      sha: str = LEAN_SHA, stamp: str = "2026-10-12", k: int = 1,
+                      toolchain: str = "Lean (version 4.35.0-rc4, x86_64-w64-windows-gnu, commit c29b6dd, Release)",
+                      body: str | None = None) -> str:
+    """A lean_check report; returns its repo-relative locator."""
+    suffix = "" if k == 1 else f"_{k}"
+    rel = f"theory/blueprint/checks/{label.replace(':', '-')}/lean_check_{stamp}{suffix}.md"
+    f = root / rel
+    f.parent.mkdir(parents=True, exist_ok=True)
+    if body is None:
+        body = f"- {verdict} — build: lake build --wfail\n"
+    f.write_text(f"# lean_check\n**Node:** {label}\n**Lean:** {lean}\n**Statement SHA-256:** {sha}\n"
+                 f"**Mode:** {mode}\n**Verdict:** {verdict}\n**Toolchain:** {toolchain}\n**Mathlib:** x\n\n"
+                 f"## Checks\n\n{body}", encoding="utf-8")
+    return rel
+
+
 def climb(target: str, root: Path | None = None, label: str | None = None,
-          proof: str = PROOF, uses=()) -> list[tuple]:
+          proof: str = PROOF, uses=(), statement: str = "S") -> list[tuple]:
     """A valid evidence log climbing the ladder from new to `target`."""
     reports = write_reports(root, label, proof, uses=uses) if root is not None else PLAIN
     chk = check_loc(root, label) if label else CHECK
+    form = verif = ""
+    if root is not None and label and target in ("formalized", "verified"):
+        card = write_card(root, label, statement=statement)
+        form = card + ";" + write_lean_report(root, label, mode="statements")
+        verif = card + ";" + write_lean_report(root, label, mode="full", k=2)
     steps = [("new", "conjecture", "theorist", ""),
              ("conjecture", "survived-search", "theorist", chk),
              ("survived-search", "proved", "theorist", ""),
              ("proved", "checked", "proof-verifier", reports),
-             ("checked", "formalized", "user", ""),
-             ("formalized", "verified", "user", "")]
+             ("checked", "formalized", "user", form),
+             ("formalized", "verified", "user", verif)]
     out = []
     for s in steps:
         out.append(s)
@@ -224,10 +264,12 @@ def climb(target: str, root: Path | None = None, label: str | None = None,
 
 def claim_at(bp: Path, label: str, target: str, uses=(), root: Path | None = None, **kw) -> Path:
     kw.setdefault("proof", PROOF if target in ("proved", "checked", "formalized", "verified") else "")
+    if target in ("formalized", "verified"):
+        kw.setdefault("lean", LEAN)
     if root is None:
         root = bp.parent.parent
     return write_node(bp, label, status=target, uses=uses,
-                      log=climb(target, root, label, kw["proof"] or PROOF, uses), **kw)
+                      log=climb(target, root, label, kw["proof"] or PROOF, uses, kw.get("statement", "S")), **kw)
 
 
 def verdict(bp: Path, root: Path | None = None):
@@ -878,6 +920,98 @@ def test_phase2_review_fixes(tmp: Path) -> None:
     check("rf_mention_self_and_unknown_warn",
           any("mentions itself" in w for w in rep.warnings)
           and any("lem:zz-nope" in w and "no such node" in w for w in rep.warnings), str(rep.warnings))
+
+
+def test_phase2_lean_rules(tmp: Path) -> None:
+    """Phase 2 (Lean lane): `formalized` needs a signed card + statements report; `verified` adds a full report."""
+    def node_at(target: str, form=None, verif=None, lean=LEAN):
+        root, bp = mkrepo(tmp)
+        log = climb(target, root, "prop:a", PROOF)
+        if form is not None:
+            i = next(k for k, e in enumerate(log) if e[1] == "formalized")
+            log[i] = log[i][:3] + (form(root),)
+        if verif is not None:
+            i = next(k for k, e in enumerate(log) if e[1] == "verified")
+            log[i] = log[i][:3] + (verif(root),)
+        write_node(bp, "prop:a", status=target, proof=PROOF, log=log, lean=lean or "")
+        return root, bp, verdict(bp, root)
+
+    _, _, rep = node_at("formalized")
+    check("ln_formalized_valid", rep.verdict == "PASS", f"{rep.verdict} {rep.errors} {rep.warnings}")
+    _, _, rep = node_at("verified")
+    check("ln_verified_valid", rep.verdict == "PASS", f"{rep.verdict} {rep.errors} {rep.warnings}")
+
+    def card_then_report(**card_kw):
+        return lambda root: write_card(root, "prop:a", **card_kw) + ";" + write_lean_report(root, "prop:a", mode="statements")
+    for name, kw in (("pending", dict(signed="PENDING")), ("unfaithful", dict(verdict="UNFAITHFUL")),
+                     ("verdict_pending", dict(verdict="PENDING")), ("other_node", dict(node="prop:b")),
+                     ("lean_mismatch", dict(lean="Pkg.Other"))):
+        _, _, rep = node_at("formalized", form=card_then_report(**kw))
+        check(f"ln_formalized_rejects_{name}", fails_naming(rep, "prop:a"), str(rep.errors))
+    _, _, rep = node_at("formalized", form=lambda root: write_card(root, "prop:a"))
+    check("ln_formalized_needs_statements_report", fails_naming(rep, "prop:a"), str(rep.errors))
+    _, _, rep = node_at("formalized", form=lambda root: write_card(root, "prop:a") + ";"
+                        + write_lean_report(root, "prop:a", mode="statements", verdict="FAIL"))
+    check("ln_formalized_rejects_failed_report", fails_naming(rep, "prop:a"), str(rep.errors))
+    _, _, rep = node_at("formalized", form=lambda root: write_card(root, "prop:a") + ";"
+                        + write_lean_report(root, "prop:a", mode="statements", sha="cd" * 32))
+    check("ln_formalized_rejects_hash_mismatch", fails_naming(rep, "prop:a"), str(rep.errors))
+    _, _, rep = node_at("formalized", form=lambda root: write_lean_report(root, "prop:a", mode="statements"))
+    check("ln_formalized_needs_card", fails_naming(rep, "prop:a"), str(rep.errors))
+    _, _, rep = node_at("formalized", lean=None)
+    check("ln_formalized_needs_lean_header", fails_naming(rep, "prop:a") and any("lean" in e for e in rep.errors),
+          str(rep.errors))
+
+    _, _, rep = node_at("verified", verif=lambda root: write_card(root, "prop:a") + ";"
+                        + write_lean_report(root, "prop:a", mode="full", verdict="UNVERIFIED", k=2))
+    check("ln_verified_rejects_unverified_report", fails_naming(rep, "prop:a"), str(rep.errors))
+    _, _, rep = node_at("verified", verif=lambda root: write_card(root, "prop:a") + ";"
+                        + write_lean_report(root, "prop:a", mode="statements", k=2))
+    check("ln_verified_needs_full_mode", fails_naming(rep, "prop:a"), str(rep.errors))
+    _, _, rep = node_at("verified", verif=lambda root: write_card(root, "prop:a") + ";"
+                        + write_lean_report(root, "prop:a", mode="full", sha="cd" * 32, k=2))
+    check("bc_verified_hash_mismatch_fails", fails_naming(rep, "prop:a"), str(rep.errors))
+    root, bp, rep = node_at("verified")
+    write_lean_report(root, "prop:a", mode="full", verdict="FAIL", stamp="2026-10-13")
+    rep = verdict(bp, root)
+    check("bc_newest_report_wins", fails_naming(rep, "prop:a") and any("newest" in e for e in rep.errors),
+          str(rep.errors))
+    root, bp, rep = node_at("verified")
+    write_lean_report(root, "prop:a", mode="statements", verdict="FAIL", stamp="2026-10-13")
+    rep = verdict(bp, root)
+    check("bc_newest_full_report_only", rep.verdict == "PASS", f"{rep.errors}")
+
+    # Review round 1 (2026-10-12) fixes.
+    _, _, rep = node_at("verified", verif=lambda root: write_card(root, "prop:a") + ";"
+                        + write_lean_report(root, "prop:a", mode="full", k=2, toolchain="(not run)"))
+    check("ln_hollow_report_no_toolchain", fails_naming(rep, "prop:a"), str(rep.errors))
+    _, _, rep = node_at("verified", verif=lambda root: write_card(root, "prop:a") + ";"
+                        + write_lean_report(root, "prop:a", mode="full", k=2,
+                                            body="- PASS — build: ok\n- UNVERIFIED — leanchecker: skipped\n"))
+    check("ln_hollow_report_unverified_line", fails_naming(rep, "prop:a"), str(rep.errors))
+    for name, signed in (("tbd", "TBD"), ("dash", "-"), ("no_date", "CS")):
+        _, _, rep = node_at("formalized", form=lambda root, s=signed: write_card(root, "prop:a", signed=s) + ";"
+                            + write_lean_report(root, "prop:a", mode="statements"))
+        check(f"ln_signed_off_{name}_rejected", fails_naming(rep, "prop:a"), str(rep.errors))
+    _, _, rep = node_at("formalized", form=lambda root: write_card(root, "prop:a", node_hash="0" * 12) + ";"
+                        + write_lean_report(root, "prop:a", mode="statements"))
+    check("ln_card_node_statement_hash_checked", fails_naming(rep, "prop:a"), str(rep.errors))
+    root, bp, rep = node_at("verified")
+    write_lean_report(root, "prop:a", mode="full", verdict="UNVERIFIED", stamp="2026-10-13",
+                      body="- UNVERIFIED — leanchecker: not available\n")
+    rep = verdict(bp, root)
+    check("ln_newest_unverified_is_warning", rep.verdict == "UNVERIFIED" and not rep.errors
+          and any("newest" in w for w in rep.warnings), f"{rep.verdict} {rep.errors} {rep.warnings}")
+    root, bp, rep = node_at("verified")
+    write_lean_report(root, "prop:a", mode="full", verdict="FAIL", stamp="2026-10-13", k=1)
+    (root / "theory/blueprint/checks/prop-a/lean_check_2026-10-13.md").rename(
+        root / "theory/blueprint/checks/prop-a/lean_check_2026-10-13_1.md")
+    rep = verdict(bp, root)
+    check("ln_suffix_1_ignored", rep.verdict == "PASS", f"{rep.errors}")
+    root, bp, rep = node_at("verified")
+    write_lean_report(root, "prop:a", mode="full", verdict="FAIL", stamp="2026-10-12", k=3)
+    rep = verdict(bp, root)
+    check("ln_same_date_counter_ordering", fails_naming(rep, "prop:a"), str(rep.errors))
 
 
 # --- Task 3: CLI + STATUS.md -----------------------------------------------------

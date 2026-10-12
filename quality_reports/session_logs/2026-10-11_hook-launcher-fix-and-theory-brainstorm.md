@@ -315,3 +315,190 @@ Results, all PASS:
 - **`lean-lsp-mcp` 0.31.0** (pinned, own venv at `C:\Users\christina.sun\lean\_tools\lean-lsp-mcp`): the stdio handshake works on native Windows, with 22 tools including hosted search (leansearch, loogle, leanfinder, hammer premise). `lean_diagnostic_messages` on the spike file returns success with no items.
 
 Outcome: phase 2 proceeds. Not yet done: registering the MCP server with Claude Code (a settings change for the owner to approve), the phase-2 plan, and the machine-local Lean-path setting.
+
+## 9. Phase 2 plan and Task 0 (2026-10-12)
+
+**Plan.** Plan v1 went through blind fit-for-purpose (58/100) and efficiency (64/100) reviews. The owner does not read Lean, so the fit lens judged the card design against that; its Critical was that the statement hash missed helper definitions. Plan v2 adopted every finding but one; the changes table is in the plan. The owner approved v2: a new node for parts (a)–(c), and the auditor calibration kept.
+
+`lean-lsp-mcp` is registered at user scope (`claude mcp add --scope user lean-lsp`), and the health check connects.
+
+**Task 0 (hand-driven slice).**
+- **Layout:** the spike project was renamed to `C:\Users\christina.sun\lean\bdd` (package `bdd`, library `Bdd`; `autoImplicit = false`; `/Bdd/Check` gitignored). The layout is `Bdd/Statements/NstarAC.lean` (self-contained: `postVar`, `vStop`, three `_part_x_stmt : Prop`), `Bdd/Proofs/NstarAC.lean` (`sorry`), and a hand-written `Bdd/Check/NstarAC.lean`. The module system works with `noncomputable def`s.
+- **Strict build:** `lake build --wfail` fails on the three `sorry`s (exit 1, 79 s cold); a plain rebuild takes 17 s.
+- **Check file** (36 s, mostly the Mathlib import): `#print axioms` prints `'Bdd.nstarAC_part_a_check' depends on axioms: [propext, sorryAx, Classical.choice, Quot.sound]`. That is the format to parse.
+- **`leanchecker` exits 0 on the sorry proofs** (47 s). It re-checks proofs at the kernel level, and `sorryAx` is just an axiom to the kernel. So the axioms check is what catches `sorry`; `leanchecker` guards against elaborator or kernel-bypass faults only.
+- **Versions:** the toolchain is `Lean 4.35.0-rc4, x86_64-w64-windows-gnu, commit c29b6dd`, and `lake-manifest.json` carries the Mathlib rev, which reports will record.
+- **`lean-lsp-mcp` with no `LEAN_PROJECT_PATH`,** started from an unrelated directory, finds the project from the file path. Diagnostics list the `sorry`s; `lean_goal` shows `⊢ nstarAC_part_a_stmt`, so proofs should begin with `unfold <stmt>`, which is a layout-doc note.
+- **The Lean repo** has a local first commit `426689e`, with the repo-local identity copied from the workflow repo; it is unclassified for the push guard.
+
+**Backup gap** (raised by the owner's side note). The Lean folder is outside OneDrive with local git only, on a temporary laptop. It needs a private remote on the owner's GitHub (classed `personal`, like BDD) once real proofs exist; this was added to plan Task 8.
+
+**Tasks 1–3 built** (`bin/lean_check.py`, its unit and integration suites, the core-Lean fixture `bin/fixtures/lean_check/`, and the validator `formalized`/`verified` rules). Lean facts found while building: def bodies need `@[expose]` under the module system; `decide +native` compiles to a private `_native.decide.ax_*` axiom; the Mathlib header-linter option is unknown in a core-only project.
+
+**Tasks 5–7 built:** the `formalizer` agent, `templates/theory/{lean-layout,fidelity-card}.md`, the `/theory formalize` and `prove` modes, and three practice cards in `quality_reports/calibration/2026-10-12_lean-cards/` with the answers sealed outside the repo. The blind back-translator, given only the Lean text, named both planted defects (B: missing `0 < c`; C: `ConcaveOn` for strict concavity), and noted an unused hypothesis on A. The calibration therefore measures the owner plus the full card, which is the design under test.
+
+**ADR-0002 review, round 1** (fable): red-team 25/100, correctness 62/100; each about 20 min and 210–230k agent tokens.
+
+Three Criticals, each confirmed on the real toolchain to give a full PASS on a fake proof:
+1. the check file imported only `Proofs`, so a proof file could redefine every `_stmt` as `True`;
+2. `macro_rules` or `notation` in a proof file rewrote the check file's theorems;
+3. a kernel-forged theorem (`skipKernelTC` + `addDecl`) in a helper module passed, because only the node's own module was scanned and passed to `leanchecker`.
+
+Highs:
+- statement-file lines were classified only at column 0, so indented commands slipped through;
+- any `@[…]` prefix exempted the rest of its line from the banned-command check;
+- parameterised or unannotated `_stmt`s dropped silently out of the audited set;
+- a `_stmt` outside the package namespace was let through;
+- the card's part list was not cross-checked.
+
+Mediums:
+- the stripper desynced on character and raw-string literals;
+- a missing `leanchecker` (the real Windows shape) gave FAIL;
+- wrapped axiom lists gave a false FAIL;
+- hollow reports were accepted;
+- test gaps.
+
+Fixed:
+- **Check file:** it imports `Statements` before `Proofs` and uses full names.
+- **Project-wide scan** (`.lake/` excluded): syntax extensions, `#` commands, meta code, `import Lean`/`Lake`, axioms, unsafe/extern/implemented_by/native, `skipKernelTC`, and non-whitelisted `set_option`. `sorry`/`admit` stay node-only, since the axiom check covers dependencies.
+- **`leanchecker <Pkg>`** over the whole package.
+- **Command classifier:** it reads the head word after whitespace, `@[…]` and modifiers, at any indentation. Statement files allow only `@[expose]`, exactly one `namespace <Pkg>`, and no declarations outside it.
+- **`_stmt` form and card list:** every `_stmt` must be a closed ASCII `def … : Prop`, and the card carries an `Audited statements` list that `lean_check` compares.
+- **Proof file:** it must import its statements and must not declare `_stmt`s.
+- **Stripper:** handles character and raw strings.
+- **Missing `leanchecker`:** now UNVERIFIED.
+- **Axiom lists:** wrapped lists are joined.
+- **Settings:** `relaxedAutoImplicit` is checked.
+- **Bad input:** non-UTF-8 gives FAIL, not a traceback; a relative `lean.toml` resolves from the repo root.
+- **Report:** it carries the proof file's SHA-256.
+- **Validator:**
+  - it rejects hollow reports (no `Lean (version` toolchain, or a FAIL/UNVERIFIED line, or no PASS line, under a PASS verdict);
+  - `Signed off` must be initials and an ISO date;
+  - the card's `Node statement hash` must match the node;
+  - a newest full report that is UNVERIFIED is a warning, while FAIL is an error;
+  - `_1` names are ignored.
+- **Formalizer:** it never writes reports; the dispatcher or owner runs `--write-report`.
+
+Tests: `lean_check` unit 112, integration 13 (all three Criticals as real-toolchain regressions), validator 145, tools 74, lint 64. Spot mutations of the eight key defences were all killed.
+
+Accepted, not fixed:
+- a deliberately forged full report written by a misbehaving agent remains possible, because the validator cannot re-run Lean. Mitigations: the formalizer may not write reports, the hollow-report rules, and the owner or dispatcher runs `lean_check` at each approval;
+- reports omit the Lean project path, which would put a machine path in a tracked file;
+- `--timeout` is per tool call, as documented.
+
+Round 2 follows, because the fixes changed the design.
+
+**ADR-0002 round 2** (fable): red-team 32/100, correctness 58/100.
+- **Red-team:** three new full-PASS attacks on the real toolchain:
+  1. `srcDir = "alt"` in `lakefile.toml`, so Lake compiles a different statement file from the hashed one;
+  2. `lakefile.lean`, which overrides the TOML and is never scanned;
+  3. a `Fix.Fix` sub-namespace hijacking name resolution in the check file.
+- **Correctness:** one Critical: a head-word-only command ban, so `open Nat in macro_rules …` on one line gave a full PASS.
+- **The pattern:** each round of text-level patches opened new holes. The owner was asked and chose a spike of Lean FRO's `comparator`.
+
+**Comparator spike (PASS).** The reference manual (Validating Proofs) calls it the "gold standard". `leanprover/comparator` (`ca04cfc`) and `lean4export` (`05d43a2`) are both pinned to v4.35.0-rc4, and both were cloned and built into `C:\Users\christina.sun\lean\_tools\` (36 s).
+- **Windows:** comparator spawns its sandbox (`landrun`, Linux-only) as a process. Its non-Linux development shim `scripts/fake-landrun.sh` runs through a one-line `fake-landrun.cmd` calling Git Bash. That means no sandbox, which is acceptable for our threat model (see below).
+- **Bundled tests:** 16/16 of comparator's own test projects gave the expected exit codes on Windows, including `olean_issue`, `proj_trick`, `primitive_issue`, `char_ofnat_issue` and the `def_hole` cases. The 4 nanoda tests were skipped.
+- **Our fixture**, in Challenge/Solution form: a generated `Fix.Check.Challenge` imports the signed statements plus `theorem Fix.x : Fix.x_stmt := sorry` per statement, and `Fix.Check.Solution` imports the proofs. Dotted module names work. Results:
+  - honest: exit 0, "Your solution is okay!";
+  - proof file redefines every `_stmt := True`: "Const does not match between challenge and target";
+  - `sorry`: "Illegal axiom detected: 'sorryAx'";
+  - helper axiom: "Illegal axiom detected: 'Fix.magic'";
+  - `Fix.Fix` shadow: "Challenge and solution theorem statement do not match";
+  - **`srcDir = "alt"`: exit 0, accepted.** This matches comparator's stated assumption 1 (a trusted lakefile).
+- **Design consequence:** lean_check keeps the card, hash and report plumbing and the statement-file readability rules, and hands soundness to comparator. lean_check must:
+  - enforce a canonical `lakefile.toml` (one `lean_lib` named `<Pkg>`, `globs = ["<Pkg>.+"]`, no `srcDir`/`roots`/extra args; a single Mathlib `require`) and reject any `lakefile.lean`;
+  - delete the project's own `.lake/build` before running comparator (its assumption 2: nothing adversarial compiled beforehand);
+  - keep the project scan for code-executing commands as defence in depth, because the Windows build is unsandboxed.
+
+  The threat model, stated plainly: this guards against Lean-level mistakes, shortcuts and tricks inside the project sources and lakefile. It does not guard against an actor with shell access who can edit `.lake/packages`, `lean_check` itself, or the reports.
+
+**lean_check rebuilt on comparator.** Full mode:
+1. static checks (canonical lakefile and no `lakefile.lean`, statement-file rules, card, proof imports, project scan);
+2. clear `.lake/build`;
+3. generate `LeanCheck/<Name>{Challenge,Solution}.lean` and a `.comparator.json`;
+4. `lake env <comparator> <config>`. PASS requires exit 0 and "Your solution is okay"; FAIL reports comparator's `uncaught exception` line.
+
+Statements mode builds `<Pkg>.Statements.<Name>` without `--wfail`, so Mathlib style lints no longer fail honest work.
+
+Round-2 classifier fixes:
+- keywords are matched anywhere on a line;
+- `_stmt` is found at any indentation, and `: Prop` on the next line or without a space is accepted;
+- honest forms pass: `@[expose]` on its own line, match arms, `#[…]` arrays, qualified `Foo.extern`, and `set_option linter.* false`;
+- `«»` names are handled by the stripper.
+
+The card's `Node statement hash` is now filled by the formalizer and checked by both tools. The formalizer runs `--statements-only` after drafting the card.
+
+Tests:
+- unit 158;
+- integration 13/13 against real comparator (66 s; full check 14 s), with every attack from both review rounds as a regression and each caught at its intended layer: comparator catches the hidden `sorry`, the namespace shadow and a proof of another statement; static checks catch `srcDir`, `lakefile.lean`, `open … in macro_rules`, redefinition, edited helper and missing companion;
+- validator 145, tools 74, lint 64.
+
+Round 3 (the last under three strikes) follows.
+
+**ADR-0002 round 3** (fable): red-team 30/100, correctness 64/100.
+- **What held:** the comparator core. No wrong proof got past the Challenge/Solution comparison or the kernel replay.
+- **Criticals:**
+  1. `lake-manifest.json` was never checked, so a manifest pointing Mathlib at another source gave `verified` for a false statement (red-team);
+  2. the statement file's import rule applied only at column 0, so an indented `public import` of an unhashed project module got a full PASS (both lenses).
+- **Highs:**
+  - `LeanCheck/` was scan-exempt but importable, and planted build-time code ran;
+  - helper names could rebind or shadow (dotted names, homoglyphs, `open … renaming`);
+  - from PowerShell an honest proof got FAIL, because comparator's `which git` failed without Git's `usr\bin`.
+- **Real Mathlib** (correctness, on a copy of bdd): statements mode PASS in 62 s, full PASS in 4 min 26 s.
+
+**Three strikes → owner.** The owner asked what the problem was and how likely agents are to find these workarounds in real work. My answer: the remaining holes need deliberate deception plus specific Lean build-system knowledge, which the stated threat model already excludes; the realistic shortcuts (sorry, an added assumption, a reworded statement, native tactics, a proof of a different statement) are caught. The owner agreed to a **middle path**: fix the real bugs and the cheap holes, one focused check, commit, pilot. The trusted harness is kept as later hardening.
+
+**Middle-path fixes:**
+- **Statement-file rules:**
+  - imports are checked at any indentation, including `import all`;
+  - definition names must be plain ASCII without dots;
+  - zero-width characters are rejected;
+  - `open … renaming/hiding` is banned.
+- **`manifest_problems`:**
+  - every package must be git from a `leanprover`/`leanprover-community` GitHub repo, pinned to a 40-hex commit, with no `subDir`/`dir`;
+  - Mathlib's `inputRev` must equal the lakefile rev, and `packagesDir`/`lakeDir` must be the defaults;
+  - each checked-out package's `.git` HEAD must equal its pin.
+- **`LeanCheck/`** is cleared before every build in both modes, and nothing may import it.
+- **Clearing is verified:** a `.lake/build` or `LeanCheck/` that cannot be removed gives UNVERIFIED.
+- **`tool_env`** puts Git's `usr/bin` (derived from `which git`) on PATH.
+- **Time-outs** kill the whole process tree.
+- **Comparator output classification:** Lean compile errors give FAIL; "Child exited" or missing tools give UNVERIFIED, with the cause kept.
+- **Syntax keywords** stay banned anywhere in the statement file, but in proof and helper files only at command positions, so honest binders such as `prefix` pass. Code-executing keywords stay banned anywhere.
+- **Toolchain line:** taken from the `Lean (version` line. Lake's leading `info:` lines would otherwise have made every real report hollow.
+- **Docs:** `lean-layout.md` brought in line.
+
+**Tests:**
+- unit 193;
+- integration 15/15, including the round-3 Critical and the planted-`LeanCheck` case, in both Git Bash and **PowerShell** (with `usr\bin` not on PATH);
+- validator 145, tools 74, lint 64.
+
+**Deferred:** the trusted harness (Challenge built in an owner-controlled project with its own Mathlib); capping `set_option` resource values (round-3 red-team Medium 6).
+
+**Focused verification of the middle-path fixes** (fable, 72/100). Every round-3 finding was confirmed FIXED with evidence, or deferred as agreed:
+- the bdd manifest passes and all nine packages are at their pins;
+- integration passed 15/15 from Git Bash and from PowerShell;
+- a time-out left no `lean`/`lake`/`comparator` processes behind.
+
+Two blockers re-opened fixed findings:
+1. a second import on the same line (`public import Mathlib public import Pkg.Hidden`), because the import rule read only head words;
+2. a two-line `open Nat` / `renaming mul → plus`, which went through comparator to a full PASS.
+
+Both were fixed:
+- imports are checked over the whole stripped text;
+- `renaming`/`hiding` are banned anywhere in a statement file, as is a line headed `in`.
+
+The cheap notes were also done:
+- Mathlib's manifest URL must be exactly `leanprover-community/mathlib4`;
+- reserved package names (`Mathlib`, `Lean`, `Std`, `Batteries`, …) give FAIL;
+- the formalizer's statements-mode list was updated.
+
+Tests: unit 199, integration 16/16 (real comparator; the two-line renaming case added), validator 145, tools 74, lint 64.
+
+Noted, not blocking (verifier):
+- `«…»` names bypass the ASCII rule (they are visible, and no real shadowing results);
+- indented `alias`/`unif_hint` pass the static rules;
+- a continuation line beginning with a binder named `prefix` is a false positive;
+- `meta`/`elab` binders are flagged by design.
+
+The BDD Lean project (`C:\Users\christina.sun\lean\bdd`) now has the canonical lakefile, and its real lakefile and manifest pass.

@@ -5,8 +5,10 @@ description: |
   small nodes (definitions, assumptions, claims, variants), runs each claim
   through prove-or-refute with examples and counterexample search first,
   checks proofs with two blind proof-verifiers, and reviews the paper against
-  the blueprint. Modes: explore, node, variants, verify, status, review, develop.
-argument-hint: "[explore <question or .tex> | node <label> | variants <label> | verify <label> [--model fable|opus] | status | review [file] | develop]"
+  the blueprint. Lean lane (phase 2): formalize a checked node's statement for
+  the owner to audit on a fidelity card, then prove it and kernel-check it.
+  Modes: explore, node, variants, verify, formalize, prove, status, review, develop.
+argument-hint: "[explore <question or .tex> | node <label> | variants <label> | verify <label> [--model fable|opus] | formalize <label> | prove <label> | status | review [file] | develop]"
 allowed-tools: Read,Grep,Glob,Write,Edit,Bash,Task
 ---
 
@@ -16,9 +18,11 @@ Develop and check economic theory one small step at a time. The working record i
 
 **Input:** `$ARGUMENTS`, a mode keyword followed by its argument.
 
-**Agents:** `theorist` (worker; may raise a node only as far as `proved`), `proof-verifier` (blind critic; two per node), `theorist-critic` (paper-level critic).
+**Agents:** `theorist` (worker; may raise a node only as far as `proved`), `proof-verifier` (blind critic; two per node), `theorist-critic` (paper-level critic), `formalizer` (Lean worker; never sets a status).
 
-**Status ladder:** `conjecture → survived-search → proved → checked → formalized → verified`, plus the terminal statuses `refuted`, `conditional`, `superseded`. `checked` needs two blind verifier PASSes. `formalized` and `verified` are set only by the user (phase 2, Lean).
+**Status ladder:** `conjecture → survived-search → proved → checked → formalized → verified`, plus the terminal statuses `refuted`, `conditional`, `superseded`. `checked` needs two blind verifier PASSes. `formalized` and `verified` are set only by the user:
+- `formalized` = a signed fidelity card plus a statements-mode `lean_check` PASS;
+- `verified` = the card plus a full `lean_check` PASS on the same statement hash.
 
 ---
 
@@ -75,6 +79,51 @@ Blind two-verifier check of a node at `proved`. **You** (the dispatcher) build t
 5. Run the validator. A FAIL here means the log edit was wrong: fix the log line, not the rule.
 
 For the fable-versus-opus comparison (ADR-0003/0004 experiment), run `verify` once with each model on the same node, and record the verdicts and findings by severity in the session log.
+
+### `/theory formalize <label>` (Lean lane, stage 1: statement first)
+
+Needs the node at `checked`, the project's Lean path in `.claude/state/lean.toml`, and `templates/theory/lean-layout.md` followed. The owner does not read Lean, so this stage produces something the owner can audit in English.
+
+1. **Dispatch `formalizer`** with `stage: formalize` and the label. It writes:
+   - the self-contained statement file and its companion statements;
+   - `sorry` proofs;
+   - the node's `lean:` header;
+   - a draft card at `theory/blueprint/cards/<node>.md` (sections 1, 2, 4–7 and the hash).
+2. **Run `python3 bin/lean_check.py <node> --statements-only`.** Every check must pass (the card exists with its hashes and statement list; it is still unsigned, and signing is the validator's check). On any other FAIL, send it back to the formalizer (at most twice in total), then stop and report.
+3. **Blind back-translation.** Dispatch a fresh general-purpose agent with `model: fable`, giving it only the text of the statement file. Withhold the paper, the node, the card and the glossary. Ask it to:
+   - state in plain English exactly what each `_stmt` asserts;
+   - say what each companion shows;
+   - give its own glossary of the Lean symbols it relied on;
+   - point out anything vacuous or odd.
+
+   Paste its answer into card section 8, word for word.
+4. **Hand the card to the owner.** Name the file, and point out where the formalizer's glossary (section 2) and the back-translation (section 8) disagree. The owner fills in:
+   - section 3 (per-part map);
+   - section 9 (concrete instance; give the numeric check file under `checks/<node>/` if one exists);
+   - section 10 (notes);
+   - the Verdict and Signed off lines.
+
+   Do not fill these in for the owner, and do not summarise the card as "looks faithful".
+5. **When the owner has signed** (Verdict FAITHFUL or WITH-NOTED-DIFFERENCES), run `python3 bin/lean_check.py <node> --statements-only --write-report`. On PASS, show the owner the exact line and append it once they approve:
+
+   `- YYYY-MM-DD | checked -> formalized | user | theory/blueprint/cards/<node>.md;<report> | stmt:<stmt hash>`
+
+   Then run the validator.
+
+### `/theory prove <label>` (Lean lane, stage 2)
+
+Needs the node at `formalized`, and comparator set up in `.claude/state/lean.toml` (`templates/theory/lean-layout.md`). `lean_check` hands the soundness judgment to comparator.
+
+1. **Dispatch `formalizer`** with `stage: prove`. It replaces the `sorry`s and must not touch the statement file.
+2. **Run `python3 bin/lean_check.py <node> --write-report` yourself** (full mode; not the formalizer) and report every check line.
+3. **On PASS**, show the owner the exact line and append it once they approve:
+
+   `- YYYY-MM-DD | formalized -> verified | user | theory/blueprint/cards/<node>.md;<report> | stmt:<stmt hash>`
+
+   Then run the validator.
+4. **On FAIL, or after two formalizer dispatches with parts still open,** report the open goals. A part shown false sends the prose claim back to the theorist; the owner decides.
+
+A later toolchain or Mathlib bump means re-running `lean_check` on every `verified` node. A new failing report takes the node's verification away (the validator checks the newest full report).
 
 ### `/theory status`
 

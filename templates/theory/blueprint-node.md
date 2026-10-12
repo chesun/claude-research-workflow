@@ -24,7 +24,8 @@ Header (exactly these keys; label, kind, status and uses are required):
   supersedes / superseded_by   label of the predecessor / successor node. When a claim needs an extra hypothesis, the
                 original node becomes conditional (or superseded if reworded) with superseded_by naming a NEW
                 claim node at conjecture that states the repaired result; the repair climbs as that new node.
-  lean          Lean declaration name (phase 2), empty until formalized
+  lean          <Pkg>.<Name>: the node's Lean statement file <Pkg>/Statements/<Name>.lean (phase 2;
+                templates/theory/lean-layout.md). Set by the formalizer; required at formalized and above.
   paper_ref     path:line of the matching result in the paper, used by theorist-critic's cross-check
 
 Rules the validator enforces:
@@ -45,7 +46,11 @@ Rules the validator enforces:
     (e.g. a comment holding "mentions: asm:objective, prop:other"). It is outside both hashes.
   - A statement or proof that cites a node label found in neither uses nor mentions gives a warning (UNVERIFIED).
     A label is read as the longest label-shaped token, so write "lem:b's bound", not "lem:b-based bound".
-  - -> formalized / verified need actor user.
+  - -> formalized / verified need actor user (the owner); no tool or agent writes these lines.
+  - -> formalized also needs locators to the node's card (cards/<node>.md: Node and Lean match, Verdict FAITHFUL or
+    WITH-NOTED-DIFFERENCES, signed off) and a statements-mode lean_check PASS report with the card's SHA-256.
+  - -> verified needs the card and a full-mode lean_check PASS report with the card's SHA-256; while a node is
+    verified, its newest full-mode report must still be that PASS.
   - A node at checked or above may depend only on definitions/assumptions or on nodes at checked or above.
 
 Evidence-log line format (one per status change; locators are repo-relative, separated by ';'):

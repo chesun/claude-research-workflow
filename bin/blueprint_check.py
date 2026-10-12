@@ -334,6 +334,80 @@ def report_fields(path: Path) -> dict[str, str]:
     return fields
 
 
+HEADER_FIELD_RE = re.compile(r"^\*\*([A-Za-z0-9 -]+):\*\*\s*(.*?)\s*$")
+# lean_check never writes `_1` (the first report of a day has no suffix), so `_1` is not one of its names.
+LEAN_REPORT_RE = re.compile(r"^lean_check_(\d{4}-\d{2}-\d{2})(?:_([2-9]|[1-9]\d+))?\.md$")
+SIGNED_VERDICTS = ("FAITHFUL", "WITH-NOTED-DIFFERENCES")
+SIGNED_OFF_RE = re.compile(r"^[A-Za-z][A-Za-z.\-]{0,9}\s+\d{4}-\d{2}-\d{2}$")
+
+
+def header_fields(path: Path) -> dict[str, str]:
+    """`**Key:** value` lines in the first 60 lines of a card or lean_check report."""
+    fields: dict[str, str] = {}
+    try:
+        with path.open(encoding="utf-8-sig", errors="replace") as fh:
+            for _, ln in zip(range(60), fh):
+                m = HEADER_FIELD_RE.match(ln.strip())
+                if m and m.group(1) not in fields:
+                    fields[m.group(1)] = m.group(2)
+    except OSError:
+        pass
+    return fields
+
+
+def _card_problem(f: dict, n: "Node") -> str | None:
+    if f.get("Node") != n.label:
+        return f"the card is for {f.get('Node', '(none)')!r}, not {n.label!r}"
+    if not n.lean or f.get("Lean") != n.lean:
+        return f"the card's Lean {f.get('Lean', '(none)')!r} differs from the node's lean: {n.lean!r}"
+    if f.get("Node statement hash") != statement_hash(n.statement):
+        return (f"the card's Node statement hash {f.get('Node statement hash', '(none)')!r} is not the node's "
+                f"statement hash {statement_hash(n.statement)} (a card for another statement?)")
+    if f.get("Verdict") not in SIGNED_VERDICTS:
+        return f"the card's verdict is {f.get('Verdict', '(none)')!r}, not FAITHFUL or WITH-NOTED-DIFFERENCES"
+    if not SIGNED_OFF_RE.match(f.get("Signed off", "")):
+        return (f"the card is not signed off (Signed off {f.get('Signed off', '(none)')!r}; expected the owner's "
+                f"initials and a YYYY-MM-DD date)")
+    if not re.fullmatch(r"[0-9a-f]{64}", f.get("Statement SHA-256", "")):
+        return "the card has no 64-hex Statement SHA-256"
+    return None
+
+
+def _lean_report_problem(f: dict, n: "Node", mode: str, sha: str, path: Path | None = None) -> str | None:
+    if f.get("Node") != n.label or f.get("Lean") != n.lean:
+        return f"is for {f.get('Node')!r} / {f.get('Lean')!r}, not {n.label!r} / {n.lean!r}"
+    if f.get("Mode") != mode:
+        return f"is a {f.get('Mode', '(no mode)')!r} report, not {mode!r}"
+    if f.get("Verdict") != "PASS":
+        return f"has verdict {f.get('Verdict', '(none)')!r}, not PASS"
+    if f.get("Statement SHA-256") != sha:
+        return f"was run on statement {f.get('Statement SHA-256')!r}, not the card's {sha!r}"
+    # A hollow report (hand-written, or from a run that never reached the tools) is not evidence.
+    if not f.get("Toolchain", "").startswith("Lean (version"):
+        return f"names no toolchain that ran (Toolchain {f.get('Toolchain', '(none)')!r})"
+    if path is not None:
+        try:
+            body = path.read_text(encoding="utf-8-sig", errors="replace")
+        except OSError:
+            body = ""
+        if re.search(r"^- (FAIL|UNVERIFIED) ", body, re.M) or not re.search(r"^- PASS ", body, re.M):
+            return "has a FAIL or UNVERIFIED check line (or no check lines) under a PASS verdict"
+    return None
+
+
+def newest_lean_report(checks_dir: Path, mode: str) -> Path | None:
+    """The newest lean_check report of a mode, by the date and counter in its file name."""
+    best, key = None, None
+    for p in checks_dir.glob("lean_check_*.md") if checks_dir.is_dir() else []:
+        m = LEAN_REPORT_RE.match(p.name)
+        if not m or header_fields(p).get("Mode") != mode:
+            continue
+        k = (m.group(1), int(m.group(2) or 1))
+        if key is None or k > key:
+            best, key = p, k
+    return best
+
+
 def _report_problem(path: Path, label: str, proof_h: str | None) -> str | None:
     f = report_fields(path)
     if not f.get("Reviewer", "").startswith("proof-verifier"):
@@ -523,6 +597,26 @@ def _check_node(n: Node, nodes: dict[str, Node], bp: Path, root: Path | None,
             elif e.to in ("formalized", "verified"):
                 if e.actor != "user":
                     errors.append(f"{where}: only the user may set {e.to!r} (actor {e.actor!r})")
+                card_path = (bp / "cards" / label_to_filename(L)).resolve()
+                lean_dir = (bp / "checks" / label_to_filename(L)[:-3]).resolve()
+                card = next((p for p in existing if _file_identity(p) == _file_identity(card_path)), None)
+                if card is None:
+                    unmet(f"needs the node's fidelity card cards/{label_to_filename(L)} as a locator")
+                else:
+                    cf = header_fields(card)
+                    prob = _card_problem(cf, n)
+                    if prob:
+                        errors.append(f"{where}: {prob}")
+                    else:
+                        mode = "statements" if e.to == "formalized" else "full"
+                        reports = [p for p in existing if p.parent == lean_dir and LEAN_REPORT_RE.match(p.name)]
+                        verdicts = {p: _lean_report_problem(header_fields(p), n, mode, cf["Statement SHA-256"], p)
+                                    for p in reports}
+                        probs = [f"{p.name} {v}" for p, v in verdicts.items()]
+                        if not any(v is None for v in verdicts.values()):
+                            detail = "; ".join(probs) if probs else "none given"
+                            unmet(f"needs a {mode}-mode lean_check PASS report for the card's statement "
+                                  f"({detail})")
         elif move == "down":
             if not existing:
                 unmet("a downgrade needs an existing evidence locator (e.g. the failing report)")
@@ -539,6 +633,23 @@ def _check_node(n: Node, nodes: dict[str, Node], bp: Path, root: Path | None,
         if logged and logged[-1] != proof_hash(n.proof, n.uses):
             errors.append(f"{L}: proof changed after it was logged (hash now {proof_hash(n.proof, n.uses)}); "
                           f"move the node back down and re-verify")
+
+    if n.status in ("formalized", "verified"):
+        if not n.lean:
+            errors.append(f"{L}: status {n.status!r} needs a `lean:` header naming its Lean statement file")
+        if n.status == "verified":
+            # A later failing run (say, after a toolchain bump) takes the node's verification away.
+            newest = newest_lean_report((bp / "checks" / label_to_filename(L)[:-3]), "full")
+            card = bp / "cards" / label_to_filename(L)
+            sha = header_fields(card).get("Statement SHA-256", "") if card.is_file() else ""
+            nf = header_fields(newest) if newest else {}
+            prob = (_lean_report_problem(nf, n, "full", sha, newest) if newest
+                    else "no full-mode lean_check report")
+            if prob:
+                where = newest.name if newest else "checks/"
+                msg = f"{L}: is 'verified' but the newest full lean_check report ({where}) {prob}"
+                # A run that could not finish (no tool, time-out) leaves the node unconfirmed, not refuted.
+                (warnings if nf.get("Verdict") == "UNVERIFIED" else errors).append(msg)
 
     if n.supersedes and n.supersedes not in nodes:
         errors.append(f"{L}: supersedes names unknown node {n.supersedes}")

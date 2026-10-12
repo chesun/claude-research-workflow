@@ -22,6 +22,16 @@
 
 **Spec:** `quality_reports/specs/2026-10-11_theory-proof-workflow-spec.md` §4 (APPROVED), acceptance #7–#8; ADR-0004.
 
+## Amendment 2026-10-12: soundness via Lean FRO comparator
+
+Two ADR-0002 review rounds broke the text-level soundness checks of Tasks 1–2: the check file did not import the statements, macros were allowed, and checks were module-scoped (round 1); then `srcDir`, `lakefile.lean` and namespace shadowing (round 2). The owner chose a spike of Lean FRO's `comparator`, and it passed on Windows: session log 2026-10-11 §9.
+
+`lean_check` therefore delegates soundness to comparator. In full mode it generates `LeanCheck/<Name>Challenge.lean` (the signed statements as `sorry` theorems), `<Name>Solution.lean` (the proofs) and a comparator config, then runs comparator. The generated check file, the `#print axioms` parsing and the `leanchecker` step are gone.
+
+`lean_check` keeps everything else: the hash, the card, the statement-file readability rules and the dated reports. It adds a canonical `lakefile.toml` (two libraries, `<Pkg>` and `LeanCheck`; no `lakefile.lean`), a cleaned project `.lake/build` before each run, and a project scan for code-executing commands, because the Windows build is unsandboxed.
+
+The **threat model** is now stated: this catches Lean-level mistakes and tricks in sources and lakefile, not an actor with shell access. Tool paths go in `.claude/state/lean.toml` (`comparator`, `lean4export`, `landrun`). The Interfaces below that mention the check file, `#print axioms` or `leanchecker` are superseded by this amendment and by `templates/theory/lean-layout.md`.
+
 ## Global Constraints
 
 - The phase-1 constraints carry over:
@@ -175,6 +185,8 @@ The owner reads the cards before the pilot card (about 20–30 min). Their resul
 ### Task 8: BDD pilot setup
 
 In BDD, write `.claude/state/lean.toml` and install `bin/lean_check.py` plus the updated `bin/blueprint_check.py` and `bin/blueprint_tools.py`.
+
+**Back up the Lean project** (the owner's side note, 2026-10-12): the folder is outside OneDrive with local git only, on a temporary laptop. Give it a private remote on the owner's GitHub, created by the owner, then give it the same personal-repo guard setup as BDD, and push after each verified node. A verified node can be re-checked only while its Lean files exist.
 
 The pilot's success test is "the validator reports no error, and no warning on the pilot node". The ~32 mention warnings elsewhere remain the separate TODO item and are not on this path.
 

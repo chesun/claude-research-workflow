@@ -1,0 +1,15 @@
+name = "fix"
+version = "0.1.0"
+defaultTargets = ["Fix"]
+
+[leanOptions]
+autoImplicit = false
+relaxedAutoImplicit = false
+
+[[lean_lib]]
+name = "Fix"
+globs = ["Fix.+"]
+
+[[lean_lib]]
+name = "LeanCheck"
+globs = ["LeanCheck.+"]

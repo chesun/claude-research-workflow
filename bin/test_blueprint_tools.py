@@ -399,9 +399,9 @@ def test_review_fixes_repoint(tmp: Path) -> None:
     root, bp = fx.mkrepo(tmp)
     fx.claim_at(bp, "lem:new", "checked", root=root, statement="new", proof="P new.")
     retired(bp, "lem:old", "lem:new")
-    fx.claim_at(bp, "prop:v", "verified", uses=["lem:old"], root=root, statement="v", proof="V.", lean="Foo.v")
+    fx.claim_at(bp, "prop:v", "verified", uses=["lem:old"], root=root, statement="v", proof="V.")  # lean: defaults to fx.LEAN, matching the card climb() writes
     rc, out = run_cli(["repoint", str(node_file(bp, "lem:old"))])
-    check("rr_lean_reported", rc == 0 and "lean" in out.lower() and "Foo.v" in out, f"{rc} {out}")
+    check("rr_lean_reported", rc == 0 and "lean" in out.lower() and fx.LEAN in out, f"{rc} {out}")
     # Low: dependents on an unparseable node reports, no traceback.
     root, bp = fx.mkrepo(tmp)
     (bp / "prop-bad.md").write_text("---\nlabel: prop:bad\n", encoding="utf-8")
