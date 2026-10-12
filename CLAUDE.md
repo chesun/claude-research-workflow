@@ -37,6 +37,7 @@
 - **Evidence gating** — a verdict is only as good as the evidence it carries; gate on *claims*, not actions; verdicts are `{PASS, UNVERIFIED, FAIL}` (never a silent default-PASS), and the verification mechanism scales to checkability (block only deterministic Tier-1 checks; advise+deduct for judgment). A no-logic-change claim is gated against the residue the recorder writes to the verification ledger (see `adversarial-default.md` § Evidence gating and `.claude/references/evidence-gating-detail.md`)
 - **Decisions are ADRs** — substantive decisions live in `decisions/NNNN_slug.md` (see `decision-log.md`)
 - **Track TODOs** — project root `TODO.md` (see `todo-tracking.md`)
+- **Python in a project virtual environment** — new analysis runs through `.venv`'s own interpreter with pinned `requirements.txt`, never the system Python (see `python-code-conventions.md`)
 - **Auto-memory** — corrections and preferences saved automatically via Claude Code's built-in memory system
 
 ---
