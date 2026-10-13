@@ -8,7 +8,7 @@ When creating a new plan, consult this index first. If an `Active` entry covers 
 
 ## 2026-10
 
-- [2026-10-12_theory-workflow-phase2-lean-plan.md](2026-10-12_theory-workflow-phase2-lean-plan.md) — APPROVED 2026-10-12 (v2, decision A, calibration kept; revised after fit 58/100 and efficiency 64/100 reviews), for approval: phase 2 (Lean lane) of the theory workflow. `bin/lean_check.py`, validator rules for `formalized`/`verified`, fidelity card, `formalizer` + blind `lean-back-translator`, `/theory formalize` and `lean-check`, auditor guide; BDD `prop:nstar-interior` pilot (spec acceptance #7–#8).
+- [2026-10-12_theory-workflow-phase2-lean-plan.md](2026-10-12_theory-workflow-phase2-lean-plan.md) — COMPLETED 2026-10-14 (pilot verified). Was APPROVED 2026-10-12 (v2, decision A, calibration kept; revised after fit 58/100 and efficiency 64/100 reviews), for approval: phase 2 (Lean lane) of the theory workflow. `bin/lean_check.py`, validator rules for `formalized`/`verified`, fidelity card, `formalizer` + blind `lean-back-translator`, `/theory formalize` and `lean-check`, auditor guide; BDD `prop:nstar-interior` pilot (spec acceptance #7–#8).
 - [2026-10-11_theory-workflow-phase1-plan.md](2026-10-11_theory-workflow-phase1-plan.md) — COMPLETED 2026-10-11 (Tasks 0–12; read-out in session log 2026-10-11 §6): phase 1 of the theory workflow (spec `specs/2026-10-11_theory-proof-workflow-spec.md`, APPROVED). Covers ADR-0004; blueprint validator `bin/blueprint_check.py` (reviewed under ADR-0002); `theorist` / `theorist-critic` / `/theory` to `main`; new blind `proof-verifier`; and the BDD pilot (planted-error calibration, known-answer variant test, fable-vs-opus verifier comparison).
 
 ## 2026-06

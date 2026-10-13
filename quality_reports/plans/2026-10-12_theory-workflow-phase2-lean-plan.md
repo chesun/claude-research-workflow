@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Status:** APPROVED 2026-10-12 (v2; owner chose decision (A) and kept the calibration task), revised after blind fit-for-purpose (58/100) and efficiency (64/100) reviews (`quality_reports/reviews/2026-10-12_theory-phase2-plan_{fit-for-purpose,efficiency}_review.md`); for the owner's approval.
+**Status:** COMPLETED 2026-10-14 (pilot node `prop:nstar-interior-ac` verified; read-out in session log 2026-10-11 §12). Was: APPROVED 2026-10-12 (v2; owner chose decision (A) and kept the calibration task), revised after blind fit-for-purpose (58/100) and efficiency (64/100) reviews (`quality_reports/reviews/2026-10-12_theory-phase2-plan_{fit-for-purpose,efficiency}_review.md`); for the owner's approval.
 
 **Goal:** Let a `checked` blueprint node climb to `formalized` (the owner has signed a fidelity card for a frozen Lean statement) and `verified` (the Lean proof of exactly that statement is kernel-checked with clean axioms), and pilot this on BDD's optimal-sample-size result.
 

@@ -6,7 +6,6 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Active (doing now)
 
-- [ ] **Theory phase 2: Lean lane pilot**: `prop:nstar-interior-ac` is **`verified`** (2026-10-14, BDD `bef1c6a`; read-out in session log 2026-10-11 §12). Acceptance #7 met; #8 met in part (the owner was guided, not unaided). Left: the Lean project backup remote (owner creates the private GitHub repo), then mark the plan COMPLETED.
 
 ## Up Next
 
@@ -50,6 +49,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Done (recent)
 
+- [x] 2026-10-14 — **Theory phase 2 Lean pilot COMPLETED**: `prop:nstar-interior-ac` `verified` (BDD `bef1c6a`); acceptance #7 met, #8 met in part (owner guided, not unaided); Lean project backed up to private `chesun/bdd-lean` (`77d1a93`). Read-out: session log 2026-10-11 §12.
 - [x] 2026-10-13 — **BDD: six recursive-methods PDFs moved into LFS** (BDD `e29e62e`; content unchanged, each file's hash matches its pointer).
 - [x] 2026-10-13 — **Lean card calibration**: owner caught both planted defects (B dropped `c > 0`, C `ConcaveOn` for strictly concave), one mild false alarm on A (session log §11).
 - [x] 2026-10-12 — **Lean setup spike PASSED** on native Windows: elan 4.2.4 (GitHub release, digest-verified), Lean v4.35.0-rc4 + Mathlib cache, `lake build --wfail`, `#print axioms`, `sorry` detection, `leanchecker`, `lean-lsp-mcp` 0.31.0 (session log 2026-10-11 §8). Also: the overlay's dropped theory agents restored (`10a0036`).
