@@ -1,16 +1,16 @@
 # TODO — claude-research-workflow
 
-Last updated: 2026-10-12
+Last updated: 2026-10-13
 
 Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans and session logs; this file tracks what is left.
 
 ## Active (doing now)
 
-- [ ] **Theory phase 2: Lean lane pilot** (plan `quality_reports/plans/2026-10-12_theory-workflow-phase2-lean-plan.md`, amended: soundness via Lean FRO comparator). Built and reviewed: `bin/lean_check.py`, validator rules, formalizer, cards, `/theory formalize`/`prove`. Done to the card: tools installed in BDD; `prop:nstar-interior-ac` (parts a–c) `checked`; formalize stage 1 + blind back-translation; card `theory/blueprint/cards/prop-nstar-interior-ac.md` drafted. **Waiting on the owner** to sign the card (after the practice cards); then `formalized`, `/theory prove`, read-out.
-- [ ] **Owner: practice cards** — `quality_reports/calibration/2026-10-12_lean-cards/` (≈20–30 min; answers sealed until done).
+- [ ] **Theory phase 2: Lean lane pilot** (plan `quality_reports/plans/2026-10-12_theory-workflow-phase2-lean-plan.md`, amended: soundness via Lean FRO comparator). `prop:nstar-interior-ac` is `formalized` (2026-10-13, BDD `5da9772`: owner-signed card FAITHFUL, statements lean_check PASS). Now: formalizer stage 2 (proofs) → full lean_check → owner approves `verified` → read-out (costs, calibration) → Lean project backup remote.
 
 ## Up Next
 
+- [ ] **ADR: lighter Lean sign-off** (after the pilot read-out; supersedes part of ADR-0004). Owner, 2026-10-13: the separate status-line approval adds little, and the owner's card review weakens on complex statements. Agreed plan: (1) signing the card is the approval, so `formalized` / `verified` lines are appended without a second ask; (2) the owner's review is a numbered plain-English checklist per part, compared with the paper, not the full card (as done in the pilot); (3) a second blind agent audits each card, so the meaning check does not rest on the owner alone. Update the formalizer, `/theory`, the card template and `blueprint_check.py` rules to match.
 - [ ] **BDD theory: remaining claims** — 7 nodes still at `conjecture` (the wedge, gap-closure and bias results). Run `/theory develop` in BDD. The wedge proof's unstated step (b_t > 0 for t < T−1) was flagged by the known-answer theorist.
 - [ ] **BDD: install the phase-2 tools and declare mentions** — copy `bin/blueprint_tools.py` and the updated `bin/blueprint_check.py`; the new checks give ~32 warnings on 51 nodes, mostly variant statements naming their parent claim or dropped assumption. Each needs a judgment (dependency → `uses`, or `<!-- mentions: -->`); adding to `uses` changes the proof hash of a proved node.
 - [ ] **BDD tidy-ups**: three refuted variant nodes (`var:cogcons-wedge-{held-belief,terminal-belief,update}-cost`) still list the superseded `lem:martingale` in `uses`. Six PDFs under `master_supporting_docs/literature/papers/recursive/` show as modified only because they were committed as plain files under an LFS rule; decide whether to renormalize them to LFS.
@@ -51,6 +51,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Done (recent)
 
+- [x] 2026-10-13 — **Lean card calibration**: owner caught both planted defects (B dropped `c > 0`, C `ConcaveOn` for strictly concave), one mild false alarm on A (session log §11).
 - [x] 2026-10-12 — **Lean setup spike PASSED** on native Windows: elan 4.2.4 (GitHub release, digest-verified), Lean v4.35.0-rc4 + Mathlib cache, `lake build --wfail`, `#print axioms`, `sorry` detection, `leanchecker`, `lean-lsp-mcp` 0.31.0 (session log 2026-10-11 §8). Also: the overlay's dropped theory agents restored (`10a0036`).
 - [x] 2026-10-12 — **Theory phase 2 prep**: `bin/blueprint_tools.py` (verify-input, dependents, repoint with cascade), cited-label + mentions check in the validator, `bin/agent_lint.py`; two ADR-0002 review rounds, all findings fixed or accepted (session log 2026-10-11 §7). Also: history scrubbed and pushed; BDD classified personal and pushed.
 - [x] 2026-10-12 — **Theory workflow phase 1 COMPLETE** (ADR-0004; merged; plan `quality_reports/plans/2026-10-11_theory-workflow-phase1-plan.md` COMPLETED). The BDD pilot found 3 statement defects in the paper, rediscovered the referees' findings blind, and ended with 4 checked nodes (51 total); calibration met spec acceptance #2. Read-out: session log 2026-10-11 §6.
