@@ -627,3 +627,12 @@ The owner signed all three practice cards. Answers were unsealed only afterwards
   - header-fields Lows: `_visible` CommonMark edge cases, which are contrived or fail closed. The inline-comment test documents behaviour and does not discriminate;
   - docs Low: the owner can still open the audit file in `checks/` before signing. That is the owner's own choice, and the path is not handed to them.
 - **Suites:** blueprint 185/185, lean_check 204/204, tools 74/74. Agent lint PASS (40 files).
+
+## 16. ADR-0005 Task 3: card-auditor and calibration (2026-10-14)
+
+- **The agent:** `.claude/agents/card-auditor.md` (fable, Read and Write only). Step 1 is a blind map against nine failure patterns. Step 2 checks coverage of the checklist.
+- **Calibration:** seven sealed cases, each compiled with `lean_run_code`. The answers were kept outside every repository, at a path no agent was given. One dispatch per case, through a general-purpose fable agent told to follow the agent file (the type was not yet registered).
+- **Result:** 6/6 planted defects caught and named, and no false alarm on the faithful case. The bar was met on the first run; no revision was needed.
+- **Cost:** about 95k tokens and 4 tool uses per case, 60–90 s each.
+- **Record:** `quality_reports/calibration/2026-10-14_card-auditor/` (README, ANSWERS, cases, reports).
+- **Limits:** seven short single-part cases; step 2 is not calibrated (the pilot exercises it).
