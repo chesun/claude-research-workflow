@@ -2,8 +2,8 @@
 
 **Node:** (practice card; not a blueprint node)
 **Lean:** Calib.CardC
-**Verdict:** PENDING
-**Signed off:** PENDING
+**Verdict:** UNFAITHFUL
+**Signed off:** CS 2026-10-13
 
 ## 1. The statement, paper and Lean side by side
 
@@ -25,7 +25,7 @@
 
 | Paper part | Lean part | equal / weaker / stronger / missing | Note |
 |---|---|---|---|
-| (a) | `cardC_part_a_stmt` | | |
+| (a) | `cardC_part_a_stmt` | weaker | concave is not the same as strictly concave |
 
 ## 4. Types (formalizer)
 

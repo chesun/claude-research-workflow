@@ -2,8 +2,8 @@
 
 **Node:** (practice card; not a blueprint node)
 **Lean:** Calib.CardA
-**Verdict:** PENDING
-**Signed off:** PENDING
+**Verdict:** WITH-NOTED-DIFFERENCES
+**Signed off:** CS 2026-10-13
 
 ## 1. The statement, paper and Lean side by side
 
@@ -27,7 +27,7 @@
 
 | Paper part | Lean part | equal / weaker / stronger / missing | Note |
 |---|---|---|---|
-| (a) | `cardA_part_a_stmt` | | |
+| (a) | `cardA_part_a_stmt` | stronger | Technically the inequality in the paper does not require v to be greater than or equal to 0 |
 
 ## 4. Types (formalizer)
 
@@ -73,4 +73,4 @@ No division, `deriv`, `sSup`, ℕ subtraction, `sqrt`, `log` or `tsum`, so there
 
 ## 10. Owner's notes
 
-Time spent:
+Time spent: 20 min

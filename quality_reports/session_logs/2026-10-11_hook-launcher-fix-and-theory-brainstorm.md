@@ -521,3 +521,19 @@ The BDD Lean project (`C:\Users\christina.sun\lean\bdd`) now has the canonical l
   2. the pilot card: sections 3, 9 and 10, then Verdict and Signed off.
 
   After that: `--statements-only --write-report`, the `checked -> formalized` line on approval, `/theory prove`, and the read-out.
+
+## 11. Calibration read-out (2026-10-13)
+
+The owner signed all three practice cards. Answers were unsealed only afterwards and are in `quality_reports/calibration/2026-10-12_lean-cards/ANSWERS.md`.
+
+| Card | Planted | Owner verdict | Owner note | Result |
+|---|---|---|---|---|
+| A | none (FAITHFUL) | WITH-NOTED-DIFFERENCES | "stronger": the inequality holds without v ≥ 0 | False alarm, mild: the note is mathematically true, but paper and Lean both assume v ≥ 0, so it is not a paper/Lean difference. An extra Lean hypothesis would make Lean *weaker*, not stronger |
+| B | dropped `c > 0` | UNFAITHFUL | "stronger": does not state c > 0 | Caught, defect named, direction right (a dropped hypothesis makes the claim stronger, here false) |
+| C | `ConcaveOn` for strictly concave | UNFAITHFUL | "weaker": concave is not strictly concave | Caught, defect named, direction right. Owner was unsure of this one |
+
+- **Score:** 2/2 planted defects caught, 1 mild false alarm, 0 misses.
+- **Time:** A 20 min, B 10 min, C not recorded.
+- **Gaps:** section 9 (concrete instance) left blank on all three cards. For these cards the defect showed in the statement text, so no number was needed to catch it. For the pilot, section 9 has worked values to check against.
+- **For the guide (efficiency #8):** the owner found the stronger/weaker direction hard to apply to a hypothesis and doubted whether the difference between strict and plain concavity counts. Both belong in the guide.
+- **Acceptance #8 anchor:** recorded. The owner reads cards well enough to catch a dropped hypothesis and a weakened conclusion.

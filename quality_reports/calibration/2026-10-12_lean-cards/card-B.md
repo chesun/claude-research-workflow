@@ -2,8 +2,8 @@
 
 **Node:** (practice card; not a blueprint node)
 **Lean:** Calib.CardB
-**Verdict:** PENDING
-**Signed off:** PENDING
+**Verdict:** UNFAITHFUL
+**Signed off:** CS 2026-10-13
 
 ## 1. The statement, paper and Lean side by side
 
@@ -27,7 +27,7 @@
 
 | Paper part | Lean part | equal / weaker / stronger / missing | Note |
 |---|---|---|---|
-| (a) | `cardB_part_a_stmt` | | |
+| (a) | `cardB_part_a_stmt` | stronger | it does not state the assumption that c > 0 |
 
 ## 4. Types (formalizer)
 
@@ -80,4 +80,4 @@ For all real p, c: if p > 0, then [p/c maximizes profit over q ≥ 0] and [p/c >
 
 ## 10. Owner's notes
 
-Time spent:
+Time spent: 10 min
