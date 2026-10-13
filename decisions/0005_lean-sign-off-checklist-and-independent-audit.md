@@ -1,7 +1,7 @@
 # ADR-0005 — Lean sign-off: the signature is the approval, plus a checklist and an independent audit
 
 **Date:** 2026-10-14
-**Status:** Proposed (v3; v1 reviewed blind for fit-for-purpose 66/100 and efficiency 82/100, v2 verified 78/100)
+**Status:** Decided 2026-10-14 by the owner (v3; v1 reviewed blind for fit-for-purpose 66/100 and efficiency 82/100, v2 verified 78/100)
 **Scope:** Methodology / theory
 **Data quality:** Full context
 **Supersedes:** #0004, the "user is the Lean auditor" bullet only. The rest of ADR-0004 stands.

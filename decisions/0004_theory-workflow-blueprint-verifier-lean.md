@@ -1,7 +1,7 @@
 # ADR-0004 — Theory workflow: blueprint, blind verifier, opt-in Lean
 
 **Date:** 2026-10-11
-**Status:** Decided
+**Status:** Decided; the "user is the Lean auditor" bullet is superseded by #0005
 **Scope:** Methodology / theory
 **Data quality:** Full context
 **Sources:**
