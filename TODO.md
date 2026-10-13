@@ -1,12 +1,12 @@
 # TODO — claude-research-workflow
 
-Last updated: 2026-10-13
+Last updated: 2026-10-14
 
 Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans and session logs; this file tracks what is left.
 
 ## Active (doing now)
 
-- [ ] **Theory phase 2: Lean lane pilot** (plan `quality_reports/plans/2026-10-12_theory-workflow-phase2-lean-plan.md`, amended: soundness via Lean FRO comparator). `prop:nstar-interior-ac` is `formalized` (2026-10-13, BDD `5da9772`: owner-signed card FAITHFUL, statements lean_check PASS). Now: formalizer stage 2 (proofs) → full lean_check → owner approves `verified` → read-out (costs, calibration) → Lean project backup remote.
+- [ ] **Theory phase 2: Lean lane pilot**: `prop:nstar-interior-ac` is **`verified`** (2026-10-14, BDD `bef1c6a`; read-out in session log 2026-10-11 §12). Acceptance #7 met; #8 met in part (the owner was guided, not unaided). Left: the Lean project backup remote (owner creates the private GitHub repo), then mark the plan COMPLETED.
 
 ## Up Next
 
@@ -36,7 +36,6 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 - [ ] **Review gate: accept directory targets** — `review-receipt-check.py` matches `**Target:**` by exact path or unique basename only, so files inside a reviewed directory (e.g. `bin/fixtures/lean_check/lean-toolchain`) need a waiver (used once, 2026-10-12). Needs an ADR-0002 review.
 
 - [ ] **lean_check trusted harness** (deferred 2026-10-12, owner's middle path): build the Challenge in an owner-controlled project with its own Mathlib, so the formalizer's lakefile/manifest/folders cannot matter; cap `set_option` resource values. Revisit if the pilot or later work shows the need.
-- [ ] **Lean project backup**: give the BDD Lean project (`~/lean/bdd`) a private remote (classify `personal`) once real proofs exist.
 
 - [ ] **Destructive-action guard on Windows OneDrive** — hardening SHELVED by the owner 2026-10-11 on branch `guard-windows-shared` (`d6d84c2`) after 3 review cycles. Four merge-blockers are listed in that branch's `quality_reports/reviews/2026-10-11_guard-windows-shared-r3_*`. Until then, `main`'s guard does not path-gate deletes inside OneDrive on Windows.
 - [ ] **Bulk LFS (+ selective DVC) migration** of the remaining research repos (ADR-0001: GO, forward-only, no history rewrites).

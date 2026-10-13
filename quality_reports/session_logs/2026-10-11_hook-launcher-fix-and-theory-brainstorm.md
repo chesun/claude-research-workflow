@@ -537,3 +537,30 @@ The owner signed all three practice cards. Answers were unsealed only afterwards
 - **Gaps:** section 9 (concrete instance) left blank on all three cards. For these cards the defect showed in the statement text, so no number was needed to catch it. For the pilot, section 9 has worked values to check against.
 - **For the guide (efficiency #8):** the owner found the stronger/weaker direction hard to apply to a hypothesis and doubted whether the difference between strict and plain concavity counts. Both belong in the guide.
 - **Acceptance #8 anchor:** recorded. The owner reads cards well enough to catch a dropped hypothesis and a weakened conclusion.
+
+## 12. Lean pilot read-out (2026-10-13 to 2026-10-14)
+
+`prop:nstar-interior-ac` (parts (a)–(c) of BDD Prop 1, split off under decision A) is **`verified`**:
+- `checked -> formalized` 2026-10-13, BDD `5da9772`: owner-signed card (FAITHFUL, CS 2026-10-13) plus statements-mode `lean_check` PASS (`lean_check_2026-10-13.md`).
+- `formalized -> verified` 2026-10-14, BDD `bef1c6a`: full `lean_check` PASS (`lean_check_2026-10-13_2.md`). The comparator confirmed every proof proves exactly its signed statement, using only propext, Quot.sound and Classical.choice, and the kernel accepted the replay. Proofs are in Lean project `77d1a93`; the statement file is unchanged since signing.
+- Each status line was dry-run on a scratch copy before the owner was asked (no new errors; the same 34 pre-existing warnings). A negative control (card dropped from the line) FAILed as it should.
+
+**Costs**
+
+| Stage | Who | Time | Notes |
+|---|---|---|---|
+| Formalize stage 1 + blind back-translation | formalizer (opus), fable | not recorded in this log | §10 |
+| Statements check | lean_check | about 1 min | 62 s on the bdd copy (§9) |
+| Calibration (3 practice cards) | owner | 30 min + C unrecorded | §11 |
+| Pilot card | owner, with Claude | about 30 min | done one part at a time; see below |
+| Prove stage | formalizer (opus) | about 10 min, 101k tokens, 27 tool calls | all 7 statements; no open parts on the first dispatch |
+| Full check | lean_check | 165 s | the comparator run |
+
+**What caught what:** in the pilot, nothing needed catching. The back-translation, the companions (two sanity instances, non-vacuity, a refuted false variant) and the owner's checklist all agreed with the paper. In calibration, the owner caught both planted defects (§11).
+
+**Acceptance status (spec 2026-10-11)**
+- **#7: met.** The unit suite (199) and the integration suite against the real comparator (16/16) cover `sorry`, hidden `sorryAx`, extra axioms and a statement edited after signing.
+- **#8: met in part, not as written.** The node is `verified` and the owner signed the card. But the owner did **not** read it unaided. They found the full card overwhelming, so Claude translated each Lean part into numbered lines in the paper's notation, which the owner compared with the paper, and set out the section 9 arithmetic for the owner to check. The judgments are the owner's (card §10 says how the card was filled in). The pilot is also parts (a)–(c) of Prop 1, not the whole proposition.
+- **Lesson for the sign-off ADR (TODO):** "unaided" does not fit an owner with no Lean background. The pilot's working form is the numbered checklist. The owner also questioned the separate status-line approval. Both go into the ADR.
+
+**Still open:** a private remote for the Lean project (`~/lean/bdd`, local git only, unclassified).
