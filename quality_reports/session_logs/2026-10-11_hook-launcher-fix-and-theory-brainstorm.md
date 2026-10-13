@@ -565,3 +565,23 @@ The owner signed all three practice cards. Answers were unsealed only afterwards
 
 **Still open:** a private remote for the Lean project (`~/lean/bdd`, local git only, unclassified).
 - **Backup (2026-10-14):** the owner asked Claude to create the repository. The GitHub CLI is not installed. Claude Code's auto-mode check first blocked use of the stored GitHub login, and the owner then authorised it. Created private `chesun/bdd-lean` through the API. The pre-push guard needed three per-repo settings, set to match BDD: the repository class (personal), the approved-remotes allowlist (the owner's GitHub account) and the declared expected email. The push was clean (4 commits), and the remote `main` equals local `77d1a93`. Plan marked COMPLETED.
+
+## 13. ADR-0005 (lighter Lean sign-off), drafted and reviewed (2026-10-14)
+
+- **v1** reviewed blind on fable: fit-for-purpose 66/100 (1 Critical, 3 High, 4 Medium, 2 Low); efficiency 82/100 (1 High, 4 Medium, 3 Low).
+  - The Critical was confirmed in code: `Signed off` is not bound to a statement version (`bin/blueprint_check.py:341`, `:368`). The gap already existed under ADR-0004; the status-line approval was its only backstop.
+- **v2** added the hash-bound signature, a report-file audit, a coverage check, no shared symbol table, a sealed calibration set, a retroactive pilot audit and a slimmer card. A fresh fable verify pass gave 78/100: 14 of 18 v1 findings resolved, the Critical partly, and two new Highs:
+  - a signature-date rule that breaks re-signing. Confirmed: the validator replays every past line against the current card (`:597-619`);
+  - an overclaim about drift between `lean_check` runs.
+- **v3** made targeted fixes:
+  - dropped the date rule;
+  - stated the between-runs limit, with an advisory `--hash` sweep in `/theory status`;
+  - no agent writes the sign-off fields;
+  - glossary-agreed symbol substitution for the paper notation;
+  - a validator check on the checklist marks;
+  - a Coverage FAIL cannot be overridden;
+  - the auditor computes the section 9 values independently;
+  - calibration widened to seven cases, adding quantifier order and junk-value guard.
+
+  v3 was not re-reviewed. It waits for the owner's approval before any implementation plan.
+- **Cost:** three fable reviews, about 455k agent tokens and about 19 minutes of wall-clock.
