@@ -207,17 +207,58 @@ LEAN = "Pkg.Thing"
 LEAN_SHA = "ab" * 32
 
 
+CHECKLIST = ("## Checklist (owner marks)\n\n"
+             "| Part | # | Lean clause (verbatim) | Reading (paper symbols) | Mark |\n"
+             "|---|---|---|---|---|\n"
+             "| (a) | 1 | `0 < s0` | the prior variance is positive | same |\n"
+             "| (a) | 2 | `f s0 = 1` | f at the prior variance is 1 | same |\n")
+
+
+def checklist(*marks: str) -> str:
+    """A checklist whose part (a) rows carry `marks`, in order."""
+    rows = "".join(f"| (a) | {i} | `c{i}` | clause {i} | {m} |\n" for i, m in enumerate(marks, 1))
+    return ("## Checklist (owner marks)\n\n| Part | # | Lean clause (verbatim) | Reading (paper symbols) | Mark |\n"
+            "|---|---|---|---|---|\n" + rows)
+
+
+def write_card_audit(root: Path, label: str, sha: str = LEAN_SHA, verdict: str = "FAITHFUL",
+                     coverage: str = "PASS", node: str | None = None, lean: str = LEAN,
+                     stamp: str = "2026-10-12", k: int = 1) -> str:
+    """A card-auditor report; returns its repo-relative locator."""
+    suffix = "" if k == 1 else f"_{k}"
+    rel = f"theory/blueprint/checks/{label.replace(':', '-')}/card_audit_{stamp}{suffix}.md"
+    f = root / rel
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_text(f"# Card audit\n**Node:** {node or label}\n**Lean:** {lean}\n**Statement SHA-256:** {sha}\n"
+                 f"**Verdict:** {verdict}\n**Coverage:** {coverage}\n\n## Map\n", encoding="utf-8")
+    return rel
+
+
 def write_card(root: Path, label: str, lean: str = LEAN, sha: str = LEAN_SHA, verdict: str = "FAITHFUL",
-               signed: str = "CS 2026-10-12", node: str | None = None, statement: str = "S",
-               node_hash: str | None = None) -> str:
-    """A fidelity card; returns its repo-relative locator."""
+               signed: str | None = None, node: str | None = None, statement: str = "S",
+               node_hash: str | None = None, checklist: str | None = CHECKLIST, audit: str | None = "default",
+               override: str | None = None) -> str:
+    """A fidelity card; returns its repo-relative locator.
+
+    `signed` defaults to a signature bound to `sha`; `audit="default"` writes a matching audit report,
+    None leaves the field out; `checklist=None` leaves the checklist out.
+    """
     rel = f"theory/blueprint/cards/{label.replace(':', '-')}.md"
     f = root / rel
     f.parent.mkdir(parents=True, exist_ok=True)
-    f.write_text(f"# Card\n**Node:** {node or label}\n"
-                 f"**Node statement hash:** {node_hash or bc.statement_hash(statement)}\n"
-                 f"**Lean:** {lean}\n**Statement SHA-256:** {sha}\n"
-                 f"**Verdict:** {verdict}\n**Signed off:** {signed}\n", encoding="utf-8")
+    if signed is None:
+        signed = f"CS 2026-10-12 sha:{sha[:12]}"
+    if audit == "default":
+        audit = write_card_audit(root, label, sha=sha, node=node, lean=lean)
+    head = (f"# Card\n**Node:** {node or label}\n"
+            f"**Node statement hash:** {node_hash or bc.statement_hash(statement)}\n"
+            f"**Lean:** {lean}\n**Statement SHA-256:** {sha}\n")
+    if audit is not None:
+        head += f"**Independent audit:** {audit}\n"
+    head += f"**Verdict:** {verdict}\n**Signed off:** {signed}\n"
+    if override is not None:
+        head += f"**Audit override:** {override}\n"
+    f.write_text(head + "\n" + (checklist or ""), encoding="utf-8")
     return rel
 
 
@@ -1012,6 +1053,150 @@ def test_phase2_lean_rules(tmp: Path) -> None:
     write_lean_report(root, "prop:a", mode="full", verdict="FAIL", stamp="2026-10-12", k=3)
     rep = verdict(bp, root)
     check("ln_same_date_counter_ordering", fails_naming(rep, "prop:a"), str(rep.errors))
+
+    # ADR-0005: bound signature, checklist marks, independent audit.
+    def form_with(**card_kw):
+        return lambda root: (write_card(root, "prop:a", **card_kw) + ";"
+                             + write_lean_report(root, "prop:a", mode="statements"))
+
+    def errs(rep):
+        return " | ".join(rep.errors)
+    good_override = f"CS 2026-10-12 sha:{LEAN_SHA[:12]}: owner accepts the auditor's note"
+    _, _, rep = node_at("formalized", form=form_with(signed="CS 2026-10-12"))
+    check("ln_signed_without_sha_rejected", fails_naming(rep, "prop:a"), errs(rep))
+    check("ln_old_format_card_message", "re-sign" in errs(rep), errs(rep))
+    _, _, rep = node_at("formalized", form=form_with(signed="CS 2026-10-12 sha:cdcdcdcdcdcd"))
+    check("ln_signed_wrong_prefix_rejected", fails_naming(rep, "prop:a") and "re-signs" in errs(rep), errs(rep))
+    _, _, rep = node_at("formalized", form=form_with(signed="CS  2026-10-12  sha:" + LEAN_SHA[:12].upper()))
+    check("ln_signed_prefix_case_and_spaces", rep.verdict == "PASS", errs(rep))
+    _, _, rep = node_at("formalized", form=form_with(checklist=None))
+    check("ln_checklist_missing_rejected", fails_naming(rep, "prop:a") and "checklist" in errs(rep).lower(),
+          errs(rep))
+    _, _, rep = node_at("formalized", form=form_with(checklist=checklist("same", "smae")))
+    check("ln_checklist_bad_mark_named", fails_naming(rep, "prop:a") and "line 2" in errs(rep), errs(rep))
+    _, _, rep = node_at("formalized", form=form_with(checklist=checklist("same", "")))
+    check("ln_checklist_empty_mark_named", fails_naming(rep, "prop:a") and "line 2" in errs(rep), errs(rep))
+
+    def crlf_bom(root):
+        loc = form_with()(root)
+        card = root / loc.split(";")[0]
+        card.write_bytes(b"\xef\xbb\xbf" + card.read_text(encoding="utf-8").replace("\n", "\r\n").encode("utf-8"))
+        return loc
+    _, _, rep = node_at("formalized", form=crlf_bom)
+    check("ln_checklist_crlf_bom", rep.verdict == "PASS", errs(rep))
+    _, _, rep = node_at("formalized", form=form_with(checklist=checklist("same", "weaker")))
+    check("ln_faithful_needs_all_same", fails_naming(rep, "prop:a") and "same" in errs(rep), errs(rep))
+    _, _, rep = node_at("formalized", form=form_with(checklist=checklist("same", "Weaker"),
+                                                      verdict="WITH-NOTED-DIFFERENCES"))
+    check("ln_noted_differences_allows_other_marks", rep.verdict == "PASS", errs(rep))
+    _, _, rep = node_at("formalized", form=form_with(audit=None))
+    check("ln_audit_missing_rejected", fails_naming(rep, "prop:a") and "audit" in errs(rep).lower(), errs(rep))
+    _, _, rep = node_at("formalized", form=lambda root: form_with(
+        audit=write_card_audit(root, "prop:b", node="prop:a"))(root))
+    check("ln_audit_wrong_place_other_node", fails_naming(rep, "prop:a") and "checks/prop-a/" in errs(rep), errs(rep))
+
+    def audit_in_cards(root):
+        src = root / write_card_audit(root, "prop:a")
+        dst = root / "theory/blueprint/cards/card_audit_2026-10-12.md"
+        dst.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+        src.unlink()
+        return form_with(audit="theory/blueprint/cards/card_audit_2026-10-12.md")(root)
+    _, _, rep = node_at("formalized", form=audit_in_cards)
+    check("ln_audit_wrong_place_cards", fails_naming(rep, "prop:a") and "checks/prop-a/" in errs(rep), errs(rep))
+    _, _, rep = node_at("formalized", form=lambda root: form_with(
+        audit=write_card_audit(root, "prop:a", sha="cd" * 32))(root))
+    check("ln_audit_sha_mismatch_rejected", fails_naming(rep, "prop:a") and "has Statement SHA-256" in errs(rep), errs(rep))
+    _, _, rep = node_at("formalized", form=lambda root: form_with(
+        audit=write_card_audit(root, "prop:a", coverage="FAIL"))(root))
+    check("ln_audit_coverage_fail_rejected", fails_naming(rep, "prop:a") and "Coverage" in errs(rep), errs(rep))
+    _, _, rep = node_at("formalized", form=lambda root: form_with(
+        audit=write_card_audit(root, "prop:a", coverage="FAIL"), override=good_override)(root))
+    check("ln_audit_coverage_fail_not_overridable", fails_naming(rep, "prop:a") and "Coverage" in errs(rep), errs(rep))
+    _, _, rep = node_at("formalized", form=lambda root: form_with(
+        audit=write_card_audit(root, "prop:a", verdict="UNFAITHFUL"))(root))
+    check("ln_audit_unfaithful_rejected", fails_naming(rep, "prop:a") and "audit verdict" in errs(rep), errs(rep))
+    _, _, rep = node_at("formalized", form=lambda root: form_with(
+        audit=write_card_audit(root, "prop:a", verdict="UNFAITHFUL"), override=good_override)(root))
+    check("ln_audit_unfaithful_with_override_passes", rep.verdict == "PASS", errs(rep))
+    _, _, rep = node_at("formalized", form=lambda root: form_with(
+        audit=write_card_audit(root, "prop:a", verdict="UNFAITHFUL"),
+        override="CS 2026-10-12 sha:cdcdcdcdcdcd: owner accepts")(root))
+    check("ln_override_wrong_prefix_rejected", fails_naming(rep, "prop:a") and "Audit override is bound" in errs(rep), errs(rep))
+    _, _, rep = node_at("verified", verif=lambda root: write_card(root, "prop:a", audit=None) + ";"
+                        + write_lean_report(root, "prop:a", mode="full", k=2))
+    check("ln_verified_replays_card_rules", fails_naming(rep, "prop:a") and "audit" in errs(rep).lower(),
+          errs(rep))
+    # Review fixes (2026-10-14 red-team and correctness reviews of the ADR-0005 rules).
+    def _append(loc, root, extra):
+        card = root / loc.split(";")[0]
+        card.write_text(card.read_text(encoding="utf-8") + extra, encoding="utf-8")
+        return loc
+    rows_ok = "| (a) | 1 | `c1` | clause 1 | same |\n"
+    head = ("## Checklist (owner marks)\n\n| Part | # | Lean clause (verbatim) | Reading (paper symbols) | Mark |\n"
+            "|---|---|---|---|---|\n")
+    weak = "| (b) | 1 | `c2` | clause 2 | weaker |\n"
+    _, _, rep = node_at("formalized", form=form_with(checklist="<!--\n" + head + rows_ok + "-->\n\n" + head + weak))
+    check("rv_checklist_in_comment_ignored", fails_naming(rep, "prop:a") and "weaker" in errs(rep), errs(rep))
+    _, _, rep = node_at("formalized", form=form_with(checklist="```\n" + head + rows_ok + "```\n\n" + head + weak))
+    check("rv_checklist_in_fence_ignored", fails_naming(rep, "prop:a") and "weaker" in errs(rep), errs(rep))
+    _, _, rep = node_at("formalized", form=form_with(
+        checklist=head + rows_ok + "\n### Part (b)\n\n| Part | # | Lean clause | Reading | Mark |\n|---|---|---|---|---|\n"
+        + weak))
+    check("rv_subheading_does_not_end_checklist", fails_naming(rep, "prop:a") and "weaker" in errs(rep), errs(rep))
+    _, _, rep = node_at("formalized", form=form_with(checklist=head + rows_ok + "\n" + head + weak))
+    check("rv_second_checklist_rejected", fails_naming(rep, "prop:a") and "Checklist" in errs(rep), errs(rep))
+    _, _, rep = node_at("formalized", form=lambda root: _append(form_with()(root), root,
+                                                                "\n**Signed off:** PENDING\n"))
+    check("rv_duplicate_card_field_rejected", fails_naming(rep, "prop:a") and "Signed off" in errs(rep)
+          and "more than once" in errs(rep), errs(rep))
+
+    def dup_audit(root):
+        loc = write_card_audit(root, "prop:a")
+        (root / loc).write_text((root / loc).read_text(encoding="utf-8") + "**Verdict:** UNFAITHFUL\n",
+                                encoding="utf-8")
+        return form_with(audit=loc)(root)
+    _, _, rep = node_at("formalized", form=dup_audit)
+    check("rv_duplicate_audit_field_rejected", fails_naming(rep, "prop:a") and "more than once" in errs(rep),
+          errs(rep))
+    _, _, rep = node_at("formalized", form=form_with(checklist=head + rows_ok + "\n**Glossary**\n\n"
+                                                      "| Lean | Means |\n|---|---|\n| `s0` | prior variance |\n"))
+    check("rv_later_table_not_checklist", rep.verdict == "PASS", errs(rep))
+    def older_audit_cited(root):
+        old = write_card_audit(root, "prop:a")
+        write_card_audit(root, "prop:a", verdict="UNFAITHFUL", k=2)
+        return form_with(audit=old)(root)
+    _, _, rep = node_at("formalized", form=older_audit_cited)
+    check("rv_newer_audit_wins", fails_naming(rep, "prop:a") and "newer" in errs(rep), errs(rep))
+    _, _, rep = node_at("formalized", form=form_with(checklist=head + rows_ok + "| | | | | |\n"))
+    check("rv_empty_row_flagged", fails_naming(rep, "prop:a") and "mark" in errs(rep), errs(rep))
+    _, _, rep = node_at("formalized", form=form_with(signed=f"CS ２０２６-10-12 sha:{LEAN_SHA[:12]}"))
+    check("rv_signature_ascii_digits_only", fails_naming(rep, "prop:a"), errs(rep))
+    _, _, rep = node_at("formalized", form=form_with(checklist=checklist("same", "wekaer"),
+                                                      verdict="WITH-NOTED-DIFFERENCES"))
+    check("rv_mark_vocabulary_enforced", fails_naming(rep, "prop:a") and "wekaer" in errs(rep), errs(rep))
+    _, _, rep = node_at("formalized", form=lambda root: form_with(
+        audit=write_card_audit(root, "prop:a", node="prop:b"))(root))
+    check("rv_audit_node_checked", fails_naming(rep, "prop:a") and "has Node" in errs(rep), errs(rep))
+    _, _, rep = node_at("formalized", form=lambda root: form_with(
+        audit=write_card_audit(root, "prop:a", lean="Pkg.Other"))(root))
+    check("rv_audit_lean_checked", fails_naming(rep, "prop:a") and "has Lean" in errs(rep), errs(rep))
+
+    def audit_bad_name(root):
+        src = root / write_card_audit(root, "prop:a")
+        dst = src.with_name("audit.md")
+        src.rename(dst)
+        return form_with(audit="theory/blueprint/checks/prop-a/audit.md")(root)
+    _, _, rep = node_at("formalized", form=audit_bad_name)
+    check("rv_audit_filename_checked", fails_naming(rep, "prop:a") and "card_audit_" in errs(rep), errs(rep))
+    _, _, rep = node_at("formalized", form=form_with(checklist=head))
+    check("rv_checklist_no_rows_rejected", fails_naming(rep, "prop:a") and "no rows" in errs(rep), errs(rep))
+    _, _, rep = node_at("formalized", form=lambda root: form_with(
+        audit=write_card_audit(root, "prop:a", coverage="PENDING"))(root))
+    check("rv_coverage_pending_message", fails_naming(rep, "prop:a") and "step 2" in errs(rep)
+          and "missing" not in errs(rep), errs(rep))
+    check("ln_checklist_helper_skips_header",
+          bc.checklist_problem(CHECKLIST) is None and bc.checklist_problem("# no checklist\n") is not None,
+          str(bc.checklist_problem(CHECKLIST)))
 
 
 # --- Task 3: CLI + STATUS.md -----------------------------------------------------

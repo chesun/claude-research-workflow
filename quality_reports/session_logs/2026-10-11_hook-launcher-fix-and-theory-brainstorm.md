@@ -585,3 +585,22 @@ The owner signed all three practice cards. Answers were unsealed only afterwards
 
   v3 was not re-reviewed. It waits for the owner's approval before any implementation plan.
 - **Cost:** three fable reviews, about 455k agent tokens and about 19 minutes of wall-clock.
+
+## 14. ADR-0005 Task 1: validator rules (2026-10-14)
+
+- `bin/blueprint_check.py`: a bound signature (`sha:` prefix, ASCII digits only), the checklist (marks, all `same` for FAITHFUL) and the audit report (place, name, newest, header match, coverage, verdict or a bound override). Every past `formalized` / `verified` line is replayed against the current card.
+- **Reviews** (fable, blind; ADR-0002): red-team 60/100 (2 Critical, 2 High, 2 Medium, 2 Low); correctness 86/100 (1 High, 3 Medium, 4 Low). Both Criticals have named regression tests.
+- **Fixed, each with a test that failed first:**
+  - red-team #1 and #2: the checklist parser ignores comments and code fences, and only a `#`/`##` heading ends the section (`rv_checklist_in_comment_ignored`, `rv_checklist_in_fence_ignored`, `rv_subheading_does_not_end_checklist`);
+  - red-team #3: a second checklist section is an error (`rv_second_checklist_rejected`);
+  - red-team #4: a duplicated card or audit header field is an error (`rv_duplicate_card_field_rejected`, `rv_duplicate_audit_field_rejected`);
+  - red-team #5: only tables headed `Part … Mark` count (`rv_later_table_not_checklist`);
+  - red-team #6: the newest audit counts (`rv_newer_audit_wins`);
+  - red-team #7: ASCII digits only (`rv_signature_ascii_digits_only`);
+  - red-team #8 and correctness #6: an empty row is flagged (`rv_empty_row_flagged`);
+  - correctness #1–#4: tests that bite (`rv_mark_vocabulary_enforced`, `rv_audit_node_checked`, `rv_audit_lean_checked`, `rv_audit_filename_checked`, `rv_checklist_no_rows_rejected`). A mutation run confirmed each rule's removal is caught;
+  - correctness #8: a Coverage PENDING message (`rv_coverage_pending_message`).
+- **Accepted:**
+  - correctness #5: the PENDING-guard and locator-state branches change only the message, because the card still FAILs through the missing-file or field checks;
+  - correctness #7: the `verified` replay cannot be isolated from `formalized`, because both lines cite the same card by design.
+- **Suites:** blueprint 182/182, lean_check 199/199, tools 74/74.

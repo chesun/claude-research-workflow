@@ -338,7 +338,104 @@ HEADER_FIELD_RE = re.compile(r"^\*\*([A-Za-z0-9 -]+):\*\*\s*(.*?)\s*$")
 # lean_check never writes `_1` (the first report of a day has no suffix), so `_1` is not one of its names.
 LEAN_REPORT_RE = re.compile(r"^lean_check_(\d{4}-\d{2}-\d{2})(?:_([2-9]|[1-9]\d+))?\.md$")
 SIGNED_VERDICTS = ("FAITHFUL", "WITH-NOTED-DIFFERENCES")
-SIGNED_OFF_RE = re.compile(r"^[A-Za-z][A-Za-z.\-]{0,9}\s+\d{4}-\d{2}-\d{2}$")
+# ADR-0005: the owner's signature is bound to the statement it was given for, by the first 12 hex
+# of the card's Statement SHA-256.
+SIGNED_OFF_RE = re.compile(r"^[A-Za-z][A-Za-z.\-]{0,9}\s+[0-9]{4}-[0-9]{2}-[0-9]{2}\s+sha:([0-9a-fA-F]{12})$")
+OLD_SIGNED_OFF_RE = re.compile(r"^[A-Za-z][A-Za-z.\-]{0,9}\s+[0-9]{4}-[0-9]{2}-[0-9]{2}$")
+OVERRIDE_RE = re.compile(r"^[A-Za-z][A-Za-z.\-]{0,9}\s+[0-9]{4}-[0-9]{2}-[0-9]{2}\s+sha:([0-9a-fA-F]{12}):\s+\S.*$")
+CARD_AUDIT_RE = re.compile(r"^card_audit_([0-9]{4}-[0-9]{2}-[0-9]{2})(?:_([2-9]|[1-9][0-9]+))?\.md$")
+MARKS = ("same", "missing", "added", "weaker", "stronger")
+CHECKLIST_HEAD_RE = re.compile(r"^##\s+(?:\d+\.\s*)?Checklist\b", re.I)
+SECTION_END_RE = re.compile(r"^#{1,2}\s")
+FENCE_RE = re.compile(r"^(```|~~~).*?^\1[^\n]*$", re.M | re.S)
+CARD_KEYS = ("Node", "Node statement hash", "Lean", "Statement SHA-256", "Audited statements",
+             "Independent audit", "Verdict", "Signed off", "Audit override")
+AUDIT_KEYS = ("Node", "Lean", "Statement SHA-256", "Verdict", "Coverage")
+
+
+def _visible(text: str) -> str:
+    """Markdown with HTML comments and fenced code blocks blanked out, keeping line numbers."""
+    blank = lambda m: "\n" * m.group(0).count("\n")
+    return FENCE_RE.sub(blank, COMMENT_RE.sub(blank, text.lstrip("﻿").replace("\r\n", "\n")))
+
+
+def duplicated_fields(text: str, keys: tuple[str, ...]) -> list[str]:
+    """Header-field keys that appear as a `**Key:**` line more than once outside comments and code."""
+    seen: dict[str, int] = {}
+    for ln in _visible(text).splitlines():
+        m = HEADER_FIELD_RE.match(ln.strip())
+        if m and m.group(1) in keys:
+            seen[m.group(1)] = seen.get(m.group(1), 0) + 1
+    return [k for k in keys if seen.get(k, 0) > 1]
+
+
+def _cells(line: str) -> list[str]:
+    return [c.strip() for c in line.strip().strip("|").split("|")]
+
+
+def checklist_rows(text: str) -> list[tuple[str, str, str]] | None:
+    """(part, number, mark) for each row of the card's checklist tables; None if there is no checklist.
+
+    The checklist is the one `## Checklist` section outside comments and code fences. It runs to the next
+    `#` or `##` heading, so `###` sub-headings per part stay inside it. Only tables whose header row starts
+    with `Part` and ends with `Mark` are checklist tables; any other table in the section is skipped.
+    Raises ValueError if there is more than one checklist section.
+    """
+    lines = _visible(text).splitlines()
+    heads = [i for i, ln in enumerate(lines) if CHECKLIST_HEAD_RE.match(ln.strip())]
+    if not heads:
+        return None
+    if len(heads) > 1:
+        raise ValueError(f"the card has {len(heads)} `## Checklist` sections (lines "
+                         f"{', '.join(str(i + 1) for i in heads)}); keep exactly one")
+    rows: list[tuple[str, str, str]] = []
+    in_table = is_checklist = False
+    for ln in lines[heads[0] + 1:]:
+        s = ln.strip()
+        if SECTION_END_RE.match(s):
+            break
+        if not s.startswith("|"):
+            in_table = False
+            continue
+        cells = _cells(s)
+        if not in_table:
+            in_table = True
+            is_checklist = bool(cells) and cells[0].lower() == "part" and cells[-1].lower() == "mark"
+            continue
+        if not is_checklist or (cells and all(re.fullmatch(r":?-{3,}:?", c) for c in cells)):
+            continue
+        rows.append((cells[0] or "?", cells[1] if len(cells) > 1 and cells[1] else "?",
+                     cells[-1] if len(cells) >= 5 else ""))
+    return rows
+
+
+def checklist_problem(text: str) -> str | None:
+    """None if the card has one checklist with at least one row and every row carries one of MARKS."""
+    try:
+        rows = checklist_rows(text)
+    except ValueError as e:
+        return str(e)
+    if rows is None:
+        return "the card has no `## Checklist` section (ADR-0005: the owner marks a checklist)"
+    if not rows:
+        return "the card's checklist has no rows"
+    for part, num, mark in rows:
+        if mark.lower() not in MARKS:
+            return (f"checklist part {part} line {num} has mark {mark!r}; expected one of "
+                    f"{', '.join(MARKS)}")
+    return None
+
+
+def newest_card_audit(checks_dir: Path) -> Path | None:
+    """The newest card_audit report, by the date and counter in its file name."""
+    best, key = None, None
+    for p in checks_dir.glob("card_audit_*.md") if checks_dir.is_dir() else []:
+        m = CARD_AUDIT_RE.match(p.name)
+        if m:
+            k = (m.group(1), int(m.group(2) or 1))
+            if key is None or k > key:
+                best, key = p, k
+    return best
 
 
 def header_fields(path: Path) -> dict[str, str]:
@@ -355,7 +452,82 @@ def header_fields(path: Path) -> dict[str, str]:
     return fields
 
 
-def _card_problem(f: dict, n: "Node") -> str | None:
+def _card_problem(f: dict, n: "Node", card: Path, bp: Path, root: Path | None) -> str | None:
+    """Everything a cited fidelity card must satisfy (ADR-0004, ADR-0005), or None."""
+    prob = _card_header_problem(f, n)
+    if prob:
+        return prob
+    sha = f["Statement SHA-256"]
+    signed = f.get("Signed off", "")
+    m = SIGNED_OFF_RE.match(signed)
+    if not m:
+        if OLD_SIGNED_OFF_RE.match(signed):
+            return (f"the card is signed in the pre-ADR-0005 form ({signed!r}); re-sign as "
+                    f"`<initials> <date> sha:{sha[:12]}` after the card is converted and audited")
+        return (f"the card is not signed off (Signed off {signed!r}; expected "
+                f"`<initials> <YYYY-MM-DD> sha:<first 12 of Statement SHA-256>`)")
+    if m.group(1).lower() != sha[:12]:
+        return (f"the signature is bound to sha:{m.group(1).lower()}, not this card's statement sha:{sha[:12]}; "
+                f"the statement changed since it was signed, so the owner re-signs (never repair the prefix)")
+    try:
+        text = card.read_text(encoding="utf-8-sig", errors="replace")
+    except OSError as e:
+        return f"cannot read the card ({e})"
+    dup = duplicated_fields(text, CARD_KEYS)
+    if dup:
+        return (f"the card has {', '.join(dup)} more than once; keep exactly one of each header field "
+                f"(a reset to PENDING replaces the line, it is not added below it)")
+    prob = checklist_problem(text)
+    if prob:
+        return prob
+    if f.get("Verdict") == "FAITHFUL":
+        off = [(p, k, mk) for p, k, mk in checklist_rows(text) or [] if mk.lower() != "same"]
+        if off:
+            p, k, mk = off[0]
+            return (f"the verdict is FAITHFUL but checklist part {p} line {k} is marked {mk!r}; FAITHFUL needs "
+                    f"every line `same` (use WITH-NOTED-DIFFERENCES and say why in the notes)")
+    loc = f.get("Independent audit", "")
+    if not loc or loc.upper() == "PENDING":
+        return "the card has no `Independent audit:` report (ADR-0005: a card-auditor report is required)"
+    state, apath = resolve_locator(loc, root)
+    want_dir = (bp / "checks" / label_to_filename(n.label)[:-3]).resolve()
+    if state != "ok":
+        return f"the card's Independent audit {loc!r} is {state}"
+    if apath.resolve().parent != want_dir or not CARD_AUDIT_RE.match(apath.name):
+        return (f"the card's Independent audit {loc!r} is not a card_audit_<date>.md report in "
+                f"checks/{want_dir.name}/")
+    newest = newest_card_audit(want_dir)
+    if newest is not None and newest.name != apath.name:
+        return (f"the card cites {apath.name}, but a newer audit report {newest.name} exists; the newest audit "
+                f"is the one that counts, so cite it (or resolve its finding)")
+    try:
+        adup = duplicated_fields(apath.read_text(encoding="utf-8-sig", errors="replace"), AUDIT_KEYS)
+    except OSError as e:
+        return f"cannot read the audit report {apath.name} ({e})"
+    if adup:
+        return f"the audit report {apath.name} has {', '.join(adup)} more than once; it must have exactly one"
+    af = header_fields(apath)
+    for key in ("Node", "Lean", "Statement SHA-256"):
+        want = n.label if key == "Node" else f.get(key)
+        if af.get(key) != want:
+            return f"the audit report {apath.name} has {key} {af.get(key, '(none)')!r}, not {want!r}"
+    if af.get("Coverage") == "PENDING":
+        return (f"the audit report {apath.name} has Coverage 'PENDING'; run the auditor's step 2 (coverage) "
+                f"on the card's checklist")
+    if af.get("Coverage") != "PASS":
+        return (f"the audit report {apath.name} has Coverage {af.get('Coverage', '(none)')!r}; a checklist line is "
+                f"missing, so regenerate the checklist and re-run coverage (an override cannot cover this)")
+    if af.get("Verdict") not in SIGNED_VERDICTS:
+        om = OVERRIDE_RE.match(f.get("Audit override", ""))
+        if not om:
+            return (f"the audit verdict is {af.get('Verdict', '(none)')!r}; the node stops until the owner "
+                    f"decides (an `Audit override: <initials> <date> sha:<12 hex>: <reason>` line, or a fix)")
+        if om.group(1).lower() != sha[:12]:
+            return f"the Audit override is bound to sha:{om.group(1).lower()}, not this card's sha:{sha[:12]}"
+    return None
+
+
+def _card_header_problem(f: dict, n: "Node") -> str | None:
     if f.get("Node") != n.label:
         return f"the card is for {f.get('Node', '(none)')!r}, not {n.label!r}"
     if not n.lean or f.get("Lean") != n.lean:
@@ -365,9 +537,6 @@ def _card_problem(f: dict, n: "Node") -> str | None:
                 f"statement hash {statement_hash(n.statement)} (a card for another statement?)")
     if f.get("Verdict") not in SIGNED_VERDICTS:
         return f"the card's verdict is {f.get('Verdict', '(none)')!r}, not FAITHFUL or WITH-NOTED-DIFFERENCES"
-    if not SIGNED_OFF_RE.match(f.get("Signed off", "")):
-        return (f"the card is not signed off (Signed off {f.get('Signed off', '(none)')!r}; expected the owner's "
-                f"initials and a YYYY-MM-DD date)")
     if not re.fullmatch(r"[0-9a-f]{64}", f.get("Statement SHA-256", "")):
         return "the card has no 64-hex Statement SHA-256"
     return None
@@ -604,7 +773,7 @@ def _check_node(n: Node, nodes: dict[str, Node], bp: Path, root: Path | None,
                     unmet(f"needs the node's fidelity card cards/{label_to_filename(L)} as a locator")
                 else:
                     cf = header_fields(card)
-                    prob = _card_problem(cf, n)
+                    prob = _card_problem(cf, n, card, bp, root)
                     if prob:
                         errors.append(f"{where}: {prob}")
                     else:
