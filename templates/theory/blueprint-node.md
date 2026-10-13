@@ -46,9 +46,14 @@ Rules the validator enforces:
     (e.g. a comment holding "mentions: asm:objective, prop:other"). It is outside both hashes.
   - A statement or proof that cites a node label found in neither uses nor mentions gives a warning (UNVERIFIED).
     A label is read as the longest label-shaped token, so write "lem:b's bound", not "lem:b-based bound".
-  - -> formalized / verified need actor user (the owner); no tool or agent writes these lines.
+  - -> formalized / verified carry actor user: they rest on the owner's bound signature on the card (ADR-0005).
+    Once the card is signed and the report passes, the dispatcher appends the line and tells the owner.
   - -> formalized also needs locators to the node's card (cards/<node>.md: Node and Lean match, Verdict FAITHFUL or
-    WITH-NOTED-DIFFERENCES, signed off) and a statements-mode lean_check PASS report with the card's SHA-256.
+    WITH-NOTED-DIFFERENCES, Signed off "<initials> <YYYY-MM-DD> sha:<first 12 of Statement SHA-256>", every
+    checklist row marked, FAITHFUL only if every row is "same", and an Independent audit report under
+    checks/<node>/card_audit_<date>.md that is the newest, matches the card, has Coverage PASS and a verdict of
+    FAITHFUL or WITH-NOTED-DIFFERENCES or a bound Audit override) and a statements-mode lean_check PASS report
+    with the card's SHA-256. Every past formalized / verified line is re-checked against the current card.
   - -> verified needs the card and a full-mode lean_check PASS report with the card's SHA-256; while a node is
     verified, its newest full-mode report must still be that PASS.
   - A node at checked or above may depend only on definitions/assumptions or on nodes at checked or above.

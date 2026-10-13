@@ -18,11 +18,11 @@ Develop and check economic theory one small step at a time. The working record i
 
 **Input:** `$ARGUMENTS`, a mode keyword followed by its argument.
 
-**Agents:** `theorist` (worker; may raise a node only as far as `proved`), `proof-verifier` (blind critic; two per node), `theorist-critic` (paper-level critic), `formalizer` (Lean worker; never sets a status).
+**Agents:** `theorist` (worker; may raise a node only as far as `proved`), `proof-verifier` (blind critic; two per node), `theorist-critic` (paper-level critic), `formalizer` (Lean worker; never sets a status), `card-auditor` (blind critic of a Lean card; ADR-0005).
 
-**Status ladder:** `conjecture → survived-search → proved → checked → formalized → verified`, plus the terminal statuses `refuted`, `conditional`, `superseded`. `checked` needs two blind verifier PASSes. `formalized` and `verified` are set only by the user:
-- `formalized` = a signed fidelity card plus a statements-mode `lean_check` PASS;
-- `verified` = the card plus a full `lean_check` PASS on the same statement hash.
+**Status ladder:** `conjecture → survived-search → proved → checked → formalized → verified`, plus the terminal statuses `refuted`, `conditional`, `superseded`. `checked` needs two blind verifier PASSes. `formalized` and `verified` rest on the owner's bound signature (ADR-0005). The signature is the approval, so Claude appends the line and tells the owner; nobody asks again:
+- `formalized` = a card signed `<initials> <date> sha:<12 hex>`, every checklist row marked, an independent audit (coverage PASS, verdict agreeing or overridden by the owner), plus a statements-mode `lean_check` PASS;
+- `verified` = the same card plus a full `lean_check` PASS on the same statement hash.
 
 ---
 
@@ -88,27 +88,48 @@ Needs the node at `checked`, the project's Lean path in `.claude/state/lean.toml
    - the self-contained statement file and its companion statements;
    - `sorry` proofs;
    - the node's `lean:` header;
-   - a draft card at `theory/blueprint/cards/<node>.md` (sections 1, 2, 4–7 and the hash).
+   - a draft card at `theory/blueprint/cards/<node>.md` (the header hashes, Appendix A–D and the formalizer column of the worked instance).
 2. **Run `python3 bin/lean_check.py <node> --statements-only`.** Every check must pass (the card exists with its hashes and statement list; it is still unsigned, and signing is the validator's check). On any other FAIL, send it back to the formalizer (at most twice in total), then stop and report.
-3. **Blind back-translation.** Dispatch a fresh general-purpose agent with `model: fable`, giving it only the text of the statement file. Withhold the paper, the node, the card and the glossary. Ask it to:
-   - state in plain English exactly what each `_stmt` asserts;
-   - say what each companion shows;
-   - give its own glossary of the Lean symbols it relied on;
-   - point out anything vacuous or odd.
+3. **Blind back-translation, which writes the checklist.** Dispatch a fresh general-purpose agent with `model: fable`, giving it only the text of the statement file with comments and docstrings stripped. Withhold the paper, the node, the card and every glossary. Ask it for:
+   - **checklist rows:** one per top-level hypothesis and per top-level conjunct of each `_stmt`, as `| Part | # | Lean clause (verbatim) | reading | PENDING |`, with the reading in plain mathematics using the Lean names;
+   - **its own glossary** of every Lean name and Mathlib symbol it relied on;
+   - **notes:** anything vacuous or odd.
 
-   Paste its answer into card section 8, word for word.
-4. **Hand the card to the owner.** Name the file, and point out where the formalizer's glossary (section 2) and the back-translation (section 8) disagree. The owner fills in:
-   - section 3 (per-part map);
-   - section 9 (concrete instance; give the numeric check file under `checks/<node>/` if one exists);
-   - section 10 (notes);
-   - the Verdict and Signed off lines.
+   Paste the glossary and the notes into Appendix E word for word.
+4. **Independent audit, step 1.** Dispatch `card-auditor` (blind) with:
+   - the node label (e.g. `prop:nstar-interior-ac`) and the Lean name from the node's `lean:` header, both copied exactly, because its report header must match them;
+   - the node's `## Statement`;
+   - the statement file's path;
+   - the parameters of each sanity companion;
+   - the Statement SHA-256 (64 hex, from `lean_check --hash`);
+   - the report path `theory/blueprint/checks/<node file stem>/card_audit_<YYYY-MM-DD>.md`. For a second audit on the same day, use `_2`, then `_3`; never `_1`. An earlier audit is never edited.
 
-   Do not fill these in for the owner, and do not summarise the card as "looks faithful".
-5. **When the owner has signed** (Verdict FAITHFUL or WITH-NOTED-DIFFERENCES), run `python3 bin/lean_check.py <node> --statements-only --write-report`. On PASS, show the owner the exact line and append it once they approve:
+   Keep its verdict, and the report's path, from the owner until the owner has signed (step 8).
+5. **Compare the three glossaries:** the formalizer's (Appendix A), the back-translator's (Appendix E) and the auditor's (in its report).
+   - **If they agree,** rewrite each checklist reading in the paper's symbols, substituting symbol for symbol and changing nothing else, and paste the table into the card's checklist.
+   - **If they disagree,** show the owner the disagreement before the checklist. The owner decides which reading is right. If it is the formalizer's that is wrong, the formalizer fixes the statement, and the card restarts at step 1 with a new Statement SHA-256.
+
+   Put the auditor's paper values next to the formalizer's in the worked instance. Fill the "Lean companion says" column from the sanity companions in the statement file. Leave `Independent audit:` at `PENDING` for now.
+6. **Independent audit, step 2 (coverage).** Send the same auditor the checklist table. If it reports `Coverage: FAIL`, re-run the back-translator on the missing clauses (at most twice in all), then repeat this step. If it still fails, stop and report.
+7. **Hand the card to the owner.** Name the file. The owner:
+   - marks every checklist row (`same`, `weaker`, `stronger`, `added`, or a `missing` row of their own);
+   - checks the worked instance;
+   - writes the notes;
+   - sets `Verdict`, and `Signed off` as `<initials> <date> sha:<first 12 of Statement SHA-256>`.
+
+   Never fill these in, never suggest marks, and never write `Signed off`, `Verdict` or `Audit override`. A walk-through that translates a row the owner asks about is fine; record that it happened in the notes.
+8. **Once the owner has signed,** write the audit report's path into `Independent audit:` and compare the owner's verdict with the auditor's.
+   - **If they agree** (both FAITHFUL / WITH-NOTED-DIFFERENCES), go to step 9.
+   - **If they disagree,** stop. Show the owner the auditor's map. The owner either:
+     - **accepts the auditor's finding:** the formalizer fixes the statement, and the card restarts at step 1. The old signature no longer matches;
+     - **overrides it:** the owner writes an `Audit override:` line in the header block, right under `Signed off` (the validator reads only the header), with a reason. Then go to step 9.
+
+     Either way, record the outcome in the owner's notes.
+9. **Run `python3 bin/lean_check.py <node> --statements-only --write-report`.** On PASS, append the line below and tell the owner it is done:
 
    `- YYYY-MM-DD | checked -> formalized | user | theory/blueprint/cards/<node>.md;<report> | stmt:<stmt hash>`
 
-   Then run the validator.
+   Then run the validator. A FAIL here names the card rule that is not met; fix that, never the rule.
 
 ### `/theory prove <label>` (Lean lane, stage 2)
 
@@ -116,7 +137,7 @@ Needs the node at `formalized`, and comparator set up in `.claude/state/lean.tom
 
 1. **Dispatch `formalizer`** with `stage: prove`. It replaces the `sorry`s and must not touch the statement file.
 2. **Run `python3 bin/lean_check.py <node> --write-report` yourself** (full mode; not the formalizer) and report every check line.
-3. **On PASS**, show the owner the exact line and append it once they approve:
+3. **On PASS**, append the line below and tell the owner (the bound signature is the approval; ADR-0005):
 
    `- YYYY-MM-DD | formalized -> verified | user | theory/blueprint/cards/<node>.md;<report> | stmt:<stmt hash>`
 
@@ -128,6 +149,8 @@ A later toolchain or Mathlib bump means re-running `lean_check` on every `verifi
 ### `/theory status`
 
 Run `python3 bin/blueprint_check.py theory/blueprint --write-status`. Show the verdict line, any errors and warnings, and the status table from `theory/blueprint/STATUS.md`.
+
+**Fingerprint sweep (advisory, ADR-0005).** The Lean project sits outside the repository, so the validator cannot see the statement file. When `.claude/state/lean.toml` names the project, run `python3 bin/lean_check.py <node> --hash` for every `formalized` or `verified` node and compare the result with its card's `Statement SHA-256`. Report a mismatch as **stale**: the statement changed after it was signed, and the next full check will FAIL. A mismatch is never fixed by editing the card: the owner re-signs after a new audit.
 
 A warning that a node "uses superseded node X" or "uses conditional node X" means its dependents were not moved to the successor. Run `python3 bin/blueprint_tools.py repoint theory/blueprint/<X>.md`, show the dry run, then apply it with `--apply` (the same authority as the theorist's own down-moves; the dry run goes in the report). Re-proving the demoted nodes is a `node` pass.
 

@@ -1194,6 +1194,25 @@ def test_phase2_lean_rules(tmp: Path) -> None:
         audit=write_card_audit(root, "prop:a", coverage="PENDING"))(root))
     check("rv_coverage_pending_message", fails_naming(rep, "prop:a") and "step 2" in errs(rep)
           and "missing" not in errs(rep), errs(rep))
+    _, _, rep = node_at("formalized", form=lambda root: _append(form_with(
+        audit=write_card_audit(root, "prop:a", verdict="UNFAITHFUL"))(root), root,
+        f"\n<!--\n**Audit override:** CS 2026-10-12 sha:{LEAN_SHA[:12]}: example only\n-->\n"))
+    check("rv_override_in_comment_ignored", fails_naming(rep, "prop:a") and "audit verdict" in errs(rep), errs(rep))
+
+    def card_comment_first(root):
+        loc = form_with(audit=write_card_audit(root, "prop:a", verdict="UNFAITHFUL"))(root)
+        card = root / loc.split(";")[0]
+        card.write_text(f"<!-- **Audit override:** CS 2026-10-12 sha:{LEAN_SHA[:12]}: example -->\n"
+                        + card.read_text(encoding="utf-8"), encoding="utf-8")
+        return loc
+    _, _, rep = node_at("formalized", form=card_comment_first)
+    check("rv_override_in_inline_comment_ignored", fails_naming(rep, "prop:a") and "audit verdict" in errs(rep),
+          errs(rep))
+    root, bp, rep = node_at("verified")
+    fail = root / write_lean_report(root, "prop:a", mode="full", verdict="FAIL", stamp="2026-10-13")
+    fail.write_text("<!--\n" + fail.read_text(encoding="utf-8") + "-->\n", encoding="utf-8")
+    rep = verdict(bp, root)
+    check("rv_commented_report_header_not_skipped", fails_naming(rep, "prop:a") and "newest" in errs(rep), errs(rep))
     check("ln_checklist_helper_skips_header",
           bc.checklist_problem(CHECKLIST) is None and bc.checklist_problem("# no checklist\n") is not None,
           str(bc.checklist_problem(CHECKLIST)))

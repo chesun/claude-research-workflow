@@ -439,16 +439,20 @@ def newest_card_audit(checks_dir: Path) -> Path | None:
 
 
 def header_fields(path: Path) -> dict[str, str]:
-    """`**Key:** value` lines in the first 60 lines of a card or lean_check report."""
+    """`**Key:** value` lines in the first 60 lines of a card, audit or lean_check report.
+
+    Lines inside HTML comments and code fences do not count, so a commented-out example field
+    (say, a template's sample `Audit override`) is never read as the real one.
+    """
     fields: dict[str, str] = {}
     try:
-        with path.open(encoding="utf-8-sig", errors="replace") as fh:
-            for _, ln in zip(range(60), fh):
-                m = HEADER_FIELD_RE.match(ln.strip())
-                if m and m.group(1) not in fields:
-                    fields[m.group(1)] = m.group(2)
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
     except OSError:
-        pass
+        return fields
+    for ln in _visible(text).splitlines()[:60]:
+        m = HEADER_FIELD_RE.match(ln.strip())
+        if m and m.group(1) not in fields:
+            fields[m.group(1)] = m.group(2)
     return fields
 
 
@@ -569,7 +573,10 @@ def newest_lean_report(checks_dir: Path, mode: str) -> Path | None:
     best, key = None, None
     for p in checks_dir.glob("lean_check_*.md") if checks_dir.is_dir() else []:
         m = LEAN_REPORT_RE.match(p.name)
-        if not m or header_fields(p).get("Mode") != mode:
+        # A report whose Mode cannot be read (hidden in a comment, say) still competes as newest, so the
+        # caller sees it and fails on it rather than falling back to an older PASS.
+        got = header_fields(p).get("Mode") if m else None
+        if not m or (got is not None and got != mode):
             continue
         k = (m.group(1), int(m.group(2) or 1))
         if key is None or k > key:

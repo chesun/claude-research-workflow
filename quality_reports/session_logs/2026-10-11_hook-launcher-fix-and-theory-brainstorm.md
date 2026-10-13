@@ -604,3 +604,26 @@ The owner signed all three practice cards. Answers were unsealed only afterwards
   - correctness #5: the PENDING-guard and locator-state branches change only the message, because the card still FAILs through the missing-file or field checks;
   - correctness #7: the `verified` replay cannot be isolated from `formalized`, because both lines cite the same card by design.
 - **Suites:** blueprint 182/182, lean_check 199/199, tools 74/74.
+
+## 15. ADR-0005 Task 2: card template, formalizer, /theory flow (2026-10-14)
+
+- **The template:** the header comes first, with `Independent audit:`. Then the checklist (`Part … Mark`, five marks, the direction reminder), the worked instance with formalizer and auditor columns, the owner's notes, and an appendix A–E. The old sections 3, 5 and 8 are gone.
+- **`/theory formalize`:** formalizer → statements check → back-translator writes the rows → auditor step 1 → three-way glossary diff → auditor step 2 (coverage) → owner marks and signs, without the audit verdict or its path → verdict compare (agree, override or fix) → statements report → `formalized` appended. `prove` appends `verified` without asking. `status` adds an advisory `--hash` sweep.
+- **The formalizer:** resets the sign-off fields in place on any header rewrite; never refreshes a `sha:` prefix.
+- **Found while writing the template:** `header_fields` read `**Key:**` lines inside HTML comments, so a commented example override could count. Fixed with `rv_override_in_comment_ignored` (RED→GREEN). The template's examples are now placeholders.
+- **Reviews:**
+  - header_fields fix (red-team + correctness, one agent): 88/100, no Critical or High;
+  - flow docs (correctness): 70/100, 2 High, 3 Medium, 5 Low.
+- **Fixed:**
+  - docs H1: the auditor gets the node label, Lean name and SHA;
+  - docs H2: the override and fix branches lead on to the statements check and the line (step 9);
+  - docs M-a: same-day audits are `_2`, `_3`, never `_1`;
+  - docs M-b: the override goes in the header block;
+  - docs M-c: a stale "section 6";
+  - Lows: the companion column is assigned, `<node file stem>` is used, the glossary-disagreement branch is resolved, a stale "at each approval" is gone, and the audit path is kept from the owner until they sign;
+  - header-fields M2: a report with an unreadable Mode now competes as the newest, so a commented-out FAIL can no longer hide behind an older PASS (`rv_commented_report_header_not_skipped`, RED→GREEN).
+- **Accepted:**
+  - header-fields M1: `lean_check.card_fields` still reads raw lines. The plan keeps `lean_check.py` unchanged; the divergence fails closed (lean_check rejects a card with a commented example field before the real one); and the template puts its comment after the header. Added to the TODO backlog;
+  - header-fields Lows: `_visible` CommonMark edge cases, which are contrived or fail closed. The inline-comment test documents behaviour and does not discriminate;
+  - docs Low: the owner can still open the audit file in `checks/` before signing. That is the owner's own choice, and the path is not handed to them.
+- **Suites:** blueprint 185/185, lean_check 204/204, tools 74/74. Agent lint PASS (40 files).

@@ -30,17 +30,18 @@ Leave the paper alone. The node's statement is the authority.
 3. **Check it compiles:** `lean_diagnostic_messages` on both files.
 4. **Draft the card** at `theory/blueprint/cards/<node file name>` from the template:
    - fill in the header: `Node`, `Node statement hash` (the `stmt:` hash from `python3 bin/blueprint_check.py --hashes <node file>`), `Lean`, `Statement SHA-256` (from `python3 bin/lean_check.py <node> --hash`) and `Audited statements` (every `<x>` with a `<x>_stmt`);
-   - fill in sections 1, 2 and 4–7;
-   - leave sections 3, 8, 9 and 10, `Verdict` and `Signed off` for others (they are `PENDING`).
+   - fill in Appendix A–D, and the formalizer column of the worked instance (the paper's values at each sanity companion's parameters, worked step by step);
+   - leave the checklist, Appendix E, the auditor column, the owner's notes, `Independent audit`, `Verdict` and `Signed off` for others (they are `PENDING`);
+   - **whenever you rewrite a card's header** (a new statement, a re-formalization), set `Independent audit`, `Verdict` and `Signed off` back to `PENDING` by editing those lines in place, never by adding new ones.
 5. **Run `python3 bin/lean_check.py <node> --statements-only`.** Every check must pass: the lakefile, the dependency manifest, the statement file, the card's hashes and list, the scan of every project file, and the build. The card is still unsigned, and the validator checks the signature later.
-6. **Write the glossary from the statement file only.** A separate blind agent writes the section 8 back-translation without seeing your glossary.
-7. **Faithfulness self-check before you stop.** For each part, ask: is the Lean version weaker, stronger, or differently quantified than the prose? Is any Lean hypothesis absent from the prose (flag it in section 6)? Can every hypothesis hold at once (the nonvacuous companion)?
+6. **Write the glossary from the statement file only.** A separate blind agent writes the checklist and its own glossary without seeing yours, and a blind auditor checks the card. The three glossaries are compared.
+7. **Faithfulness self-check before you stop.** For each part, ask: is the Lean version weaker, stronger, or differently quantified than the prose? Is any Lean hypothesis absent from the prose (flag it in Appendix C)? Can every hypothesis hold at once (the nonvacuous companion)?
 
    If a faithful statement cannot be expressed with Mathlib as it stands, say so plainly and stop; do not substitute something weaker. If you *suspect* the prose statement is false, record why in your report. Never strengthen hypotheses or weaken conclusions to make the statement easier.
 
 ## Stage 2 — prove (the dispatcher says `stage: prove`; the card is signed)
 
-1. **Do not touch the statement file.** One edited byte changes its SHA-256 and voids the owner's signature.
+1. **Do not touch the statement file.** One edited byte changes its SHA-256, so the owner's `sha:` signature no longer matches and the node cannot move.
 2. **Replace each `sorry`** in `<Pkg>/Proofs/<Name>.lean` with a proof. Begin each with `unfold <x>_stmt`.
    - Use the language server constantly: `lean_goal` after each step, `lean_diagnostic_messages` for errors.
    - Use the search tools (`lean_loogle`, `lean_leansearch`, `lean_leanfinder`, `lean_local_search`) to find Mathlib lemmas.
@@ -53,8 +54,8 @@ Leave the paper alone. The node's statement is the authority.
 
 ## What you never do
 
-- Set `formalized` or `verified`, or write any evidence-log line. Only the owner does that.
-- Write or edit anything under `theory/blueprint/checks/` (lean_check reports), or a card's `Verdict` / `Signed off` lines.
+- Set `formalized` or `verified`, or write any evidence-log line. Those rest on the owner's bound signature (ADR-0005), and the dispatcher appends them.
+- Write or edit anything under `theory/blueprint/checks/` (lean_check reports, card audits), or a card's `Verdict`, `Signed off` or `Audit override` lines. Never "refresh" a `sha:` prefix: a mismatch means the owner signs again.
 - Edit a statement file after its card is signed, or edit the node's prose `## Statement`.
 - Read the paper, other cards' verdicts, or the back-translation before writing your glossary.
 - Weaken, strengthen or re-quantify a statement to make it provable.
