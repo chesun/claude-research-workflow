@@ -8,6 +8,9 @@ When writing a new review, consult this index first. If an `Active` entry exists
 
 ## 2026-10
 
+- [2026-10-14_adr-0005-v2_verification_review.md](2026-10-14_adr-0005-v2_verification_review.md) — ADR-0005 v2, verification, 78, Active
+- [2026-10-14_adr-0005_fit-for-purpose_review.md](2026-10-14_adr-0005_fit-for-purpose_review.md) — ADR-0005 v1, fit-for-purpose, 66, Active
+- [2026-10-14_adr-0005_efficiency_review.md](2026-10-14_adr-0005_efficiency_review.md) — ADR-0005 v1, efficiency, 82, Active
 - [2026-10-12_lean-check-r3_red-team_review.md](2026-10-12_lean-check-r3_red-team_review.md) — `bin/lean_check.py` on comparator, red team round 3, 30/100; three strikes escalated to the owner, middle path chosen, findings fixed or deferred (session log 2026-10-11 §9), Active
 - [2026-10-12_lean-check-r3_correctness_review.md](2026-10-12_lean-check-r3_correctness_review.md) — same, correctness round 3, 64/100; fixed (session log §9), Active
 - [2026-10-12_lean-check-r3-fixes_verification_review.md](2026-10-12_lean-check-r3-fixes_verification_review.md) — focused verification of the round-3 fixes, 72/100; two blockers fixed and pinned (session log §9), Active
