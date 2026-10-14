@@ -731,3 +731,12 @@ The owner signed all three practice cards. Answers were unsealed only afterwards
 - Replaced CLAUDE.md's Cross-Repo Propagation section with a short "Overlays and consumer repos" note: the hand-sync rules by class, pointing at §19 and §21.
 - Kept `.claude/file-classes.toml`, header reworded, as the reference for hand syncs.
 - No consumers registry is tracked (`.claude/state/` holds none). The applied-micro overlay and the dormant consumers stay frozen.
+
+## 23. `bdm_bic` cloned and refreshed (2026-10-14)
+
+- **Clone:** the full clone failed with "connection was reset … early EOF" partway through the download. A `--depth 1` clone followed by `git fetch --deepen=100` twice got all 122 commits.
+- **Checkout:** one file's path (`master_supporting_docs/theory/economical-writing-…-9780226448107.pdf`) is over Windows' 260-character limit inside OneDrive. Fixed with repo-local `core.longpaths true`.
+- **Step 4 + 5:** restore tag `pre-simplify-2026-10`; 9 added, 50 replaced (all unmodified upstream copies), 24 deleted (pruned hooks, four rules consolidated upstream in March, `post-merge.sh`, the retired propagation tooling); `SESSION_REPORT.md` and `journal-profiles.html` kept. Gate: 10 hooks load, suites pass, agent lint PASS.
+- **Identity slip:** the fresh clone had no repo-local identity, so the first commit carried the machine's global work address. It was caught before the push. The repo-local `user.name` / `user.email` and the three guard settings (repository class personal, approved remotes, expected email) were set to mirror BDD, and the commit was fixed with `--amend --reset-author --only`, leaving the staged files out (`2c10c3f`).
+- **LFS:** 29 PDFs committed as plain blobs under the LFS rule were renormalized (`2920761`); all 29 pointers match their files. `git lfs push` ran first, as the LFS hook does not run here. Pushed; `sync_status` PASS.
+- **BDD tag not pushed:** a new tag ref makes the guard scan all 376 commits, which hold 124 Office files committed long before the guards existed. The tag stays local; its commit `767f02e` is on GitHub.

@@ -13,7 +13,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 - [ ] **BDD theory: remaining claims** — 7 nodes still at `conjecture` (the wedge, gap-closure and bias results). Run `/theory develop` in BDD. The wedge proof's unstated step (b_t > 0 for t < T−1) was flagged by the known-answer theorist. When proving `prop:commit-cogcons` and `prop:commit-vs-seq-size`, settle whether `prop:nstar` / `prop:vol-commit-equiv` go in `uses` or `mentions` (the last two validator warnings).
 - [ ] **Modernize Track A, remaining steps** (plan `quality_reports/plans/2026-09-16_modernize-and-simplify-plan.md`):
   - step 3: DONE locally 2026-10-14 (`behavioral` `ab9f5f0`, worktree `~/wt/crw-behavioral`; Class A sync 62 copied + 17 deleted, 5 Class B hand-merged; gate passed). Push of `behavioral` awaits the owner. Guard redesign re-synced too;
-  - step 4: BDD DONE 2026-10-14 (BDD `43ee165`, tag `pre-simplify-2026-10`; session log §21). `bdm_bic` is not on this machine: refresh it the same way where it lives;
+  - step 4: DONE 2026-10-14 for both live projects: BDD `43ee165`, `bdm_bic` `2c10c3f` (tags `pre-simplify-2026-10`, local only; session log §21, §23).
   - step 5: DONE 2026-10-14 (propagate.py and sync_overlays.py deleted; `/tools` subcommands and CLAUDE.md section retired; manifest kept as the hand-sync reference).
 - [ ] **Voice preservation** (the committed next build from the 2026-09-22 infra survey): two per-paradigm voice profiles; needs the owner's exemplar papers. Folds in the anti-AI-prose academic carve-outs (Backlog).
 
