@@ -763,3 +763,15 @@ Each node got a theorist prove-or-refute pass (examples, counterexample search, 
 - **Hygiene:** parallel theorists shared the repo. One early pass ran `git stash` on its own; nothing was lost (no stash left, the other node untouched). Every later dispatch forbade stash, restore and reset.
 - **Environment:** checks that need SymPy, NumPy or Z3 ran from BDD's own `.venv` after the first round; the first round used a temporary venv. BDD's `requirements.txt` and its `.venv` describe different environments (analysis vs theory); this is now an owner question on the TODO.
 - **Cost:** about 30 agent runs (theorists about 120–240k tokens each, verifiers about 80–135k).
+
+## 25. BDD: the 13 `proved` variants verified (2026-10-15)
+
+- **Outcome:** no BDD node is left at `proved`. Statuses: 24 checked, 1 verified, 5 conditional, 8 refuted, 1 superseded, 19 stated (58 nodes, validator PASS). BDD pushed to `7f6b053`; later commits through `201c9d5` are local.
+- **Checked as written:** `martingale-beta-bernoulli`, `cogcons-wedge-abs-belief-cost`, `-discounting`, `-prior-anchored-forecast`, `-no-objective`.
+- **Checked after a self-contained rewrite:** `martingale-no-objective`, `vol-commit-equiv-int-tie-continue`, `band-tie-continue` (its first `checked` was withdrawn), `cogcons-wedge-tie-continue` (on-path reachability written out).
+- **Uniform standard (owner's note):** verifiers had judged "Step N of another node's proof" citations unevenly (one FAIL, one split, one double PASS after rebuilding the step). Rule: such a step is a FAIL even when rebuildable. proof-verifier checklist item 11 and a line in theorist.md (workflow `4a14740`, copied to BDD `3b6c455`). A sweep of every checked/proved node found only `band-tie-continue`. TODO backlog: a `verify-input` refusal for it.
+- **Refuted, then repaired by owner choice:** `cogcons-wedge-beta-bernoulli` and `-threshold-loss` claimed an on-path wedge but proved only unconditional probabilities; with lopsided priors, or μ₀ far from w, the optimal rule stops before T−1 and the equivalence holds. Repairs: a cap c < G, and |μ₀ − w| < ρ(c). `-location-loss` asserted an optimal report that need not exist (ℓ = 1 + sin d + eᵈ); repaired to the value of the reporting problem. All three repairs checked.
+- **Superseded:** `vol-commit-equiv-int-det-variance` ended with an unproved and universally false Beta–Bernoulli remark; successor `-2` drops it (and an unproved comparison) and is checked.
+- **Parent claims cleared:** `prop:cogcons-wedge`'s proof already carries the on-path argument (Steps 4–5(b)). `-no-objective`'s closing clause names the superseded `lem:martingale`; the dependency graph confirms the claim with `lem:martingale-horizon`.
+- **Paper wording:** say `lem:martingale-horizon` where the text names `lem:martingale`; the Beta–Bernoulli caveat needs the cost cap; the threshold-loss wedge needs μ₀ near w.
+- **Cost:** about 50 agent runs (verifiers about 90–125k tokens each, theorists about 105–205k).

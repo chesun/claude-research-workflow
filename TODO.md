@@ -10,7 +10,6 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 ## Up Next
 
 - [ ] **card-auditor review point (ADR-0005 item 3):** after five audited nodes, count the auditor's catches and false alarms in the session log; the owner decides whether it stays. Audited so far: 1 (`prop:nstar-interior-ac`, 2026-10-14, FAITHFUL, agreed with the owner).
-- [ ] **BDD theory: verify the 13 `proved` variant nodes** (the develop loop's step 3). All 7 conjecture claims were settled on 2026-10-14 (session log §24); 13 variant nodes from earlier passes sit at `proved` and need two blind verifiers each, in dependency order.
 - [ ] **Modernize Track A, remaining steps** (plan `quality_reports/plans/2026-09-16_modernize-and-simplify-plan.md`):
   - step 3: DONE locally 2026-10-14 (`behavioral` `ab9f5f0`, worktree `~/wt/crw-behavioral`; Class A sync 62 copied + 17 deleted, 5 Class B hand-merged; gate passed). Push of `behavioral` awaits the owner. Guard redesign re-synced too;
   - step 4: DONE 2026-10-14 for both live projects: BDD `43ee165`, `bdm_bic` `2c10c3f` (tags `pre-simplify-2026-10`, local only; session log §21, §23).
@@ -49,6 +48,8 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 - [ ] **`/tools data-status`**, and a pre-push block when `dvc push` is pending (revisit only if it bites).
 
 ## Done (recent)
+
+- [x] 2026-10-15 — **BDD theory: the 13 `proved` variants verified.** 9 checked (3 after self-contained rewrites); 3 refuted on reachability or attainment and repaired by owner choice (`-beta-bernoulli-cap`, `-threshold-loss-reach`, `-location-loss-value`, all checked); det-variance superseded by `-2` (checked). No node left at `proved`. Session log §25.
 
 - [x] 2026-10-14 — **BDD theory: all 7 conjecture claims settled.** Checked as written: `lem:var0`, `prop:seq-vs-commit-bias`, `prop:cogcons-wedge`, `prop:commit-vs-seq-size`, `cor:gap-rank`. Repaired with the owner's approval, then checked: `prop:gap-closure` → `prop:gap-closure-pos` (n ≥ 1), `prop:commit-cogcons` → `prop:commit-cogcons-grid` (grid benchmark). Validator PASS (54 nodes).
 - [x] 2026-10-14 — **lean_check `card_fields` ignores comments and fences**, matching `blueprint_check` (review 88/100).
