@@ -636,3 +636,15 @@ The owner signed all three practice cards. Answers were unsealed only afterwards
 - **Cost:** about 95k tokens and 4 tool uses per case, 60–90 s each.
 - **Record:** `quality_reports/calibration/2026-10-14_card-auditor/` (README, ANSWERS, cases, reports).
 - **Limits:** seven short single-part cases; step 2 is not calibrated (the pilot exercises it).
+
+## 17. ADR-0005 Task 4: pilot converted, audited and re-signed (2026-10-14)
+
+- **The new validator copied into BDD:** it FAILed `prop:nstar-interior-ac` on both its `formalized` and `verified` lines with the re-sign message, as planned. That shows the replay works.
+- **Formalize steps 3–6 on the unchanged statement file:**
+  - the back-translator (fable, comment-stripped Lean only) wrote 31 checklist rows, its glossary and notes;
+  - card-auditor step 1 (blind) returned FAITHFUL, with sanity values (1, 1, 1/4) → n\* = 1, V = −3/4 and (2, 4, 1) → n\* = 0, V = −2;
+  - the three glossaries agreed, so Claude substituted symbols only;
+  - auditor step 2: Coverage PASS (all seven `_stmt`s, no contradicting reading).
+- **The owner** reviewed the checklist ("they all look the same to me"; Claude transcribed that as `same` on all 31 rows, and the notes say so) and the worked instance ("the values are the same"). The owner typed `Verdict: FAITHFUL` and `Signed off: CS 2026-10-14 sha:a6cb62a1734a`. The audit verdict was shown only after signing. It agreed.
+- **Validator:** no errors, the same 34 pre-existing warnings. Fingerprint sweep: current. BDD `f779e92`; not pushed.
+- **Cost:** back-translator 92k tokens, auditor 78k + 95k (two steps); owner time not recorded.

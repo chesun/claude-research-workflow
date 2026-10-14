@@ -9,7 +9,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Up Next
 
-- [ ] **ADR: lighter Lean sign-off** (after the pilot read-out; supersedes part of ADR-0004). Owner, 2026-10-13: the separate status-line approval adds little, and the owner's card review weakens on complex statements. Agreed plan: (1) signing the card is the approval, so `formalized` / `verified` lines are appended without a second ask; (2) the owner's review is a numbered plain-English checklist per part, compared with the paper, not the full card (as done in the pilot); (3) a second blind agent audits each card, so the meaning check does not rest on the owner alone. Update the formalizer, `/theory`, the card template and `blueprint_check.py` rules to match.
+- [ ] **card-auditor review point (ADR-0005 item 3):** after five audited nodes, count the auditor's catches and false alarms in the session log; the owner decides whether it stays. Audited so far: 1 (`prop:nstar-interior-ac`, 2026-10-14, FAITHFUL, agreed with the owner).
 - [ ] **BDD theory: remaining claims** — 7 nodes still at `conjecture` (the wedge, gap-closure and bias results). Run `/theory develop` in BDD. The wedge proof's unstated step (b_t > 0 for t < T−1) was flagged by the known-answer theorist.
 - [ ] **BDD: install the phase-2 tools and declare mentions** — copy `bin/blueprint_tools.py` and the updated `bin/blueprint_check.py`; the new checks give ~32 warnings on 51 nodes, mostly variant statements naming their parent claim or dropped assumption. Each needs a judgment (dependency → `uses`, or `<!-- mentions: -->`); adding to `uses` changes the proof hash of a proved node.
 - [ ] **BDD tidy-ups**: three refuted variant nodes (`var:cogcons-wedge-{held-belief,terminal-belief,update}-cost`) still list the superseded `lem:martingale` in `uses`.
@@ -32,6 +32,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Backlog
 
+- [ ] **lean_check card_fields ignores comments** (header-fields review M1, 2026-10-14): `bin/lean_check.py` `card_fields` still reads raw lines, while `blueprint_check.header_fields` skips HTML comments and fences. Fails closed (lean_check rejects a card with a commented example field above the real one). Apply `bc._visible` plus a mirror test; ADR-0002 review.
 - [ ] **Review gate: accept directory targets** — `review-receipt-check.py` matches `**Target:**` by exact path or unique basename only, so files inside a reviewed directory (e.g. `bin/fixtures/lean_check/lean-toolchain`) need a waiver (used once, 2026-10-12). Needs an ADR-0002 review.
 
 - [ ] **lean_check trusted harness** (deferred 2026-10-12, owner's middle path): build the Challenge in an owner-controlled project with its own Mathlib, so the formalizer's lakefile/manifest/folders cannot matter; cap `set_option` resource values. Revisit if the pilot or later work shows the need.
@@ -49,6 +50,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Done (recent)
 
+- [x] 2026-10-14 — **ADR-0005 implemented**: bound signature, checklist, card-auditor (calibration 6/6, no false alarm), `/theory` flow; pilot converted, audited (FAITHFUL, coverage PASS) and re-signed (BDD `f779e92`). Session log §14–§17.
 - [x] 2026-10-14 — **Theory phase 2 Lean pilot COMPLETED**: `prop:nstar-interior-ac` `verified` (BDD `bef1c6a`); acceptance #7 met, #8 met in part (owner guided, not unaided); Lean project backed up to private `chesun/bdd-lean` (`77d1a93`). Read-out: session log 2026-10-11 §12.
 - [x] 2026-10-13 — **BDD: six recursive-methods PDFs moved into LFS** (BDD `e29e62e`; content unchanged, each file's hash matches its pointer).
 - [x] 2026-10-13 — **Lean card calibration**: owner caught both planted defects (B dropped `c > 0`, C `ConcaveOn` for strictly concave), one mild false alarm on A (session log §11).
