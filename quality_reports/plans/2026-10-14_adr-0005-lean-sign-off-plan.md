@@ -1,6 +1,6 @@
 # ADR-0005 Lean sign-off — Implementation Plan
 
-**Status:** DRAFT (awaiting owner approval)
+**Status:** COMPLETED 2026-10-14 (all four tasks; final review 88/100, its Important fixed; session log 2026-10-11 §14–§17)
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
