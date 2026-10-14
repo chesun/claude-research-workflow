@@ -648,3 +648,7 @@ The owner signed all three practice cards. Answers were unsealed only afterwards
 - **The owner** reviewed the checklist ("they all look the same to me"; Claude transcribed that as `same` on all 31 rows, and the notes say so) and the worked instance ("the values are the same"). The owner typed `Verdict: FAITHFUL` and `Signed off: CS 2026-10-14 sha:a6cb62a1734a`. The audit verdict was shown only after signing. It agreed.
 - **Validator:** no errors, the same 34 pre-existing warnings. Fingerprint sweep: current. BDD `f779e92`; not pushed.
 - **Cost:** back-translator 92k tokens, auditor 78k + 95k (two steps); owner time not recorded.
+- **Final whole-branch review** (fable, fresh): 88/100, 0 Critical, 1 Important.
+  - The Important: a checklist row cut off from its table by a blank or prose line was skipped, so FAITHFUL could pass over a `weaker` row. Fixed with `fr_detached_row_rejected` and `fr_detached_row_after_prose_rejected`, RED→GREEN.
+  - Suites: blueprint 187/187, lean_check 204/204, tools 74/74. The BDD pilot passes the fixed validator.
+  - Four Minors deferred (glossary-branch wording, a prose-quoted bold field fails closed, "line" vs "row" in a message, the pilot's blanket marks counting as owner-guided). The declined-to-judge items stand as logged residues.

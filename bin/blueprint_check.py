@@ -401,6 +401,11 @@ def checklist_rows(text: str) -> list[tuple[str, str, str]] | None:
         if not in_table:
             in_table = True
             is_checklist = bool(cells) and cells[0].lower() == "part" and cells[-1].lower() == "mark"
+            if not is_checklist and len(cells) >= 5:
+                # A row cut off from its table (by a blank or prose line) would otherwise read as the
+                # header of a non-checklist table and vanish from the mark and FAITHFUL checks.
+                raise ValueError(f"the checklist row {s[:60]!r} is not under a `| Part | … | Mark |` header row; "
+                                 f"keep the checklist rows in one table, or repeat the header row above them")
             continue
         if not is_checklist or (cells and all(re.fullmatch(r":?-{3,}:?", c) for c in cells)):
             continue

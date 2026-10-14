@@ -1213,6 +1213,14 @@ def test_phase2_lean_rules(tmp: Path) -> None:
     fail.write_text("<!--\n" + fail.read_text(encoding="utf-8") + "-->\n", encoding="utf-8")
     rep = verdict(bp, root)
     check("rv_commented_report_header_not_skipped", fails_naming(rep, "prop:a") and "newest" in errs(rep), errs(rep))
+    # Final whole-branch review (2026-10-14): a row cut off from its table must not vanish.
+    _, _, rep = node_at("formalized", form=form_with(
+        checklist=checklist("same") + "\n| (b) | 1 | `c-b` | clause b | weaker |\n"))
+    check("fr_detached_row_rejected", fails_naming(rep, "prop:a") and "Part" in errs(rep), errs(rep))
+    _, _, rep = node_at("formalized", form=form_with(
+        checklist=checklist("same") + "Part (b) follows.\n| (b) | 1 | `c-b` | clause b | smae |\n",
+        verdict="WITH-NOTED-DIFFERENCES"))
+    check("fr_detached_row_after_prose_rejected", fails_naming(rep, "prop:a") and "Part" in errs(rep), errs(rep))
     check("ln_checklist_helper_skips_header",
           bc.checklist_problem(CHECKLIST) is None and bc.checklist_problem("# no checklist\n") is not None,
           str(bc.checklist_problem(CHECKLIST)))

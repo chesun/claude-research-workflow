@@ -556,6 +556,26 @@ def test_cli(tmp: Path) -> None:
     check("lc_cli_node_without_lean_2", rc == 2 and "lean:" in out, f"{rc} {out}")
 
 
+def test_card_template_readable(tmp: Path) -> None:
+    """ADR-0005: both checkers read every header field of the card template; its checklist is unmarked."""
+    tpl = (Path(__file__).resolve().parent.parent / "templates" / "theory" / "fidelity-card.md").read_text(
+        encoding="utf-8")
+    card = (tpl.replace("<node label>", "prop:zz-sentinel").replace("<Pkg>.<Name>", "Pkg.Sentinel")
+            .replace("<from `python3 bin/lean_check.py <node> --hash`>", "a" * 64))
+    f = tmp / "card_template_sentinel.md"
+    f.write_text(card, encoding="utf-8")
+    want = ("Node", "Node statement hash", "Lean", "Statement SHA-256", "Audited statements",
+            "Independent audit", "Verdict", "Signed off")
+    lf, bf = lc.card_fields(f), bc.header_fields(f)
+    check("lc_template_header_fields_lean_check", all(k in lf for k in want), str(sorted(lf)))
+    check("lc_template_header_fields_validator", all(k in bf for k in want), str(sorted(bf)))
+    check("lc_template_sha_read", lf.get("Statement SHA-256") == "a" * 64, str(lf.get("Statement SHA-256")))
+    prob = bc.checklist_problem(card)
+    check("lc_template_checklist_unmarked", prob is not None and "has mark" in prob, str(prob))
+    check("lc_template_no_duplicate_fields", bc.duplicated_fields(card, bc.CARD_KEYS) == [],
+          str(bc.duplicated_fields(card, bc.CARD_KEYS)))
+
+
 def main() -> int:
     global bc, lc
     try:
