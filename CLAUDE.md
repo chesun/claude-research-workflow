@@ -112,16 +112,16 @@ For full architecture, enabling instructions, and rollback: see `.claude/rules/d
 
 ---
 
-## Cross-Repo Propagation
+## Overlays and consumer repos
 
-When the workflow source repo (this repo) is also the upstream for multiple research projects, two skills keep everyone in sync without manual copy-paste loops. Both are workflow-source-only: forks that aren't acting as the upstream simply don't have a consumer registry and the skills become inert.
+The automated propagation tooling (`/tools propagate`, `/tools sync-overlays`, `/tools list-consumers`) was retired on 2026-10-14 (modernize plan, Track A step 5). The `applied-micro` overlay and the dormant consumers are frozen.
 
-- **`/tools propagate <pattern>...`** — sync selected files from this workflow to all configured consumer repos. Routing is class-aware: Class A (Universal) files read from `main`, Class B (Overlay-customized) files read from the consumer's overlay branch, Class C (Overlay-only) files read from the overlay if the consumer is on a matching branch.
-- **`/tools sync-overlays`** — push Class A updates from `main` to the `applied-micro` and `behavioral` overlay worktrees. Never touches Class B / C files (those live on the overlay by design).
+To bring an overlay up to date by hand, use `.claude/file-classes.toml`:
+- Class A (universal): copy main's version, or delete where main deleted the file;
+- Class B (overlay-customized): merge three-way from the common base, by hand;
+- Class C (overlay-only) and Class D (project state): never touched.
 
-The file-class manifest lives at `.claude/file-classes.toml` (tracked on `main`, itself Class A so it propagates to overlays). Default for unlisted paths = Class A.
-
-For full design rationale, file-class definitions, and the bootstrap workflow: see `quality_reports/plans/2026-05-07_comprehensive-propagation-plan.md` and `.claude/skills/tools/SKILL.md`.
+The 2026-10-14 `behavioral` sync is the worked example (session log 2026-10-11 §19). A live project is refreshed the same way, file by file under `.claude/`, keeping any local customization (§21).
 
 ---
 
@@ -167,7 +167,7 @@ See `quality.md` for weighted aggregation formula and per-target deduction table
 | `/talk [mode] [format]` | Create, audit, or compile Beamer presentations |
 | `/submit [mode]` | Journal targeting → package → audit → final gate |
 | `/challenge [file --mode]` | Devil's advocate: `--paper`, `--fresh`, etc. |
-| `/tools [subcommand]` | Utilities: commit, compile, validate-bib, context-status, learn, sync-status, propagate, sync-overlays, list-consumers |
+| `/tools [subcommand]` | Utilities: commit, compile, validate-bib, context-status, learn, sync-status, normdiff, cite-check, stata-sweep |
 
 Overlay branches add paradigm-specific skills: `applied-micro` adds `/strategize`, `/balance`, `/event-study`; `behavioral` adds `/design`, `/otree`, `/qualtrics`, `/preregister`.
 

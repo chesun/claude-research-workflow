@@ -711,3 +711,23 @@ The owner signed all three practice cards. Answers were unsealed only afterwards
 - **TODO:** Windows shared-storage prefixes. Tier 2 is inert for OneDrive on this machine, and the scope needs the owner's decision.
 - **Lows left:** `git push +main` with no remote allowed; `cp X .claude/settings.json.bak` false-blocks (parity); FPs from comments on the heredoc opener line (fail closed).
 - **Note:** a reused scratch-file name once spliced stale code into the hook. It was caught at once by the test run, and the hook was restored from the pre-splice copy. Use unique scratch names.
+
+## 21. Track A step 4: BDD's `.claude/` refreshed (2026-10-14)
+
+- **Method:** a restore-point tag `pre-simplify-2026-10`, then a file-level refresh of `.claude/` from the `behavioral` overlay:
+  - a differing file is replaced only if its exact content (blob) exists in the workflow repo's history, which means it is an untouched old upstream copy;
+  - otherwise it is kept as a local customization.
+- **Result:** 8 added, 50 replaced, 17 deleted (the pruned hooks). Kept: `.claude/references/journal-profiles.md` (the JEBO target) and `.claude/SESSION_REPORT.md`.
+- **Sweep:** removed-hook names remain only as history ("former ... pruned", CHANGELOG), plus two stale live references (`protect-files.sh` in the destructive-actions rule and in the deep-audit table). Those were fixed on main (`3733b45`) and synced.
+- **Diagnosis:** two BDD bin suites failed. The cause was the ADR-0005 `blueprint_check.py` copied in on 2026-10-14 without its updated tests. Confirmed by running the suites at HEAD with the refresh stashed: same failures. Fixed by bringing `bin/test_blueprint_check.py`, `bin/test_lean_check.py` and `templates/theory/` up to date (187/74/204).
+- **Process slip:** `git stash` / `stash pop` during the diagnosis unstaged the refresh, so the first commit (`ef01e01`) held only 13 of its 80 files. It was caught by `git status` and amended before any push (`43ee165`). Lesson: use `stash pop --index`, or don't stash a staged change set.
+- **Gate:** all 10 hooks exist and load; hook suites pass (except `test_derive_lib`, which needs pytest); bin suites pass; the blueprint validator is unchanged.
+- `bdm_bic` is not on this machine (TODO).
+
+## 22. Track A step 5: propagation tooling retired (2026-10-14)
+
+- Deleted `.claude/skills/tools/propagate.py` and `sync_overlays.py`.
+- Removed the `/tools propagate`, `sync-overlays` and `list-consumers` sections and their frontmatter mentions.
+- Replaced CLAUDE.md's Cross-Repo Propagation section with a short "Overlays and consumer repos" note: the hand-sync rules by class, pointing at §19 and §21.
+- Kept `.claude/file-classes.toml`, header reworded, as the reference for hand syncs.
+- No consumers registry is tracked (`.claude/state/` holds none). The applied-micro overlay and the dormant consumers stay frozen.
