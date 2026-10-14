@@ -29,6 +29,8 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Backlog
 
+- [ ] **`verify-input`: refuse a proof that points at another node's proof** (2026-10-15). Verifiers judged "Step 2 of lem:x" citations unevenly: one passed, one failed, two passed after rebuilding the step. Item 11 in `proof-verifier.md` and a line in `theorist.md` now make it a uniform FAIL. A refusal in `blueprint_tools.py verify-input` on patterns like `Step N of <label>` / `proof of <label>` would catch it before any verifier runs. Gated code (ADR-0002 review).
+
 - [ ] **Destructive guard: Windows shared-storage prefixes** — `_shared_prefixes()` lists macOS mount points only, so on this Windows machine `rm -rf` / `find -delete` inside OneDrive or Dropbox folders is not blocked (red-team, 2026-10-14). Adding `%OneDrive%`, `%OneDriveCommercial%` and `~/Dropbox` would also block routine scratch deletes inside repos that live in OneDrive; decide the scope first. ADR-0002 review.
 - [ ] **Unclosed `<!--` or code fence in a card** (lean_check review M1, 2026-10-14): `blueprint_check.COMMENT_RE` needs the closing `-->`, so fields after an unclosed comment are still read, while a renderer hides them. Both checkers agree; the owner signs in a raw editor, so the impact is limited. The fix (blank an unclosed comment or fence to the end of the file) must not change node hashing, which also uses `COMMENT_RE`. ADR-0002 review.
 - [ ] **Review gate: accept directory targets** — `review-receipt-check.py` matches `**Target:**` by exact path or unique basename only, so files inside a reviewed directory (e.g. `bin/fixtures/lean_check/lean-toolchain`) need a waiver (used once, 2026-10-12). Needs an ADR-0002 review.

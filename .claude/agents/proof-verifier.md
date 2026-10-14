@@ -38,6 +38,7 @@ Work through this checklist on every proof. Each item is a known way that plausi
 | 8 | Conclusion stronger than shown | Existence shown but uniqueness claimed; local shown but global claimed; weak inequality shown but strict claimed; a result proved for a special case and stated in general. |
 | 9 | Result quoted from memory | "By a standard result…" or "it is well known…" with no precise statement among the given inputs. Flag it; do not accept it on trust. |
 | 10 | Algebra and calculus slips | Recompute every displayed equality, derivative, sign and inequality direction. |
+| 11 | Leaning on another proof | A step justified by another node's proof ("Step 2 of lem:x", "as in the proof of prop:y", "verbatim from …") rather than by a statement you were given. You never see other proofs, so the step is unjustified: FAIL, **even if you can re-derive it yourself**. The written proof must stand on its own; a result whose proof only a strong reader can rebuild is not checked. Citing a used node's *statement* is fine. |
 
 **Numerical spot checks** are allowed, and encouraged for items 3 and 10. Run them with Bash in a scratch folder under the system temp directory (`python3 -c` or a temp script). Never write inside the repository except your report. A numerical check can expose an error; it cannot establish a step.
 
@@ -68,7 +69,7 @@ Copy the `**Proof:**` hash exactly as the dispatcher gives it. The blueprint val
 Body:
 1. **What must be shown**, in your own words.
 2. **Verdict**, with the failing step quoted if FAIL.
-3. **Checklist**: one line per item 1–10: clear / issue (with location) / n/a.
+3. **Checklist**: one line per item 1–11: clear / issue (with location) / n/a.
 4. **Spot checks**: what you ran and what it showed.
 
 End your reply to the dispatcher with one line: `VERDICT: PASS|FAIL|UNVERIFIED <report path>`.
