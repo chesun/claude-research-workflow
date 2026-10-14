@@ -101,6 +101,15 @@ The guard parses leading `cd <path> &&` directives in the command string and upd
 
 This handles the realistic case where Claude prefixes a `cd` to localize a destructive command.
 
+## Chains, heredocs and unparseable commands
+
+- **Every command of a chain is checked** by all three tiers (always-blocked, settings write, shared-storage delete), with the working directory carried across `cd` commands: commands joined by `;`, `&&`, `||`, `|`, `&` or a newline, split on unquoted operators only, so a quoted commit message containing `; git reset --hard` is not a command. Before 2026-10-14 only the first command was checked, so `echo hi && git filter-repo ...` got through.
+- **Wrappers and git's global options do not hide the subcommand:** `env [-u NAME] [--] A=1 git ...`, `command git ...`, `time -p git ...`, `(git ...)`, `{ git ...; }`, `/usr/bin/git`, `git.exe`, and every `git -C dir` / `git -c k=v` / `git --flag` before the subcommand are read as the git command they run.
+- **Backslash continuations** are joined before the command is split.
+- **Heredoc bodies are data unless a shell reads them.** Only an unquoted `<<` opens a heredoc (`echo "<<EOF"` does not). A body is checked as commands when a shell (`bash`, `sh`, `zsh`, `dash`, `ksh`, `fish`, `pwsh`, `powershell`) is named anywhere on its line (`bash <<EOF`, `sh -s <<EOF`, `cat <<EOF | bash`). Any other body (a commit message, a file being written, a Python script) is skipped. An unterminated `<<` removes nothing.
+- **Unparseable commands** (an unbalanced apostrophe, typically): each segment is checked with the same always-blocked predicates and the settings gate. The shared-storage delete check stays fail-open there, as it always was.
+- **Known limits:** commands inside `$(...)`, backticks, `eval "..."` or `sh -c '...'` strings are not unpacked, and neither is a script for another interpreter (`python - <<EOF` that calls `subprocess`). `sudo`, `timeout`, `nice` and `xargs` are not treated as wrappers. On the unparseable path the shared-storage delete check is fail-open. The shared-storage prefixes are macOS mount points, so on Windows the delete check does not fire for OneDrive or Dropbox folders (see TODO).
+
 ## Bypass mechanism
 
 When the operation is genuinely intentional, prefix the command with the env-var:
@@ -109,6 +118,8 @@ When the operation is genuinely intentional, prefix the command with the env-var
 BYPASS_SHARED_GUARD=1 git filter-repo --invert-paths --path output/legacy/
 BYPASS_SHARED_GUARD=1 rm -rf ~/Library/CloudStorage/Dropbox/repo/dist/
 ```
+
+The bypass covers the command it prefixes, as an env assignment does in the shell: in `cd repo && BYPASS_SHARED_GUARD=1 git rebase ...` the rebase is authorized, and in `BYPASS_SHARED_GUARD=1 git status && git push --force` the force push (and any later settings write or shared-storage delete) is still checked. On a shell that reads a heredoc (`BYPASS_SHARED_GUARD=1 bash <<EOF`) it covers the body.
 
 The bypass:
 
@@ -164,4 +175,4 @@ Note: `agent_id` is not currently logged by `destructive-action-guard.py` — ex
 - `.claude/rules/adversarial-default.md` — the prose-level rule this hook enforces. Compliance requires evidence.
 - `.claude/hooks/destructive-action-guard.py` — implementation.
 - `.claude/hooks/post-rewrite-verify.py` — verification reminder injection.
-- `.claude/hooks/test_destructive_action_guard.py` — 37 regression cases covering both classes, bypass, symlink resolution, and mount-point anchoring.
+- `.claude/hooks/test_destructive_action_guard.py` — regression cases (136 as of 2026-10-14) covering both classes, bypass, chains, heredocs, the unparseable fallback, symlink resolution, and mount-point anchoring.

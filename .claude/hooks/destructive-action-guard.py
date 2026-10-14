@@ -69,16 +69,12 @@ def _is_force_push(tokens: list[str]) -> bool:
         return True
     # refspec starting with `+` (force form: `+main:main`, `+HEAD:refs/...`)
     # skip any token that starts with `-` (flags) and look at remaining args
-    for t in rest:
-        if t.startswith("-"):
-            continue
-        # first non-flag arg after `git push` is usually the remote;
-        # subsequent args are refspecs. Any refspec starting with `+` forces.
-        if ":" in t and t.startswith("+"):
-            return True
-        if t.startswith("+") and ":" in t:
-            return True
-    return False
+    # The first non-flag argument is the remote; any later one is a refspec, and a
+    # refspec starting with `+` (`+main`, `+main:main`, `+HEAD:refs/...`) forces.
+    args = [t for t in rest if not t.startswith("-")]
+    if args and args[0].startswith("+") and ":" in args[0]:
+        return True
+    return any(t.startswith("+") for t in args[1:])
 
 def _is_rebase_nontrivial(tokens: list[str]) -> bool:
     if len(tokens) < 2 or tokens[0] != "git" or tokens[1] != "rebase":
@@ -360,7 +356,7 @@ def _check_settings_write(command: str) -> str | None:
             for back in range(i - 1, max(-1, i - 6), -1):
                 if back < 0:
                     break
-                if re.match(r'^(python\d*|node|ruby|perl)$', tokens[back]):
+                if re.match(r'^(python[\d.]*|py|node|ruby|perl)(\.exe)?$', tokens[back]):
                     interp = tokens[back]
                     break
             if interp:
@@ -413,92 +409,300 @@ def _resolve_path(path: str, cwd: str) -> str:
 
 # --- Core check ------------------------------------------------------------
 
+# --- Command structure: chains, heredocs, wrappers -------------------------
+
+# Shell control operators and newlines separate commands (used when shlex fails).
+_SEGMENT_SPLIT_RE = re.compile(r"\n|&&|\|\||;|\||&")
+_CONTINUATION_RE = re.compile(r"\\\r?\n[ \t]*")
+_CONTROL_CHARS = set(";&|\n")
+# `2>&1`, `>&2`, `<&3`, `&>log`, `&>>log` are redirects, not command separators.
+_REDIRECT_AMP_RE = re.compile(r"([<>])&(\d+|-)")
+_AMP_REDIRECT_RE = re.compile(r"&(>>?)")
+
+
+def _defuse_redirects(text: str) -> str:
+    return _AMP_REDIRECT_RE.sub(r"\1", _REDIRECT_AMP_RE.sub(r"\1\2", text))
+
+_WRAPPERS = {"env", "command", "builtin", "nohup", "exec", "time"}
+# wrapper options that take a separate value (env -u NAME, env -C DIR, time -o FILE)
+_WRAPPER_OPT_ARG = {"-u", "--unset", "-C", "--chdir", "-S", "--split-string", "-o", "--output", "-f", "--format"}
+# git global options that take a separate value; any other leading `-...` token is a flag
+_GIT_OPT_ARG = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path", "--config-env",
+                "--super-prefix", "--list-cmds"}
+_SHELLS = {"bash", "sh", "zsh", "dash", "ksh", "fish", "pwsh", "powershell"}
+_HEREDOC_AT_RE = re.compile(r"<<(-?)[ \t]*(?:(['\"])([^'\"\s]+)\2|\\?([A-Za-z0-9_.\-]+))")
+_SHELL_WORD = r"(?:\S*[/\\])?(?:bash|sh|zsh|dash|ksh|fish|pwsh|powershell)(?:\.exe)?"
+_BYPASSED_SHELL_RE = re.compile(r"(?:^|[;&|(]\s*)BYPASS_SHARED_GUARD=1\s+(?:[A-Za-z_]\w*=\S*\s+)*" + _SHELL_WORD + r"\b")
+
+
+def _unquoted_heredoc_starts(line: str, quote: str | None = None) -> tuple[list[int], str | None]:
+    """(offsets of `<<` operators outside quotes and comments, quote still open at the line's end).
+
+    `quote` is the quote open at the start of the line, so a string spanning lines is followed."""
+    out, i, n = [], 0, len(line)
+    while i < n:
+        ch = line[i]
+        if quote == "'":
+            if ch == "'":
+                quote = None
+        elif ch == "\\":
+            i += 2
+            continue
+        elif quote == '"':
+            if ch == '"':
+                quote = None
+        elif ch in ("'", '"'):
+            quote = ch
+        elif ch == "#" and (i == 0 or line[i - 1] in " \t;&|("):
+            break  # the rest of the line is a comment
+        elif line.startswith("<<", i):
+            if line.startswith("<<<", i):
+                i += 3
+                continue
+            out.append(i)
+            i += 2
+            continue
+        i += 1
+    return out, quote
+
+
+def _split_heredocs(command: str) -> tuple[str, list[tuple[str, bool]]]:
+    """(command with heredoc bodies removed, [(body, bypassed)] for bodies a shell reads).
+
+    Only an unquoted `<<` opens a heredoc. A body is commands when a shell is named anywhere on the
+    line that opens it (`bash <<EOF`, `cat <<EOF | bash`, `sh -s <<EOF`); any other body is data (a
+    commit message, a file being written, a script for another interpreter) and is dropped. If the
+    closing delimiter never appears, nothing is removed. `bypassed` is True when the shell itself
+    carries the BYPASS_SHARED_GUARD=1 prefix, which then covers its body.
+    """
+    lines = command.split("\n")
+    out: list[str] = []
+    shell_bodies: list[tuple[str, bool]] = []
+    i = 0
+    quote: str | None = None
+    while i < len(lines):
+        line = lines[i]
+        out.append(line)
+        i += 1
+        starts, quote = _unquoted_heredoc_starts(line, quote)
+        for pos in starts:
+            m = _HEREDOC_AT_RE.match(line, pos)
+            if not m:
+                continue
+            delim, strip_tabs = m.group(3) or m.group(4), m.group(1) == "-"
+            j, body = i, []
+            while j < len(lines):
+                cand = lines[j].rstrip("\r")
+                if (cand.lstrip("\t") if strip_tabs else cand) == delim:
+                    break
+                body.append(lines[j])
+                j += 1
+            if j >= len(lines):
+                continue  # unterminated: keep the lines
+            words = re.findall(r"[A-Za-z0-9_./\\-]+", line[:m.start()] + " " + line[m.end():])
+            if any(w.replace("\\", "/").rsplit("/", 1)[-1].lower().removesuffix(".exe") in _SHELLS for w in words):
+                shell_bodies.append(("\n".join(body), bool(_BYPASSED_SHELL_RE.search(line))))
+            i = j + 1
+    return "\n".join(out), shell_bodies
+
+
+def _segment_bypassed(tokens: list[str]) -> bool:
+    return _strip_env_assignments(tokens)[1].get("BYPASS_SHARED_GUARD") == "1"
+
+
+def _normalize(tokens: list[str]) -> list[str]:
+    """The command a segment runs: drop subshell/brace/negation markers, env assignments, wrappers
+    (`env`, `command`, ...) with their options, and git's global options, and read a path to git
+    (`/usr/bin/git`, `git.exe`) as `git`. So `env -u X git -C dir push -f` reads as `git push -f`."""
+    toks = list(tokens)
+    while toks:
+        t0 = toks[0]
+        if t0 in ("(", "{", "!"):
+            toks = toks[1:]
+            continue
+        if t0.startswith("(") and len(t0) > 1:
+            toks = [t0.lstrip("(")] + toks[1:]
+            continue
+        stripped, _ = _strip_env_assignments(toks)
+        if len(stripped) != len(toks):
+            toks = stripped
+            continue
+        if t0 in _WRAPPERS:
+            toks = toks[1:]
+            while toks and toks[0].startswith("-"):
+                opt = toks.pop(0)
+                if opt == "--":
+                    break
+                if opt in _WRAPPER_OPT_ARG and toks:
+                    toks.pop(0)
+            continue
+        break
+    while toks and toks[-1] in (")", "}"):
+        toks.pop()
+    if toks and toks[-1].endswith(")") and toks[-1] != ")":
+        toks[-1] = toks[-1].rstrip(")")
+    if toks and toks[0].replace("\\", "/").rsplit("/", 1)[-1].lower() in ("git", "git.exe"):
+        i = 1
+        while i < len(toks) and toks[i].startswith("-"):
+            i += 2 if toks[i] in _GIT_OPT_ARG else 1
+        toks = ["git"] + toks[i:]
+    return toks
+
+
+def _always_blocked(tokens: list[str]) -> tuple[str, str] | None:
+    toks = _normalize(tokens)
+    for label, predicate, reason in ALWAYS_BLOCKED:
+        if toks and predicate(toks):
+            return label, reason
+    return None
+
+
+def _parsed_segments(command: str) -> list[list[str]] | None:
+    """Commands of a chain, split on unquoted control operators and newlines; None if unparseable."""
+    try:
+        lex = shlex.shlex(_defuse_redirects(_CONTINUATION_RE.sub(" ", command)), posix=True,
+                          punctuation_chars=";&|\n")
+        lex.whitespace = " \t\r"
+        lex.whitespace_split = True
+        lex.commenters = "#"
+        toks = list(lex)
+    except ValueError:
+        return None
+    segs: list[list[str]] = [[]]
+    for t in toks:
+        if t and set(t) <= _CONTROL_CHARS:
+            segs.append([])
+        else:
+            segs[-1].append(t)
+    return [s for s in segs if s]
+
+
+def _shared_delete(tokens: list[str], cwd: str, command: str) -> str | None:
+    """Tier 2 for one (normalized) command: a recursive delete on shared storage."""
+    for label, extract in (("rm -r/-R/-rf/-fr", _extract_rm_paths), ("find ... -delete", _extract_find_delete_paths)):
+        paths = extract(tokens)
+        if not paths:
+            continue
+        resolved = [_resolve_path(p, cwd) for p in paths]
+        for r in resolved:
+            shared = _is_under_shared(r)
+            if shared:
+                return _format_block(label, f"destructive command on shared-storage path under {shared}",
+                                     command, cwd, resolved)
+        # A relative target in a shared cwd (`rm -rf .`, `rm -rf build`) deletes shared files too.
+        if any(not os.path.isabs(p) and not p.startswith("~") for p in paths):
+            shared = _is_under_shared(cwd)
+            if shared:
+                return _format_block(label, f"destructive command in shared-storage cwd under {shared}",
+                                     command, cwd, resolved)
+    return None
+
+
+def _settings_block(text: str, command: str, cwd: str) -> str | None:
+    reason = _check_settings_write(text)
+    if reason:
+        return _format_block(
+            "write to .claude/settings*.json",
+            reason + " — closes the gap that protect-files.sh (Edit|Write matcher only) cannot cover for "
+            "Bash file writes",
+            command, cwd, [])
+    return None
+
+
+def _check_segment(seg: list[str], cwd: str, command: str) -> str | None:
+    """All three tiers for one command of a chain."""
+    toks = _normalize(seg)
+    hit = _always_blocked(toks)
+    if hit:
+        return _format_block(hit[0], hit[1], command, cwd, [])
+    return _settings_block(shlex.join(seg), command, cwd) or _shared_delete(toks, cwd, command)
+
+
+def _fallback_check(command: str, cwd: str, debug: dict) -> str | None:
+    """Always-blocked and settings checks for a command shlex cannot tokenize as a whole.
+
+    A segment carrying the bypass prefix is skipped (the prefix covers that command only)."""
+    command_joined = _defuse_redirects(_CONTINUATION_RE.sub(" ", command))
+    for seg in _SEGMENT_SPLIT_RE.split(command_joined):
+        seg = seg.strip()
+        if not seg:
+            continue
+        try:
+            toks = shlex.split(seg, posix=True, comments=True)
+        except ValueError:
+            # Still unbalanced: drop stray quote characters, then split on whitespace.
+            seg = seg.replace("'", "").replace('"', "")
+            toks = seg.split()
+        if _segment_bypassed(toks):
+            debug["bypass"] = True
+            continue
+        hit = _always_blocked(toks)
+        if hit:
+            return _format_block(hit[0], hit[1], command, cwd, [])
+        block = _settings_block(seg, command, cwd)
+        if block:
+            return block
+    return None
+
+
 def check_command(command: str, cwd: str) -> tuple[str | None, dict]:
     """
     Inspect `command` (Bash command string) executed from `cwd`.
     Return (block_message, debug) where block_message is None if allowed.
+
+    Each command of a chain is checked on its own, with the working directory carried across
+    `cd` commands; a BYPASS_SHARED_GUARD=1 prefix covers only the command it prefixes.
     """
-    debug = {"command": command, "cwd": cwd}
+    debug = {"command": command, "cwd": cwd, "effective_cwd": cwd}
     if not command or not command.strip():
         return None, debug
 
-    # Tokenize. Use posix=True to match shell quoting.
-    try:
-        tokens_all = shlex.split(command, posix=True, comments=True)
-    except ValueError:
-        # Unparseable — fail-closed for always-blocked patterns by simple substring
-        # check; fail-open otherwise. Conservative on the dangerous classes.
-        for label, _, reason in ALWAYS_BLOCKED:
-            # crude substring fallback
-            if label.split(" (")[0].split(" / ")[0].split()[0] in command and \
-               any(kw in command for kw in ("filter-repo", "filter-branch", "--force", "-f ", "--hard", "update-ref -d")):
-                return _format_block(label, reason, command, cwd, []), debug
-        return None, debug
-
-    if not tokens_all:
-        return None, debug
-
-    # Strip env assignments; check for bypass first.
-    tokens, env_assigns = _strip_env_assignments(tokens_all)
-    debug["env_assigns"] = env_assigns
-    if env_assigns.get("BYPASS_SHARED_GUARD") == "1":
-        # Bypass authorized; record in debug for audit log.
-        debug["bypass"] = True
-        return None, debug
-
-    if not tokens:
-        return None, debug
-
-    # Consume leading cd-chain to compute effective cwd.
-    tokens, effective_cwd = _consume_cd_chain(tokens, cwd)
-    debug["effective_cwd"] = effective_cwd
-
-    # Tier 1: always-blocked patterns.
-    for label, predicate, reason in ALWAYS_BLOCKED:
-        if predicate(tokens):
-            return _format_block(label, reason, command, effective_cwd, []), debug
-
-    # Tier 3: settings.json write gate.
-    # Run on the post-bypass-strip, post-cd-chain command so that env-var
-    # bypass and `cd` prefixes don't change detection. We search the original
-    # command string (sans env-var prefix) — substring matching is more
-    # reliable than reconstructing tokens.
-    settings_reason = _check_settings_write(command)
-    if settings_reason:
-        return _format_block(
-            "write to .claude/settings*.json",
-            settings_reason + " — closes the gap that protect-files.sh "
-            "(Edit|Write matcher only) cannot cover for Bash file writes",
-            command, effective_cwd, [],
-        ), debug
-
-    # Tier 2: path-conditional — extract paths.
-    extractors = [
-        ("rm -r/-R/-rf/-fr", _extract_rm_paths),
-        ("find ... -delete", _extract_find_delete_paths),
-    ]
-    for label, extract in extractors:
-        paths = extract(tokens)
-        if not paths:
+    outer, shell_bodies = _split_heredocs(command)
+    for body, bypassed in shell_bodies:
+        if bypassed:
+            debug["bypass"] = True
             continue
-        # Resolve each path; check if any lands in shared storage.
-        resolved = [_resolve_path(p, effective_cwd) for p in paths]
-        # Also check effective_cwd itself (for `rm -rf .` / `rm -rf *` with cwd in shared)
-        # but only if no explicit paths or all paths are under cwd.
-        for r in resolved:
-            shared = _is_under_shared(r)
-            if shared:
-                reason = f"destructive command on shared-storage path under {shared}"
-                return _format_block(label, reason, command, effective_cwd, resolved), debug
-        # Even if explicit paths aren't under shared, check effective_cwd if cwd
-        # is shared and the rm/find target is relative (could mean "files in cwd")
-        if any(not os.path.isabs(p) and not p.startswith("~") for p in paths):
-            shared = _is_under_shared(effective_cwd)
-            if shared:
-                reason = f"destructive command in shared-storage cwd under {shared}"
-                return _format_block(label, reason, command, effective_cwd, resolved), debug
+        msg, sub = check_command(body, cwd)
+        for key in ("bypass", "fallback"):
+            if sub.get(key):
+                debug[key] = True
+        if msg:
+            debug["heredoc_shell"] = True
+            return msg, debug
 
+    segments = _parsed_segments(outer)
+    if segments is None:
+        # Unparseable (typically an apostrophe). The shared-storage delete check stays
+        # fail-open on this path, as it always was.
+        debug["fallback"] = True
+        return _fallback_check(outer, cwd, debug), debug
+
+    effective = cwd
+    bypassed_any = False
+    for seg in segments:
+        toks = _normalize(seg)
+        if toks and toks[0] == "cd":
+            # Track the directory even for a bypassed cd: the bypass covers that command,
+            # not the ones run in the directory it enters.
+            if len(toks) >= 2:
+                effective = _resolve_path(toks[1], effective)
+                debug["effective_cwd"] = effective
+            continue
+        if _segment_bypassed(seg):
+            debug["bypass"] = True
+            bypassed_any = True
+            continue
+        msg = _check_segment(seg, effective, command)
+        if msg:
+            return msg, debug
+
+    # The settings gate also reads the whole command, for write shapes that span commands.
+    if not bypassed_any:
+        block = _settings_block(command, command, effective)
+        if block:
+            return block, debug
     return None, debug
+
 
 def _format_block(label: str, reason: str, command: str, cwd: str, paths: list[str]) -> str:
     paths_str = "\n  ".join(paths) if paths else "(none extracted)"
@@ -542,6 +746,8 @@ def _log_invocation(project_dir: str, command: str, cwd: str, decision: str,
             "cwd": cwd,
             "effective_cwd": debug.get("effective_cwd"),
             "bypass": debug.get("bypass", False),
+            "fallback": debug.get("fallback", False),
+            "heredoc_shell": debug.get("heredoc_shell", False),
         }
         with log_path.open("a") as f:
             f.write(json.dumps(entry) + "\n")
