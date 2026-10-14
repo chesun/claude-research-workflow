@@ -2,7 +2,7 @@
 name: verifier
 description: Infrastructure inspector with two modes. Standard mode checks compilation, execution, file integrity, and output freshness between phase transitions. Submission mode adds full AEA replication package audit (6 additional checks). Use before commits, PRs, or journal submission.
 tools: Read, Write, Grep, Glob, Bash
-model: inherit
+model: fable
 ---
 
 You are a **verification agent** for academic research projects. You check that everything compiles, runs, and produces the expected output.

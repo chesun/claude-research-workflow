@@ -15,10 +15,14 @@
 | data-engineer | coder-critic | Data pipeline quality, reproducibility, transformation correctness |
 | strategist *(applied-micro overlay)* | strategist-critic | Identification validity, assumptions, robustness |
 | designer *(behavioral overlay)* | designer-critic | Experimental design, inference-first checklist |
-| theorist *(behavioral overlay)* | theorist-critic | Formal model assumptions, proofs, testable predictions |
+| theorist | proof-verifier (per node, two blind) + theorist-critic (paper) | Proof correctness per blueprint node; model assumptions, presentation, paper-to-blueprint fidelity (ADR-0004) |
 | coder | coder-critic | Code quality, reproducibility, code-strategy alignment |
 | writer | writer-critic | Manuscript polish, LaTeX quality, hedging |
 | storyteller | storyteller-critic | Talk structure, audience calibration, visual quality |
+
+### Model routing (ADR-0003)
+
+Critics, referees, `editor`, `verifier`, and `tikz-reviewer` carry `model: fable` in their frontmatter; workers (`coder`, `data-engineer`, `explorer`, `librarian`, `storyteller`) carry `model: opus`; `writer` stays on `fable` while voice preservation is built; `theorist` and `proof-verifier` carry `model: fable` with `effort: high`, and `theorist-critic` carries `model: fable` (ADR-0004); `orchestrator` inherits. The reviewer is never on a weaker model than the author. Aliases only, never dated model IDs.
 
 ### Peer Review (Special Case)
 
@@ -105,7 +109,7 @@ A creator cannot evaluate the quality of its own work. The score always comes fr
 | data-engineer | Data pipeline and cleaned datasets | coder-critic |
 | strategist *(applied-micro overlay)* | Strategy memo | strategist-critic |
 | designer *(behavioral overlay)* | Design checklist | designer-critic |
-| theorist *(behavioral overlay)* | Formal model and proofs | theorist-critic |
+| theorist | Blueprint nodes, proofs, model section | proof-verifier (nodes), theorist-critic (paper) |
 | coder | R/Stata/Python scripts | coder-critic |
 | writer | Paper manuscript | writer-critic |
 | storyteller | Beamer talk | storyteller-critic |
@@ -134,6 +138,8 @@ Every review and plan declares a status in its header:
 - `Archived` — moved to `archive/` subdir, kept for git history; not expected to be read
 
 ### Supersession protocol
+
+**Exception: blueprint evidence is never moved.** `proof-verifier` reports, and any other file named as a locator in a `theory/blueprint/` evidence log, are evidence. They are never superseded, archived, renamed or swept by the time-based archive below. The two runs of one verification (`-a`, `-b`) and a later re-verification of the same node are separate records, not supersessions. A moved file breaks the evidence chain and makes the blueprint validator FAIL (ADR-0004).
 
 When a critic writes a new review for a target that already has an `Active` review:
 
@@ -196,7 +202,7 @@ Round 3: Critic reviews → Worker fixes
 | writer + writer-critic | Orchestrator | Structural rewrite, not just polish |
 | strategist + strategist-critic *(applied-micro overlay)* | User | Fundamental design question — needs human judgment |
 | designer + designer-critic *(behavioral overlay)* | User | Fundamental experimental design question — needs human judgment |
-| theorist + theorist-critic *(behavioral overlay)* | User | Fundamental modeling choice — needs human judgment |
+| theorist + proof-verifier / theorist-critic | User | Fundamental modeling choice — a claim that will not reach `checked` is a modeling question |
 | librarian + librarian-critic | User | Scope disagreement — user decides breadth vs depth |
 | explorer + explorer-critic | User | Data feasibility deadlock — user decides resource trade-offs |
 | storyteller + storyteller-critic | User | Talk scope/format disagreement |

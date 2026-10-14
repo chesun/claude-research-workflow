@@ -143,72 +143,24 @@ Extract reusable knowledge from the current session into memory.
 
 ---
 
-### `/tools sync-status` — Storage Sync Status (LFS + DVC + Backup)
+### `/tools sync-status` — Storage Sync Status (git, LFS, DVC, backup)
 
-One-shot report of bulk-content storage state for the current repo: Git LFS, DVC, and (if configured) periodic Dropbox backup. Run before declaring a session done to catch a forgotten `dvc push`.
-
-**Step 1: Detect which tiers are active**
-
-- LFS: `[ -f .gitattributes ] && grep -q 'filter=lfs' .gitattributes`
-- DVC: `[ -d .dvc ]`
-- Periodic backup (Class D): check for `~/Dropbox/research-data/<proj>/backup/` or a project-specific manifest
-
-**Step 2: Gather state per tier**
-
-LFS:
+One-shot report of the current repo's storage state. Run it before declaring a session done.
 
 ```bash
-git lfs ls-files | wc -l                  # tracked file count
-git lfs ls-files | awk '{print $1}' | sort -u | wc -l   # unique blob count
-du -sh .git/lfs/objects 2>/dev/null       # local LFS cache size
-git lfs env 2>/dev/null | grep -E "Endpoint|UploadTransfers|DownloadTransfers"
-# Bandwidth and storage stats: only available via GitHub web UI / API; if
-# `gh` CLI is configured, query the LFS endpoint via `gh api`. Otherwise just
-# point user at `https://github.com/<org>/<repo>/settings/lfs`.
+py -I bin/sync_status.py [REPO] [--hooks-dir DIR]
 ```
 
-DVC:
+It reports, and lists as numbered actions:
+- commits not on the upstream (`git push` / `git pull`), a branch with no upstream (`git push -u`), or an upstream that was never fetched. A detached HEAD or a repo with no remote is UNVERIFIED, not "in sync";
+- LFS files in unpushed commits when Git LFS's own pre-push hook does not run. That happens when `core.hooksPath` replaces `.git/hooks`, as on a machine with git guards. `git push` alone would then not upload them, so the action is `git lfs push <remote> <branch>` first;
+- files committed as plain blobs although an LFS rule routes them to LFS, from any `.gitattributes` (nested ones too), `info/attributes` or a macro (they show as modified with no content change; the action is `git add --renormalize`);
+- DVC changes not yet pushed (`dvc status -c`), when `.dvc/` exists;
+- the periodic backup's newest file and size, if `~/Dropbox/research-data/<repo>/backup/` exists.
 
-```bash
-dvc status                                 # local: any pointers ahead of working tree?
-dvc status -c                              # cloud: any pending pushes / pulls?
-dvc remote list                            # which remote is configured
-find . -name '*.dvc' -not -path './.git/*' -not -path './.dvc/*' | wc -l  # pointer count (path-agnostic)
-du -sh "$(dvc config cache.dir 2>/dev/null || echo .dvc/cache)" 2>/dev/null
-```
+Verdict and exit code: PASS (0) all in sync; FAIL (1) actions listed; UNVERIFIED (3) a tier is configured but cannot be checked here (for example `.dvc/` with no `dvc` CLI, or LFS rules with no `git-lfs`); 2 usage.
 
-Periodic backup (Class D): `du -sh ~/Dropbox/research-data/$(basename $PWD)/backup 2>/dev/null` and `stat -f %m` on its newest file.
-
-**Step 3: Format output**
-
-```
-=== Git LFS ===
-Tracked patterns:    [list from .gitattributes]
-LFS files in repo:   N files, M MB local cache
-Endpoint:            <url>
-GitHub usage:        <link to repo settings → LFS for storage/bandwidth>
-
-=== DVC ===
-Remote:              <path>
-Pending uploads:     N files (run: dvc push)
-Pending downloads:   N files (run: dvc pull)
-Pointer count:       M files
-Cache size:          X MB
-
-=== Periodic Dropbox backup (Class D) ===
-Last run:            YYYY-MM-DD HH:MM (or "never")
-Mirror size:         X GB
-```
-
-**Step 4: Flag actionable items**
-
-If any are non-zero / stale, surface as a numbered action list at the bottom:
-
-- "Run `dvc push` — N files pending upload"
-- "Run `git lfs pull` — local LFS cache is empty"
-- "Backup is N days stale — run `bin/sync-backup.sh`"
-
-If everything is clean: print "All storage tiers in sync."
+Whether the LFS pre-push hook runs is read from the active hooks folder's `pre-push` (comments ignored). Not reported: GitHub's LFS storage and bandwidth quotas (see the repository's Settings → LFS), the LFS endpoint, and backup staleness by path. With the `dvc` CLI present, `dvc status -c` takes DVC's lock briefly.
 
 Reference: `.claude/rules/data-version-control.md`.
 
@@ -241,7 +193,7 @@ The manifest lives at `.claude/file-classes.toml` on `main` (itself Class A so i
 
 Patterns are repo-relative paths or globs:
 
-- `.claude/hooks/context-monitor.py` — single file
+- `.claude/hooks/derive-check-advisory.py` — single file
 - `.claude/rules/*.md` — all rules
 - `templates/data-*.md` — globbed templates
 - `.claude/skills/tools/SKILL.md` — a single skill file

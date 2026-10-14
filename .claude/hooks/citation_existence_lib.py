@@ -77,8 +77,8 @@ from __future__ import annotations
 
 import os
 import re
-import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -175,6 +175,13 @@ def _resolve_within_repo(file_part: str, repo_root: Path) -> Path | None:
     realpath + commonpath so that a symlink pointing outside the tree is also
     caught.
     """
+    # On Windows the backslash is the path separator, not a shell
+    # metacharacter (no shell is ever invoked here): normalize it to '/' so
+    # native relative paths resolve. Containment below still applies, so a
+    # backslash traversal is rejected exactly like a forward-slash one.
+    # On POSIX a backslash stays a rejected metacharacter.
+    if os.sep == "\\":
+        file_part = file_part.replace("\\", "/")
     if os.path.isabs(file_part):
         return None
     # Reject obvious shell metacharacters in the path component.
@@ -211,7 +218,11 @@ def _runner_for_extension(suffix: str):
             # pytest node id: `<relpath>::<test_id>`. test_id already passed
             # the _SAFE_TEST_ID whitelist; it is an argv element, never shell.
             node = f"{relpath}::{test_id}"
-            return ["python3", "-m", "pytest", "-q", "-x", node]
+            # The interpreter running this check: the same one whose pytest
+            # _python_runner_available() probed. A bare "python3" from PATH may
+            # be a different interpreter without pytest, or (Windows venvs)
+            # not exist at all.
+            return [sys.executable, "-m", "pytest", "-q", "-x", node]
         return _py
     # No whitelisted runner for other extensions (Stata/R/LaTeX test execution
     # is out of scope for Phase 3). Treated as infra-absent → ASSUMED.
@@ -219,9 +230,10 @@ def _runner_for_extension(suffix: str):
 
 
 def _python_runner_available() -> bool:
-    """True iff python3 + pytest appear runnable. Used to distinguish a real
-    test FAIL from infra-absence (pytest not installed → ASSUMED)."""
-    if shutil.which("python3") is None and shutil.which("python") is None:
+    """True iff this interpreter (sys.executable, which runs the tests) can
+    import pytest. Used to distinguish a real test FAIL from infra-absence
+    (pytest not installed → ASSUMED)."""
+    if not sys.executable:
         return False
     try:
         import importlib.util

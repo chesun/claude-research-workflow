@@ -1,0 +1,13 @@
+# Development-only dependencies for the workflow's own tests (not needed to use the template).
+# Setup:  py -m venv .venv  (or python3 -m venv .venv)
+#         .venv/Scripts/python -m pip install -r requirements-dev.txt   (Windows)
+#         .venv/bin/python -m pip install -r requirements-dev.txt       (macOS/Linux)
+# Run:    .venv/Scripts/python -m pytest -q .claude/hooks/test_derive_lib.py
+#         .venv/Scripts/python .claude/hooks/test_citation_existence_lib.py   (its test-execution cases need pytest)
+# The other test files are plain-Python and run with: python3 <test file>
+colorama==0.4.6
+iniconfig==2.3.1
+packaging==26.3
+pluggy==1.6.0
+Pygments==2.21.0
+pytest==9.1.1

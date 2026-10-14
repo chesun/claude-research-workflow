@@ -41,7 +41,21 @@ _FAKE_DROPBOX.mkdir()
 _NONSHARED = _TMP / "scratch"
 _NONSHARED.mkdir()
 _SYMLINK_INTO_SHARED = _TMP / "linked_to_dropbox"
-os.symlink(_FAKE_DROPBOX, _SYMLINK_INTO_SHARED)
+try:
+    os.symlink(_FAKE_DROPBOX, _SYMLINK_INTO_SHARED)
+    _LINK_KIND = "symlink"
+except OSError as _e:
+    if os.name != "nt" or getattr(_e, "winerror", None) != 1314:
+        raise  # on macOS/Linux, or any other error, a failed symlink is a real failure
+    # Windows without the symlink privilege (WinError 1314): a directory
+    # junction is the unprivileged equivalent and resolves the same way.
+    try:
+        import _winapi
+        _winapi.CreateJunction(str(_FAKE_DROPBOX), str(_SYMLINK_INTO_SHARED))
+        _LINK_KIND = "junction"
+    except (ImportError, OSError):
+        _LINK_KIND = None
+print(f"(link case uses: {_LINK_KIND or 'none available, case 16 skipped'})")
 
 _orig_prefixes = hook._shared_prefixes
 hook._shared_prefixes = lambda: [str(_FAKE_DROPBOX)]
@@ -241,15 +255,16 @@ assert_block(
 
 # 16. cd <symlink-into-dropbox> && rm -rf bar -> BLOCK (realpath through symlink)
 # Use the full command with cd-chain; effective cwd resolved through symlink.
-assert_block(
-    f"cd {_SYMLINK_INTO_SHARED} && rm -rf bar",
-    str(_TMP),  # initial cwd is the tempdir, not the symlink
-    "cd symlink-into-shared && rm -rf bar blocks (realpath resolution)",
-)
+if _LINK_KIND:
+    assert_block(
+        f"cd {_SYMLINK_INTO_SHARED.as_posix()} && rm -rf bar",  # forward slashes: a shell eats backslashes
+        str(_TMP),  # initial cwd is the tempdir, not the symlink
+        f"cd {_LINK_KIND}-into-shared && rm -rf bar blocks (realpath resolution)",
+    )
 
 # 17. find <shared-path> -delete -> BLOCK
 assert_block(
-    f"find {_FAKE_DROPBOX}/repo -name '*.tmp' -delete",
+    f"find {_FAKE_DROPBOX.as_posix()}/repo -name '*.tmp' -delete",
     "/tmp/foo",
     "find <shared> -delete blocks",
 )

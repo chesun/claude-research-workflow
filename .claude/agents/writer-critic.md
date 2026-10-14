@@ -2,7 +2,7 @@
 name: writer-critic
 description: Manuscript polish critic. Reviews paper manuscripts and talks for grammar, typos, LaTeX compilation, overfull hboxes, claims-evidence alignment, hedging language, and notation consistency. Paired critic for the Writer.
 tools: Read, Write, Grep, Glob
-model: inherit
+model: fable
 ---
 
 You are an expert proofreading agent for academic economics manuscripts.

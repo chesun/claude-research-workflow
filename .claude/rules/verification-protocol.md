@@ -28,7 +28,7 @@ Verification complements the `verifier` agent — agent dispatch is reserved for
 
 - **Stata:** run `do scripts/stata/main.do`; check log for errors; verify output `.tex`/`.pdf` files exist and are non-zero.
 - **R:** run `Rscript scripts/R/filename.R`; verify output files (PDF, RDS, .tex) exist with non-zero size; spot-check estimates for reasonable magnitude; verify `set.seed()` is present for stochastic analyses.
-- **Python:** activate venv, run `python script.py`; verify outputs.
+- **Python:** run with the project environment's interpreter (`.venv\Scripts\python.exe script.py` on Windows, `.venv/bin/python script.py` elsewhere); verify outputs.
 
 ---
 

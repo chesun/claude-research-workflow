@@ -75,6 +75,10 @@ quality_reports/plans/YYYY-MM-DD_short-description.md
 
 Format: Status (DRAFT/APPROVED/COMPLETED), approach, files to modify, verification steps.
 
+### Enforcement
+
+Convention, not a hook. After a plan is approved, copy it to `quality_reports/plans/YYYY-MM-DD_<slug>.md` and add an `INDEX.md` line so it survives context compaction. The former `plan-persist-check.py` Stop hook was pruned 2026-09-16.
+
 ---
 
 ## 2. The Orchestrator Loop
@@ -115,7 +119,7 @@ The Orchestrator selects agents based on what the task requires:
 | Literature/references | librarian + librarian-critic |
 | Data sourcing | explorer + explorer-critic |
 | Data engineering | data-engineer + coder-critic |
-| Formal theory/model | theorist + theorist-critic |
+| Formal theory/model | theorist + proof-verifier (per node) + theorist-critic (paper) |
 | Experiment design | designer + designer-critic |
 | Qualtrics survey | qualtrics-specialist |
 | oTree experiment | otree-specialist |
@@ -278,7 +282,7 @@ When approaching context limits, ensure:
 3. Active plan is saved to disk
 4. Open questions are documented in session log
 
-The pre-compact hook will remind you of this checklist.
+Compaction is automatic near the context limit; the former `pre-compact.py` reminder hook was pruned 2026-09-16. Keep the session log and any active plan current as you go so a compaction never loses them.
 
 **After Compression:**
 First message should be: "Resuming after compression. Last task: [read most recent plan + git log]. Status: [next step]."

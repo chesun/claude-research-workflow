@@ -237,7 +237,7 @@ Dispatch **writer-critic** standalone:
 Re-implement existing code in a different language and compare outputs:
 1. Auto-detect source language from file extension (`.R`, `.py`, `.do`, `.jl`)
 2. Dispatch **Coder** in replication mode — re-implement in target language (writes to `scripts/[target-language]/`)
-3. **coder-critic** reviews both implementations and writes report to `quality_reports/reviews/YYYY-MM-DD_<target>_replicate-<lang>_coder_review.md` per the canonical path in `.claude/rules/agents.md` § 2.
+3. **coder-critic** reviews both implementations and writes report to `quality_reports/reviews/YYYY-MM-DD_<target>_replicate_<lang>_coder_review.md` per the canonical path in `.claude/rules/agents.md` § 2.
 4. Compare numerical outputs per `.claude/references/domain-profile-behavioral.md` Quality Tolerance Thresholds.
 
 ---
@@ -266,6 +266,12 @@ The Verifier produces a binary PASS/FAIL result:
 - README accurately describes the pipeline
 
 Verifier score maps to 0 (FAIL) or 100 (PASS) for weighted aggregation.
+
+---
+
+## Review-report path convention
+
+All critics write to `quality_reports/reviews/YYYY-MM-DD_<target>_<critic>_review.md`. Critics consult `quality_reports/reviews/INDEX.md` first; if an `Active` review exists for the same target, they follow the supersession protocol (mark prior `Status: Superseded by <new-path>`, `git mv` to `archive/`, set `Supersedes:` in the new report, update `INDEX.md`). See `quality_reports/reviews/README.md` for full lifecycle conventions.
 
 ---
 

@@ -43,6 +43,8 @@ No component can be below 80 for submission. A perfect literature review can't c
 
 ### When Components Are Missing
 
+The table lists every possible component, so its weights sum to more than 100% (115% with the theory row). The aggregate always divides by the sum of the weights of the components actually scored, so the effective weights sum to 100%. Without a theory component, the table above sums to exactly 100%.
+
 Not every project uses all components. If a component hasn't been scored:
 - It's excluded from the weighted average
 - Remaining weights are renormalized
@@ -163,7 +165,7 @@ Talk scores are reported as "Talk: XX/100" but do **not** block commits or PRs.
 - **Score < 80:** block commit; list blocking issues.
 - **Score < 90:** allow commit, warn; list recommendations.
 - **Score ≥ 95 + all components ≥ 80:** submission-ready.
-- User can override with justification (logged in `research_journal.md`).
+- User can override with justification (logged in the session log).
 
 ---
 

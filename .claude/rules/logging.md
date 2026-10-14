@@ -17,9 +17,9 @@ After plan approval, immediately capture: goal, approach, rationale, key context
 
 Append 1-3 lines whenever: a design decision is made, a problem is solved, the user corrects something, or the approach changes. Do not batch.
 
-**3. Hard-cap reminder (enforced by stop hook)**
+**3. Don't let the log drift**
 
-The `log-reminder.py` Stop hook fires if **10 responses** pass without a session-log edit. When it fires, append progress to the most recent session-log file before stopping. This is a safety net for the incremental rule — if you hit the hook, the incremental rule was already missed.
+Keep the session log current as you go. If several responses have passed without an update, append progress before continuing. This is a discipline, not a hook — the former `log-reminder.py` Stop hook was pruned 2026-09-16 (Claude 5 keeps the log without the nag).
 
 **4. End-of-Session Log**
 

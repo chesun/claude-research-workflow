@@ -108,7 +108,7 @@ These are real bugs found across 7 rounds — check for these specifically:
 |-------------|---------------|-----------------|
 | Stale counts ("19 skills" → "21") | Guide, README, landing page | Added skills but didn't update all mentions |
 | Hook exit codes | All Python hooks | Exit 2 in PreCompact silently discards stdout |
-| Hook field names | post-compact-restore.py | SessionStart uses `source`, not `type` |
+| Hook field names | SessionStart hooks | SessionStart payload uses `source`, not `type` |
 | State in /tmp/ | All Python hooks | Should use `~/.claude/sessions/<hash>/` |
 | Hash length mismatch | All Python hooks | Some used `[:12]`, others `[:8]` |
 | Missing fail-open | Python hooks `__main__` | Unhandled exception → exit 1 → confusing behavior |

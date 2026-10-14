@@ -91,3 +91,6 @@ CLAUDE.local.md
 # quality_reports/plans/*lfs-dvc-migration-plan.md.
 master_supporting_docs/literature/papers/*.pdf
 master_supporting_docs/literature/papers/**/*.pdf
+
+# pytest
+.pytest_cache/

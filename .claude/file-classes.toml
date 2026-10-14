@@ -60,8 +60,8 @@ patterns = [
   ".claude/agents/orchestrator.md",                 # behavioral has Behavioral/Experimental Pipeline section
   ".claude/agents/verifier.md",                     # overlay-specific verification logic
   ".claude/agents/writer.md",                       # behavioral references domain-profile-behavioral; different examples
-  ".claude/rules/quality.md",                       # overlay-specific component weights (theory 15%, design 25%, qualtrics 7%)
-  ".claude/rules/workflow.md",                      # overlay-specific phase + dispatch tables (theory/design/qualtrics/otree)
+  ".claude/rules/quality.md",                       # overlay-specific component weights (design 25%, qualtrics 7%; theory 15% is now on main too)
+  ".claude/rules/workflow.md",                      # overlay-specific phase + dispatch tables (design/qualtrics/otree; theory dispatch is on main)
   ".claude/skills/analyze/SKILL.md",                # behavioral defaults to Stata 17 + behavioral domain-profile
   ".claude/skills/discover/SKILL.md",               # overlay-flavored discovery pipeline
   ".claude/skills/new-project/SKILL.md",            # overlay-pipeline-specific
@@ -92,8 +92,6 @@ branches = ["behavioral"]
 patterns = [
   ".claude/agents/designer.md",
   ".claude/agents/designer-critic.md",
-  ".claude/agents/theorist.md",
-  ".claude/agents/theorist-critic.md",
   ".claude/agents/otree-specialist.md",
   ".claude/agents/qualtrics-specialist.md",
   ".claude/references/domain-profile-behavioral.md",
@@ -105,7 +103,6 @@ patterns = [
   ".claude/skills/otree/SKILL.md",
   ".claude/skills/preregister/SKILL.md",
   ".claude/skills/qualtrics/SKILL.md",
-  ".claude/skills/theory/SKILL.md",
   "experiments/comprehension/.gitkeep",
   "experiments/designs/.gitkeep",
   "experiments/instructions/.gitkeep",

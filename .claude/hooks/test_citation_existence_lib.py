@@ -78,6 +78,12 @@ _PYTEST_AVAILABLE = lib._python_runner_available()
 
 _RESULTS: list[tuple[str, bool, str]] = []
 
+for _stream in (sys.stdout, sys.stderr):  # cp1252 consoles cannot print some details
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 
 def _check(name: str, cond: bool, detail: str = "") -> None:
     _RESULTS.append((name, bool(cond), detail))
@@ -224,6 +230,22 @@ def test_deep_traversal_rejected():
     r = lib.resolve_citation("../../../../etc/passwd", _ROOT)
     _check("deep_traversal_rejected",
            r["status"] == "MISSING" and not r["exists"], str(r))
+
+
+def test_backslash_paths_by_platform():
+    """Backslash is the path separator on Windows and a metacharacter elsewhere."""
+    rel_bs = os.path.relpath(str(_LIB_PATH), str(_ROOT)).replace("/", "\\")
+    r = lib.resolve_citation(rel_bs + ":1", _ROOT)
+    t = lib.resolve_citation("..\\..\\..\\etc\\passwd:1", _ROOT)
+    if os.sep == "\\":
+        # (resolution itself is covered by test_windows_backslash_path_resolves)
+        _check("backslash_traversal_still_rejected_on_windows",
+               t["status"] == "MISSING" and "escapes" in t["detail"].lower(), str(t))
+    else:
+        _check("backslash_rejected_on_posix",
+               r["status"] == "MISSING" and "unsafe" in r["detail"].lower(), str(r))
+        _check("backslash_traversal_rejected_on_posix",
+               t["status"] == "MISSING" and "unsafe" in t["detail"].lower(), str(t))
 
 
 def test_absolute_path_outside_repo_rejected():
@@ -394,6 +416,7 @@ _ALL_TESTS = [
     test_line_and_test_id_form,
     test_traversal_rejected,
     test_deep_traversal_rejected,
+    test_backslash_paths_by_platform,
     test_absolute_path_outside_repo_rejected,
     test_shell_metachar_test_id_rejected,
     test_backtick_test_id_rejected,
@@ -418,15 +441,16 @@ def main() -> int:
             _check(t.__name__, False, f"EXCEPTION: {e!r}")
     passed = sum(1 for _, ok, _ in _RESULTS if ok)
     failed = [(n, d) for n, ok, d in _RESULTS if not ok]
+    skipped = sum(1 for _, ok, d in _RESULTS if ok and str(d).startswith("SKIPPED"))
     for name, ok, detail in _RESULTS:
-        status = "PASS" if ok else "FAIL"
+        status = "SKIP" if ok and str(detail).startswith("SKIPPED") else ("PASS" if ok else "FAIL")
         line = f"[{status}] {name}"
         if not ok and detail:
             line += f"  -> {detail}"
         print(line)
-    print(f"\n{passed}/{len(_RESULTS)} checks passed.")
+    print(f"\n{passed - skipped}/{len(_RESULTS)} checks passed, {skipped} skipped, {len(failed)} failed.")
     if not _PYTEST_AVAILABLE:
-        print("(note: pytest unavailable — test-execution cases SKIPPED, counted as pass.)")
+        print("(note: pytest unavailable for this interpreter; test-execution cases were skipped.)")
     return 0 if not failed else 1
 
 

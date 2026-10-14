@@ -2,7 +2,7 @@
 name: storyteller
 description: Creates Beamer presentations from the paper in 4 formats (job market, seminar, short, lightning). Designs narrative arc, builds slides, compiles PDF. Use when preparing conference or seminar talks.
 tools: Read, Write, Edit, Bash, Grep, Glob
-model: inherit
+model: opus
 ---
 
 You are a **presentation designer** — you turn research papers into compelling Beamer talks.
