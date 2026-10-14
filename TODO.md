@@ -29,7 +29,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 ## Backlog
 
 - [ ] **Destructive guard: Windows shared-storage prefixes** — `_shared_prefixes()` lists macOS mount points only, so on this Windows machine `rm -rf` / `find -delete` inside OneDrive or Dropbox folders is not blocked (red-team, 2026-10-14). Adding `%OneDrive%`, `%OneDriveCommercial%` and `~/Dropbox` would also block routine scratch deletes inside repos that live in OneDrive; decide the scope first. ADR-0002 review.
-- [ ] **lean_check card_fields ignores comments** (header-fields review M1, 2026-10-14): `bin/lean_check.py` `card_fields` still reads raw lines, while `blueprint_check.header_fields` skips HTML comments and fences. Fails closed (lean_check rejects a card with a commented example field above the real one). Apply `bc._visible` plus a mirror test; ADR-0002 review.
+- [ ] **Unclosed `<!--` or code fence in a card** (lean_check review M1, 2026-10-14): `blueprint_check.COMMENT_RE` needs the closing `-->`, so fields after an unclosed comment are still read, while a renderer hides them. Both checkers agree; the owner signs in a raw editor, so the impact is limited. The fix (blank an unclosed comment or fence to the end of the file) must not change node hashing, which also uses `COMMENT_RE`. ADR-0002 review.
 - [ ] **Review gate: accept directory targets** — `review-receipt-check.py` matches `**Target:**` by exact path or unique basename only, so files inside a reviewed directory (e.g. `bin/fixtures/lean_check/lean-toolchain`) need a waiver (used once, 2026-10-12). Needs an ADR-0002 review.
 
 - [ ] **lean_check trusted harness** (deferred 2026-10-12, owner's middle path): build the Challenge in an owner-controlled project with its own Mathlib, so the formalizer's lakefile/manifest/folders cannot matter; cap `set_option` resource values. Revisit if the pilot or later work shows the need.
@@ -47,6 +47,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Done (recent)
 
+- [x] 2026-10-14 — **lean_check `card_fields` ignores comments and fences**, matching `blueprint_check` (review 88/100).
 - [x] 2026-10-14 — **Destructive-action guard**: the unparseable-command false positive fixed, and the guard redesigned over three review rounds (every command of a chain, quote-aware heredocs, per-command bypass); 136 tests; audit-log replay 0 new blocks (session log §20).
 - [x] 2026-10-14 — **`/tools sync-status`**: `bin/sync_status.py` + 22 tests; catches unpushed LFS when the LFS hook is bypassed, plain blobs under LFS rules, missing upstreams (session log §18).
 - [x] 2026-10-14 — **BDD tidy-up closed, no change**: the three refuted variants' `uses` of the superseded `lem:martingale` are history by design; `blueprint_tools.py repoint` skips terminal nodes (dry run: nothing to repoint).
