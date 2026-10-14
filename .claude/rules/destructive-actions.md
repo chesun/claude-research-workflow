@@ -49,7 +49,7 @@ These are blocked unconditionally; bypass requires explicit `BYPASS_SHARED_GUARD
 
 ## Settings.json write gate (Tier 3)
 
-The companion hook `protect-files.sh` is registered only on the `Edit|Write` matcher and cannot observe Bash invocations. Without Tier 3, any of the following would silently bypass it:
+The companion hook `protect-files.py` (formerly `protect-files.sh`) is registered only on the `Edit|Write` matcher and cannot observe Bash invocations. Without Tier 3, any of the following would silently bypass it:
 
 ```bash
 echo '{...}' > .claude/settings.json
