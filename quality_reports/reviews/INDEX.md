@@ -8,6 +8,17 @@ When writing a new review, consult this index first. If an `Active` entry exists
 
 ## 2026-10
 
+- [2026-10-14_destructive-guard-r3_verification_review.md](2026-10-14_destructive-guard-r3_verification_review.md) — destructive guard rev 3, verification, 74, Active
+- [2026-10-14_destructive-guard-redesign_red-team_review.md](2026-10-14_destructive-guard-redesign_red-team_review.md) — destructive guard rev 2, red-team, 62, Active
+- [2026-10-14_destructive-guard-redesign_correctness_review.md](2026-10-14_destructive-guard-redesign_correctness_review.md) — destructive guard rev 2, correctness, 83, Active
+- [2026-10-14_destructive-guard-fallback_red-team_review.md](2026-10-14_destructive-guard-fallback_red-team_review.md) — destructive guard rev 1, red-team, 74, Active
+- [2026-10-14_destructive-guard-fallback_correctness_review.md](2026-10-14_destructive-guard-fallback_correctness_review.md) — destructive guard rev 1, correctness, 82, Active
+- [2026-10-14_sync-status_red-team_review.md](2026-10-14_sync-status_red-team_review.md) — bin/sync_status.py, red-team + correctness, 58, Active
+- [2026-10-14_adr0005-branch_final_review.md](2026-10-14_adr0005-branch_final_review.md) — ADR-0005 implementation, final whole-branch, 88, Active
+- [2026-10-14_adr0005-flow-docs_correctness_review.md](2026-10-14_adr0005-flow-docs_correctness_review.md) — ADR-0005 flow docs, correctness, 70, Active
+- [2026-10-14_adr0005-header-fields_red-team_review.md](2026-10-14_adr0005-header-fields_red-team_review.md) — ADR-0005 header_fields fix, red-team + correctness, 88, Active
+- [2026-10-14_adr0005-validator_red-team_review.md](2026-10-14_adr0005-validator_red-team_review.md) — ADR-0005 validator, red-team, 60, Active
+- [2026-10-14_adr0005-validator_correctness_review.md](2026-10-14_adr0005-validator_correctness_review.md) — ADR-0005 validator, correctness, 86, Active
 - [2026-10-14_adr-0005-v2_verification_review.md](2026-10-14_adr-0005-v2_verification_review.md) — ADR-0005 v2, verification, 78, Active
 - [2026-10-14_adr-0005_fit-for-purpose_review.md](2026-10-14_adr-0005_fit-for-purpose_review.md) — ADR-0005 v1, fit-for-purpose, 66, Active
 - [2026-10-14_adr-0005_efficiency_review.md](2026-10-14_adr-0005_efficiency_review.md) — ADR-0005 v1, efficiency, 82, Active

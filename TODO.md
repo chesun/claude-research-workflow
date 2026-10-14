@@ -12,11 +12,10 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 - [ ] **card-auditor review point (ADR-0005 item 3):** after five audited nodes, count the auditor's catches and false alarms in the session log; the owner decides whether it stays. Audited so far: 1 (`prop:nstar-interior-ac`, 2026-10-14, FAITHFUL, agreed with the owner).
 - [ ] **BDD theory: remaining claims** — 7 nodes still at `conjecture` (the wedge, gap-closure and bias results). Run `/theory develop` in BDD. The wedge proof's unstated step (b_t > 0 for t < T−1) was flagged by the known-answer theorist. When proving `prop:commit-cogcons` and `prop:commit-vs-seq-size`, settle whether `prop:nstar` / `prop:vol-commit-equiv` go in `uses` or `mentions` (the last two validator warnings).
 - [ ] **Modernize Track A, remaining steps** (plan `quality_reports/plans/2026-09-16_modernize-and-simplify-plan.md`):
-  - step 3: DONE locally 2026-10-14 (`behavioral` `ab9f5f0`, worktree `~/wt/crw-behavioral`; Class A sync 62 copied + 17 deleted, 5 Class B hand-merged; gate passed). Push of `behavioral` awaits the owner. Re-sync after the destructive-guard redesign lands on main (Class A);
+  - step 3: DONE locally 2026-10-14 (`behavioral` `ab9f5f0`, worktree `~/wt/crw-behavioral`; Class A sync 62 copied + 17 deleted, 5 Class B hand-merged; gate passed). Push of `behavioral` awaits the owner. Guard redesign re-synced too;
   - step 4: one-time `.claude/` update of the live projects (`bdm_bic`, `belief_distortion_discrimination`);
   - step 5: retire `/tools propagate`, `sync-overlays` and `consumers.toml`.
 - [ ] **Voice preservation** (the committed next build from the 2026-09-22 infra survey): two per-paradigm voice profiles; needs the owner's exemplar papers. Folds in the anti-AI-prose academic carve-outs (Backlog).
-- [ ] **Destructive-action guard false positive**: the shlex-failure fallback in `.claude/hooks/destructive-action-guard.py` blocks any command containing an apostrophe plus a keyword (`--force`, `update-ref -d`) and labels it `git filter-repo`. Workaround: commit with `-F <file>`. Needs an ADR-0002 review.
 
 ## Waiting On
 
@@ -48,6 +47,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Done (recent)
 
+- [x] 2026-10-14 — **Destructive-action guard**: the unparseable-command false positive fixed, and the guard redesigned over three review rounds (every command of a chain, quote-aware heredocs, per-command bypass); 136 tests; audit-log replay 0 new blocks (session log §20).
 - [x] 2026-10-14 — **`/tools sync-status`**: `bin/sync_status.py` + 22 tests; catches unpushed LFS when the LFS hook is bypassed, plain blobs under LFS rules, missing upstreams (session log §18).
 - [x] 2026-10-14 — **BDD tidy-up closed, no change**: the three refuted variants' `uses` of the superseded `lem:martingale` are history by design; `blueprint_tools.py repoint` skips terminal nodes (dry run: nothing to repoint).
 - [x] 2026-10-14 — **BDD mentions pass**: 32 named-not-used citations on 15 nodes declared as mentions; no hash changed; warnings 34 → 2 (both on conjecture claims, left for the theorist). Tools already current in BDD.
