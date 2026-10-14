@@ -116,7 +116,7 @@ These are real bugs found across 7 rounds — check for these specifically:
 | Missing directories | quality_reports/specs/ | Referenced in rules but never created |
 | Always-on rule listing | Guide + README | meta-governance omitted from listings |
 | macOS-only commands | Skills, rules | `open` without `xdg-open` fallback |
-| Protected file blocking | settings.json edits | protect-files.sh blocks Edit/Write |
+| Protected file blocking | settings.json edits | protect-files.py blocks Edit/Write |
 
 ## Output Format
 
