@@ -11,7 +11,6 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 - [ ] **card-auditor review point (ADR-0005 item 3):** after five audited nodes, count the auditor's catches and false alarms in the session log; the owner decides whether it stays. Audited so far: 1 (`prop:nstar-interior-ac`, 2026-10-14, FAITHFUL, agreed with the owner).
 - [ ] **BDD theory: remaining claims** — 7 nodes still at `conjecture` (the wedge, gap-closure and bias results). Run `/theory develop` in BDD. The wedge proof's unstated step (b_t > 0 for t < T−1) was flagged by the known-answer theorist. When proving `prop:commit-cogcons` and `prop:commit-vs-seq-size`, settle whether `prop:nstar` / `prop:vol-commit-equiv` go in `uses` or `mentions` (the last two validator warnings).
-- [ ] **BDD tidy-ups**: three refuted variant nodes (`var:cogcons-wedge-{held-belief,terminal-belief,update}-cost`) still list the superseded `lem:martingale` in `uses`.
 - [ ] **Modernize Track A, remaining steps** (plan `quality_reports/plans/2026-09-16_modernize-and-simplify-plan.md`):
   - step 3: mirror the hook prune and Python ports onto the `behavioral` overlay; the overlay's own Class-B rules still call `theorist` overlay-only. The overlay is ~200 files behind main and lacks `bin/blueprint_check.py`, `bin/blueprint_tools.py`, `bin/agent_lint.py` and `templates/theory/` (its `/theory` skill references them). Run `bin/agent_lint.py` on each branch after the sync;
   - step 4: one-time `.claude/` update of the live projects (`bdm_bic`, `belief_distortion_discrimination`);
@@ -49,6 +48,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Done (recent)
 
+- [x] 2026-10-14 — **BDD tidy-up closed, no change**: the three refuted variants' `uses` of the superseded `lem:martingale` are history by design; `blueprint_tools.py repoint` skips terminal nodes (dry run: nothing to repoint).
 - [x] 2026-10-14 — **BDD mentions pass**: 32 named-not-used citations on 15 nodes declared as mentions; no hash changed; warnings 34 → 2 (both on conjecture claims, left for the theorist). Tools already current in BDD.
 - [x] 2026-10-14 — **ADR-0005 implemented**: bound signature, checklist, card-auditor (calibration 6/6, no false alarm), `/theory` flow; pilot converted, audited (FAITHFUL, coverage PASS) and re-signed (BDD `f779e92`). Session log §14–§17.
 - [x] 2026-10-14 — **Theory phase 2 Lean pilot COMPLETED**: `prop:nstar-interior-ac` `verified` (BDD `bef1c6a`); acceptance #7 met, #8 met in part (owner guided, not unaided); Lean project backed up to private `chesun/bdd-lean` (`77d1a93`). Read-out: session log 2026-10-11 §12.
