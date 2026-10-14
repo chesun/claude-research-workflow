@@ -652,3 +652,20 @@ The owner signed all three practice cards. Answers were unsealed only afterwards
   - The Important: a checklist row cut off from its table by a blank or prose line was skipped, so FAITHFUL could pass over a `weaker` row. Fixed with `fr_detached_row_rejected` and `fr_detached_row_after_prose_rejected`, RED→GREEN.
   - Suites: blueprint 187/187, lean_check 204/204, tools 74/74. The BDD pilot passes the fixed validator.
   - Four Minors deferred (glossary-branch wording, a prose-quoted bold field fails closed, "line" vs "row" in a message, the pilot's blanket marks counting as owner-guided). The declined-to-judge items stand as logged residues.
+
+## 18. `/tools sync-status` script (2026-10-14)
+
+- `bin/sync_status.py` (stdlib, `py -I`) replaces the prose steps. Ruling: Python in `bin/` with tests rather than the plan's `.claude/skills/tools/sync-status.sh`, matching the repository's tool convention.
+- It checks: commits not pushed or not pulled; branch, upstream, detached and no-remote states; LFS files in unpushed commits when the LFS pre-push hook does not run (this machine's `core.hooksPath`); plain blobs under an LFS rule (the earlier six-PDF case); DVC state; the backup.
+- **Review** (red-team + correctness in one agent, on fable; ruling: one agent for a new single-file tool): 58/100, with 1 Critical, 3 High and some Medium findings. All fixed, each with a test that failed first:
+  - nested `.gitattributes` (`ss_nested_gitattributes_seen`);
+  - git-lfs absent → UNVERIFIED (`ss_lfs_cli_missing_unverified`);
+  - hook comments ignored (`ss_hook_comment_not_counted`);
+  - no remote, no upstream, unfetched upstream and detached HEAD are not "in sync" (`ss_no_remote_unverified`, `ss_remote_without_upstream_publish`, `ss_upstream_never_fetched_not_clean`, `ss_detached_head_not_clean`);
+  - blob check batched into two git calls (BDD, 69 LFS files: 7 s);
+  - rev-list failure → UNVERIFIED;
+  - exit 1 and behind-only now tested (`ss_fail_main_exit_1`, `ss_behind_flags_pull`);
+  - backup reported (`ss_backup_reported`);
+  - remote names come from the branch config (slash-safe).
+- **Accepted:** a `.dvc` file (not a folder) is skipped (Low); `[attr]` macro lines display oddly (Low).
+- **Suite:** 22/22. Real repos: the workflow repo PASS; BDD UNVERIFIED (no `dvc` CLI); the Lean project PASS.

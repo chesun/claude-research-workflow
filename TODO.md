@@ -15,13 +15,12 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
   - step 3: mirror the hook prune and Python ports onto the `behavioral` overlay; the overlay's own Class-B rules still call `theorist` overlay-only. The overlay is ~200 files behind main and lacks `bin/blueprint_check.py`, `bin/blueprint_tools.py`, `bin/agent_lint.py` and `templates/theory/` (its `/theory` skill references them). Run `bin/agent_lint.py` on each branch after the sync;
   - step 4: one-time `.claude/` update of the live projects (`bdm_bic`, `belief_distortion_discrimination`);
   - step 5: retire `/tools propagate`, `sync-overlays` and `consumers.toml`.
-- [ ] **Model-routing experiment read-out** (ADR-0003/0004). Pilot evidence so far: verifier fable vs opus near-identical; opus slightly stricter in calibration round 1 and about twice as fast (session log 2026-10-11 §6). Revisit the `writer` exception after the voice build.
 - [ ] **Voice preservation** (the committed next build from the 2026-09-22 infra survey): two per-paradigm voice profiles; needs the owner's exemplar papers. Folds in the anti-AI-prose academic carve-outs (Backlog).
 - [ ] **Destructive-action guard false positive**: the shlex-failure fallback in `.claude/hooks/destructive-action-guard.py` blocks any command containing an apostrophe plus a keyword (`--force`, `update-ref -d`) and labels it `git filter-repo`. Workaround: commit with `-F <file>`. Needs an ADR-0002 review.
-- [ ] **`/tools sync-status` script** (§7.5 of the LFS/DVC plan): the subcommand exists only as prose steps.
 
 ## Waiting On
 
+- [ ] **Model-routing experiment read-out** (ADR-0003/0004) — waiting on the voice-preservation build, which ADR-0003 names as the revisit point. Pilot evidence so far: verifier fable vs opus near-identical; opus slightly stricter in calibration round 1 and about twice as fast (session log 2026-10-11 §6). Revisit the `writer` exception after the voice build. Per-review severity counts and fix rounds keep accumulating in the session logs (2026-10-14: §13–§17, all reviewers on fable; no new fable-vs-opus pair).
 
 - [ ] **Paper wording, BDD Props 1–2** — the author (or the writer) rewords `theory/quadratic_loss_model_paper_v2.tex` from the checked nodes `prop:nstar-interior` and `prop:vol-commit-equiv-int`; the martingale lemma also needs its edge-case wording (`lem:martingale-horizon`).
 - [ ] **Work-repo fixes** (in a session opened in the consulting repo; prompt given 2026-10-11): guard launchers that trust the Store stub; recognising the `personal` repo class. Pushing from this machine depends on the second.
@@ -48,6 +47,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Done (recent)
 
+- [x] 2026-10-14 — **`/tools sync-status`**: `bin/sync_status.py` + 22 tests; catches unpushed LFS when the LFS hook is bypassed, plain blobs under LFS rules, missing upstreams (session log §18).
 - [x] 2026-10-14 — **BDD tidy-up closed, no change**: the three refuted variants' `uses` of the superseded `lem:martingale` are history by design; `blueprint_tools.py repoint` skips terminal nodes (dry run: nothing to repoint).
 - [x] 2026-10-14 — **BDD mentions pass**: 32 named-not-used citations on 15 nodes declared as mentions; no hash changed; warnings 34 → 2 (both on conjecture claims, left for the theorist). Tools already current in BDD.
 - [x] 2026-10-14 — **ADR-0005 implemented**: bound signature, checklist, card-auditor (calibration 6/6, no false alarm), `/theory` flow; pilot converted, audited (FAITHFUL, coverage PASS) and re-signed (BDD `f779e92`). Session log §14–§17.
