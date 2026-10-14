@@ -740,3 +740,26 @@ The owner signed all three practice cards. Answers were unsealed only afterwards
 - **Identity slip:** the fresh clone had no repo-local identity, so the first commit carried the machine's global work address. It was caught before the push. The repo-local `user.name` / `user.email` and the three guard settings (repository class personal, approved remotes, expected email) were set to mirror BDD, and the commit was fixed with `--amend --reset-author --only`, leaving the staged files out (`2c10c3f`).
 - **LFS:** 29 PDFs committed as plain blobs under the LFS rule were renormalized (`2920761`); all 29 pointers match their files. `git lfs push` ran first, as the LFS hook does not run here. Pushed; `sync_status` PASS.
 - **BDD tag not pushed:** a new tag ref makes the guard scan all 376 commits, which hold 124 Office files committed long before the guards existed. The tag stays local; its commit `767f02e` is on GitHub.
+
+## 24. BDD `/theory develop`: the seven conjecture claims (2026-10-14)
+
+Each node got a theorist prove-or-refute pass (examples, counterexample search, exact checks, proof), then two blind fable proof-verifiers on the `verify-input` text alone. All 14 verifier runs were PASS.
+
+| Node | Outcome | BDD commit |
+|---|---|---|
+| lem:var0 | holds as written; checked | a90b579 |
+| prop:gap-closure | fails at n = 0 only (the residual factor is 1 for any variances) → conditional | 0b74460 |
+| prop:gap-closure-pos | owner-approved repair: comparative statics for n ≥ 1; checked; cor:gap-rank repointed | 0b74460 |
+| prop:seq-vs-commit-bias | holds as written; checked | 7e0d569 |
+| prop:cogcons-wedge | holds; the flagged step b_t > 0 for t < T−1 is derived (the hypothesis forces γ < 1, plus a one-step deviation bound); checked | 75d75e1 |
+| prop:commit-cogcons | compares the grid maximizer with the continuous n* (σ0² = σd² = 1, c = 25/324, T = 10: n* = 13/5, grid optimum 3) → conditional | b8c5829 |
+| prop:commit-cogcons-grid | owner-approved repair (a): benchmark is the rational grid optimum; checked; both dependents repointed | b8c5829 |
+| prop:commit-vs-seq-size | holds; prop:vol-commit-equiv is a mention, the dependency is -int; checked | 9b274ec |
+| cor:gap-rank | holds on the repaired inputs; "every regime" read as the three regimes; checked | 38dd512 |
+
+- **Validator:** PASS on 54 nodes, the first clean verdict for this blueprint.
+- **Statuses:** 11 checked, 1 verified, 13 proved (variants, awaiting verification), 5 conditional, 5 refuted, 19 stated.
+- **Paper follow-ups:** recorded on the TODO's paper-wording item. Proposed variant nodes are recorded in each node's run comment; none was created.
+- **Hygiene:** parallel theorists shared the repo. One early pass ran `git stash` on its own; nothing was lost (no stash left, the other node untouched). Every later dispatch forbade stash, restore and reset.
+- **Environment:** checks that need SymPy, NumPy or Z3 ran from BDD's own `.venv` after the first round; the first round used a temporary venv. BDD's `requirements.txt` and its `.venv` describe different environments (analysis vs theory); this is now an owner question on the TODO.
+- **Cost:** about 30 agent runs (theorists about 120–240k tokens each, verifiers about 80–135k).
