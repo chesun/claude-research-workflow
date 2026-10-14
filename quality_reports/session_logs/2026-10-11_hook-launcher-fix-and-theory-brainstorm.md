@@ -669,3 +669,45 @@ The owner signed all three practice cards. Answers were unsealed only afterwards
   - remote names come from the branch config (slash-safe).
 - **Accepted:** a `.dvc` file (not a folder) is skipped (Low); `[attr]` macro lines display oddly (Low).
 - **Suite:** 22/22. Real repos: the workflow repo PASS; BDD UNVERIFIED (no `dvc` CLI); the Lean project PASS.
+
+## 19. Track A step 3: `behavioral` overlay synced (2026-10-14)
+
+- **Ruling:** a class-aware sync, not `git merge main`. The merge previewed 42 conflicts and would have carried about 150 of main's Class D files (session logs, reviews, plans, ADRs) into the template overlay. `sync_overlays.py` refuses to run without an `applied-micro` worktree, and that overlay stays frozen by plan. So a one-off scratch script applied the manifest rules instead:
+  - Class A: copy where main differs;
+  - delete only where main deleted the file (history-aware, which catches the 2026-09-16 hook prune);
+  - Classes B, C and D untouched.
+- **Result:** 62 Class A files copied (29 new, 33 updated) and 17 deleted. Five Class B files were merged three-way from the common base `5737307`, with each hunk resolved explicitly:
+  - `verifier.md`: model `fable` from main, overlay superset elsewhere;
+  - `quality.md`: overlay weights kept;
+  - `workflow.md`: overlay rows, with the theory row updated per ADR-0004;
+  - `review/SKILL.md`: overlay superset, `replicate_<lang>`;
+  - `writer.md`: clean.
+- **Gate** (plan: hooks load, the tool cycle survives):
+  - all 10 registered hooks exist and run (rc 0 on a benign payload);
+  - hook and bin suites pass, except `test_derive_lib`, which needs pytest, as on main;
+  - agent lint PASS (48 files).
+- Committed `behavioral` `ab9f5f0`, locally, in worktree `C:/Users/christina.sun/wt/crw-behavioral` (outside OneDrive). Not pushed.
+
+## 20. Destructive-action guard: false-positive fix grew into a redesign (2026-10-14)
+
+- **The TODO bug:** the fallback for commands `shlex` cannot parse blocked anything containing "git" plus a keyword such as `-f `, labelled it `git filter-repo`, and ignored the bypass.
+- **Round 1:** a segment-wise fallback. Reviews: red-team 74, correctness 82. Found:
+  - a backslash continuation fail-open;
+  - the bypass not logged;
+  - an older hole: on parsed commands only the first command of a chain was checked (`echo hi && git filter-repo` got through).
+- **Round 2:** every command of a chain is checked; wrappers and git global options are normalized; heredoc bodies are data unless a shell reads them; the bypass covers only its own command. Reviews: red-team 62 (2 Critical: a quoted `<<` swallowing commands, `cat <<EOF | bash` unchecked), correctness 83.
+- **Round 3:** quote-aware heredocs; a shell anywhere on the opener line; one per-command check across all three tiers with `cd` tracking; `env -u`, `--`, subshells, braces, `/usr/bin/git`, `git.exe`, glued and unknown git options, `+refspec`. Verification: 74, every earlier Critical and High resolved, plus one new High (`2>&1` split a command) and three Mediums.
+- **Final pass after round 3** (the three-strikes limit, so no fourth review), each with a test that failed first:
+  - redirects are defused before splitting;
+  - quote state is carried across lines;
+  - `cd` is tracked before the bypass check;
+  - `py` joins the Tier-3 interpreters;
+  - `heredoc_shell` is logged.
+- **Evidence:**
+  - 136/136 tests;
+  - an audit-log replay over 1,570 unique commands against HEAD: 0 new blocks, 6 blocked→allowed, all HEAD false positives (heredoc data), each confirmed independently by two reviewers;
+  - the other hook suites pass (except `test_derive_lib`, which needs pytest).
+- **Accepted and documented** in the rule's Known limits: `$(...)`, backticks, `eval` and `sh -c` strings are not unpacked; nor is `python - <<EOF` calling subprocess; `sudo`, `timeout`, `nice` and `xargs` are not wrappers; the fallback's Tier 2 is fail-open.
+- **TODO:** Windows shared-storage prefixes. Tier 2 is inert for OneDrive on this machine, and the scope needs the owner's decision.
+- **Lows left:** `git push +main` with no remote allowed; `cp X .claude/settings.json.bak` false-blocks (parity); FPs from comments on the heredoc opener line (fail closed).
+- **Note:** a reused scratch-file name once spliced stale code into the hook. It was caught at once by the test run, and the hook was restored from the pre-splice copy. Use unique scratch names.

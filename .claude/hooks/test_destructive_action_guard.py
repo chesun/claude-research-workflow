@@ -3,8 +3,8 @@
 
 Run with: python3 .claude/hooks/test_destructive_action_guard.py
 
-Covers the 20 test cases enumerated in
-quality_reports/plans/2026-05-03_destructive-action-guardrails.md.
+Started from the 20 cases in quality_reports/plans/2026-05-03_destructive-action-guardrails.md;
+now also covers chains, heredocs, wrappers, the unparseable fallback and bypass scope (2026-10-14).
 """
 
 from __future__ import annotations
@@ -571,6 +571,278 @@ assert_allow(
     "/tmp/foo",
     "echo of quoted string containing '> path' allows (not a real redirect)",
 )
+
+
+# --- Unparseable commands (shlex fails): the fallback ----------------------
+
+print("\n=== Fallback for commands shlex cannot parse (2026-10-14 fix) ===")
+
+# False positives the old substring fallback produced, reported as "git filter-repo".
+assert_allow(
+    "git commit -F - <<'EOF'\ndocs: don't use git push --force here; cut -f 2 is fine\nEOF",
+    "/tmp/foo",
+    "fallback: heredoc commit message with an apostrophe and --force / -f allows",
+)
+assert_allow(
+    "echo don't stop -f now && git status",
+    "/tmp/foo",
+    "fallback: apostrophe plus '-f ' in ordinary commands allows",
+)
+assert_allow(
+    "BYPASS_SHARED_GUARD=1 git push --force origin main && echo it's done",
+    "/tmp/foo",
+    "fallback: bypass prefix is honoured when the command is unparseable",
+)
+# Fail-closed is kept, and the label names the real command.
+assert_block(
+    "git push --force origin main && echo it's done",
+    "/tmp/foo",
+    "fallback: force push beside an unparseable segment still blocks",
+    expect_substr="Matched: git push --force",
+)
+assert_block(
+    "echo it's && git filter-repo --invert-paths",
+    "/tmp/foo",
+    "fallback: filter-repo after an unparseable segment still blocks",
+    expect_substr="Matched: git filter-repo",
+)
+assert_block(
+    "git reset --hard HEAD~1; echo don't",
+    "/tmp/foo",
+    "fallback: reset --hard before an unparseable segment still blocks",
+    expect_substr="Matched: git reset --hard",
+)
+assert_block(
+    "bash <<EOF\ngit push --force origin main\nEOF\necho it's",
+    "/tmp/foo",
+    "fallback: a heredoc body that runs a force push still blocks",
+    expect_substr="Matched: git push --force",
+)
+assert_block(
+    "echo it's; git push -f origin main",
+    "/tmp/foo",
+    "fallback: an unparseable segment that is itself a force push blocks",
+)
+assert_block(
+    "git push -f origin it's-a-branch",
+    "/tmp/foo",
+    "fallback: a force push whose own segment is unparseable still blocks",
+    expect_substr="Matched: git push --force",
+)
+
+
+# --- Review fixes (2026-10-14 red-team and correctness reviews) ------------
+
+print("\n=== Review fixes: continuations, every segment, git global flags, logging ===")
+
+assert_block(
+    "git push \\\n  --force origin main && echo don't",
+    "/tmp/foo",
+    "fallback: a backslash continuation does not split the flag from its command",
+    expect_substr="Matched: git push --force",
+)
+assert_block(
+    "git reset \\\n  --hard HEAD~1; echo it's",
+    "/tmp/foo",
+    "fallback: reset --hard across a continuation still blocks",
+    expect_substr="Matched: git reset --hard",
+)
+assert_block(
+    "echo it's && git update-ref -d refs/heads/old",
+    "/tmp/foo",
+    "fallback: update-ref -d beside an apostrophe blocks under its own label",
+    expect_substr="Matched: git update-ref -d",
+)
+assert_block(
+    "echo it's & git push --force origin main",
+    "/tmp/foo",
+    "fallback: a single & separates commands",
+    expect_substr="Matched: git push --force",
+)
+assert_block(
+    "echo it's > .claude/settings.json",
+    "/tmp/foo",
+    "fallback: the settings.json write gate still applies",
+)
+# The parsed path now checks every command in a chain, not just the first.
+assert_block(
+    "echo hi && git filter-repo --invert-paths",
+    "/tmp/foo",
+    "parsed: filter-repo as the second command of a chain blocks",
+    expect_substr="Matched: git filter-repo",
+)
+assert_block(
+    "git status; git push -f origin main",
+    "/tmp/foo",
+    "parsed: force push after ; blocks",
+    expect_substr="Matched: git push --force",
+)
+assert_block(
+    "true | git clean -fdx",
+    "/tmp/foo",
+    "parsed: clean -f after a pipe blocks",
+    expect_substr="Matched: git clean",
+)
+assert_allow(
+    "git commit -m 'fix; git reset --hard is not run here'",
+    "/tmp/foo",
+    "parsed: a quoted message containing ; and a dangerous command allows",
+)
+assert_allow(
+    "git status && git log --oneline -3",
+    "/tmp/foo",
+    "parsed: a chain of safe commands allows",
+)
+# git global options and command wrappers no longer hide the subcommand.
+assert_block(
+    "git -C ../repo push --force origin main",
+    "/tmp/foo",
+    "git -C <dir> push --force blocks",
+    expect_substr="Matched: git push --force",
+)
+assert_block(
+    "git -c core.editor=true reset --hard HEAD",
+    "/tmp/foo",
+    "git -c k=v reset --hard blocks",
+    expect_substr="Matched: git reset --hard",
+)
+assert_block(
+    "env A=1 git push -f origin main",
+    "/tmp/foo",
+    "env VAR=x git push -f blocks",
+    expect_substr="Matched: git push --force",
+)
+assert_block(
+    "command git update-ref -d refs/heads/old",
+    "/tmp/foo",
+    "command git update-ref -d blocks",
+    expect_substr="Matched: git update-ref -d",
+)
+
+# Heredoc bodies are data unless a shell reads them (found by replaying the session's audit log).
+assert_allow(
+    "py -I - <<'EOF'\nrun(\"G2\", \"echo hi ; git rebase -i HEAD~3\", \"C:/\")\nprint('done')\nEOF",
+    "/tmp/foo",
+    "heredoc: a Python script that quotes a dangerous command allows",
+)
+assert_allow(
+    "git commit -F - <<'EOF'\ngit push --force origin main is what the guard blocks\nEOF",
+    "/tmp/foo",
+    "heredoc: a commit message whose line starts with a dangerous command allows",
+)
+assert_allow(
+    "cat > tools/clean.sh <<'EOF'\nset -e; git clean -fdx\nEOF",
+    "/tmp/foo",
+    "heredoc: writing a script file is not running it",
+)
+assert_block(
+    "bash <<'EOF'\ngit push --force origin main\nEOF",
+    "/tmp/foo",
+    "heredoc: a body read by bash is checked as commands",
+    expect_substr="Matched: git push --force",
+)
+assert_block(
+    "sh -s <<EOF\ngit reset --hard HEAD\nEOF",
+    "/tmp/foo",
+    "heredoc: a body read by sh -s is checked as commands",
+    expect_substr="Matched: git reset --hard",
+)
+assert_block(
+    "echo '<<EOF'\ngit push --force origin main",
+    "/tmp/foo",
+    "heredoc: an unterminated << hides nothing",
+    expect_substr="Matched: git push --force",
+)
+assert_block(
+    "cat <<'EOF'\nharmless\nEOF\ngit filter-repo --invert-paths",
+    "/tmp/foo",
+    "heredoc: a command after the body is still checked",
+    expect_substr="Matched: git filter-repo",
+)
+# A bypass prefix covers the command it prefixes, also after a cd.
+assert_allow(
+    'cd "/tmp/foo"; BYPASS_SHARED_GUARD=1 git rebase origin/main --exec true',
+    "/tmp/foo",
+    "bypass: a prefix on the command after a cd authorizes that command",
+)
+assert_block(
+    "BYPASS_SHARED_GUARD=1 git status && git push --force origin main",
+    "/tmp/foo",
+    "bypass: a prefix on one command does not authorize the next",
+)
+
+# --- Cycle-2 review fixes (2026-10-14 redesign red-team and correctness reviews) ---
+
+print("\n=== Cycle-2 fixes: quoted <<, piped shells, bypass scope, wrappers, git forms ===")
+_SH = str(_FAKE_DROPBOX / "repo")
+for _cmd, _lab in (
+    ('echo "see <<EOF"\ngit push --force origin main\nEOF', "quoted << (double) does not open a heredoc"),
+    ("echo '<<EOF'\ngit push --force origin main\nEOF", "quoted << (single) does not open a heredoc"),
+    ("cat <<EOF | bash\ngit push --force origin main\nEOF", "a heredoc piped into bash is checked"),
+    ("pwsh <<EOF\ngit push --force origin main\nEOF", "a heredoc read by pwsh is checked"),
+    ("BYPASS_SHARED_GUARD=1 echo ok && echo '{}' > .claude/settings.json", "bypass does not cover a later settings write"),
+    (f'BYPASS_SHARED_GUARD=1 echo ok && rm -rf "{_SH}"', "bypass does not cover a later shared-storage delete"),
+    (f'true && rm -rf "{_SH}"', "a shared-storage delete as a later command blocks"),
+    (f'cd "{_FAKE_DROPBOX}";rm -rf repo', "glued ; after cd still sets the cwd"),
+    ("env -u X git push --force origin main", "env -u NAME is consumed with its argument"),
+    ("env -- git push -f origin main", "env -- is consumed"),
+    ("git -ckey=val push --force origin main", "glued git -c is a global option"),
+    ("git --no-lazy-fetch push --force origin main", "an unknown git global option is skipped"),
+    ("(git push --force origin main)", "a subshell does not hide the command"),
+    ("{ git push --force origin main; }", "a brace group does not hide the command"),
+    ("git push origin +main", "a +refspec without a colon forces"),
+    ("/usr/bin/git push --force origin main", "a path to git is still git"),
+    ("git.exe push -f origin main", "git.exe is still git"),
+):
+    assert_block(_cmd, "/tmp/foo", "cycle2: " + _lab)
+for _cmd, _lab in (
+    ("git push origin main && tail -f build.log", "tail -f after a normal push is not a force push"),
+    ("cat > a.sh <<'EOF-X'\ngit clean -fdx\nEOF-X", "a heredoc delimiter with a dash is recognized"),
+    ("cat > a.sh <<\\EOF\ngit clean -fdx\nEOF", "a backslash-quoted heredoc delimiter is recognized"),
+    ("BYPASS_SHARED_GUARD=1 bash <<EOF\ngit push --force origin main\nEOF", "a bypass on the shell covers its heredoc body"),
+):
+    assert_allow(_cmd, "/tmp/foo", "cycle2: " + _lab)
+_m, _d = hook.check_command("bash <<EOF\nBYPASS_SHARED_GUARD=1 git push --force origin main\nEOF", "/tmp/foo")
+if _m is None and _d.get("bypass") is True:
+    print("PASS: cycle2: a bypass inside a bash heredoc body is recorded as a bypass")
+    PASS += 1
+else:
+    print(f"FAIL: cycle2: bypass inside a bash heredoc body: msg={_m is not None} debug={_d}")
+    FAIL += 1
+
+# --- Round-3 verification fixes (2026-10-14) ---------------------------------
+
+print("\n=== Round-3 fixes: redirects, multi-line quotes, bypassed cd, py writes ===")
+for _cmd, _lab in (
+    ("git push origin main 2>&1 --force", "2>&1 does not split a command"),
+    ("git reset 2>&1 --hard HEAD~1", "2>&1 before --hard does not split a command"),
+    ("git push origin main &> log --force", "&> does not split a command"),
+    ("git clean 2>&1 -fdx", "2>&1 before -fdx does not split a command"),
+    (f'rm -rf 2>&1 "{_SH}"', "2>&1 before a shared path does not split rm"),
+    (f'BYPASS_SHARED_GUARD=1 cd "{_FAKE_DROPBOX}" && rm -rf repo', "a bypassed cd still sets the cwd for the next command"),
+    ("py -c 'open(\".claude/settings.json\",\"w\").write(\"{}\")'", "py is a scripted-write interpreter"),
+    ('git commit -m "first line\nsecond <<EOF\n"\ngit push --force origin main\nEOF', "a quote spanning lines hides no later command"),
+):
+    assert_block(_cmd, "/tmp/foo", "round3: " + _lab)
+assert_allow(
+    'git commit -m "docs: example\nbash <<EOF\ngit push --force\nEOF\nend of message"',
+    "/tmp/foo",
+    "round3: a multi-line quoted message quoting a bash heredoc example allows",
+)
+assert_allow("git status 2>&1 | head -5", "/tmp/foo", "round3: 2>&1 in an ordinary command allows")
+
+# The audit log records a fallback bypass as a bypass, and marks fallback decisions.
+_msg, _dbg = hook.check_command("BYPASS_SHARED_GUARD=1 git push --force origin main && echo it's done", "/tmp/foo")
+_logdir = _TMP / "logproj"
+hook._log_invocation(str(_logdir), "cmd", "/tmp/foo", "ALLOW", _dbg)
+import json as _json
+_entry = _json.loads((_logdir / ".claude" / "state" / "destructive-action-guard.log").read_text().splitlines()[-1])
+if _msg is None and _entry.get("bypass") is True and _entry.get("fallback") is True:
+    print("PASS: fallback: a bypassed unparseable command is logged with bypass and fallback true")
+    PASS += 1
+else:
+    print(f"FAIL: fallback bypass logging: msg={_msg!r} entry={_entry}")
+    FAIL += 1
 
 
 # --- Summary ---------------------------------------------------------------

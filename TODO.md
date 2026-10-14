@@ -12,7 +12,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 - [ ] **card-auditor review point (ADR-0005 item 3):** after five audited nodes, count the auditor's catches and false alarms in the session log; the owner decides whether it stays. Audited so far: 1 (`prop:nstar-interior-ac`, 2026-10-14, FAITHFUL, agreed with the owner).
 - [ ] **BDD theory: remaining claims** — 7 nodes still at `conjecture` (the wedge, gap-closure and bias results). Run `/theory develop` in BDD. The wedge proof's unstated step (b_t > 0 for t < T−1) was flagged by the known-answer theorist. When proving `prop:commit-cogcons` and `prop:commit-vs-seq-size`, settle whether `prop:nstar` / `prop:vol-commit-equiv` go in `uses` or `mentions` (the last two validator warnings).
 - [ ] **Modernize Track A, remaining steps** (plan `quality_reports/plans/2026-09-16_modernize-and-simplify-plan.md`):
-  - step 3: mirror the hook prune and Python ports onto the `behavioral` overlay; the overlay's own Class-B rules still call `theorist` overlay-only. The overlay is ~200 files behind main and lacks `bin/blueprint_check.py`, `bin/blueprint_tools.py`, `bin/agent_lint.py` and `templates/theory/` (its `/theory` skill references them). Run `bin/agent_lint.py` on each branch after the sync;
+  - step 3: DONE locally 2026-10-14 (`behavioral` `ab9f5f0`, worktree `~/wt/crw-behavioral`; Class A sync 62 copied + 17 deleted, 5 Class B hand-merged; gate passed). Push of `behavioral` awaits the owner. Re-sync after the destructive-guard redesign lands on main (Class A);
   - step 4: one-time `.claude/` update of the live projects (`bdm_bic`, `belief_distortion_discrimination`);
   - step 5: retire `/tools propagate`, `sync-overlays` and `consumers.toml`.
 - [ ] **Voice preservation** (the committed next build from the 2026-09-22 infra survey): two per-paradigm voice profiles; needs the owner's exemplar papers. Folds in the anti-AI-prose academic carve-outs (Backlog).
@@ -29,6 +29,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Backlog
 
+- [ ] **Destructive guard: Windows shared-storage prefixes** — `_shared_prefixes()` lists macOS mount points only, so on this Windows machine `rm -rf` / `find -delete` inside OneDrive or Dropbox folders is not blocked (red-team, 2026-10-14). Adding `%OneDrive%`, `%OneDriveCommercial%` and `~/Dropbox` would also block routine scratch deletes inside repos that live in OneDrive; decide the scope first. ADR-0002 review.
 - [ ] **lean_check card_fields ignores comments** (header-fields review M1, 2026-10-14): `bin/lean_check.py` `card_fields` still reads raw lines, while `blueprint_check.header_fields` skips HTML comments and fences. Fails closed (lean_check rejects a card with a commented example field above the real one). Apply `bc._visible` plus a mirror test; ADR-0002 review.
 - [ ] **Review gate: accept directory targets** — `review-receipt-check.py` matches `**Target:**` by exact path or unique basename only, so files inside a reviewed directory (e.g. `bin/fixtures/lean_check/lean-toolchain`) need a waiver (used once, 2026-10-12). Needs an ADR-0002 review.
 
