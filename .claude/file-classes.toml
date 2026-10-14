@@ -1,5 +1,7 @@
 # .claude/file-classes.toml
-# Workflow propagation manifest — classifies tracked paths into propagation classes.
+# File-class manifest — classifies tracked paths by how they relate across branches.
+# The automated propagation it was built for was retired on 2026-10-14; it remains the
+# reference for syncing an overlay or a live project by hand (see CLAUDE.md).
 #
 # Design and rationale: quality_reports/plans/2026-05-07_comprehensive-propagation-plan.md
 # Bootstrap audit:      quality_reports/plans/proposals/proposed-file-classes-2026-05-07.toml
@@ -10,7 +12,7 @@
 #                            Default for any path not listed in [overlay-customized] or [overlay-only].
 #   B — Overlay-customized:  exists on multiple branches with genuinely different content;
 #                            source = consumer's overlay branch.
-#                            sync-overlays does NOT touch these.
+#                            a hand sync never overwrites these.
 #   C — Overlay-only:        exists on exactly one (or both) overlay branch(es);
 #                            source = the overlay branch where it lives.
 #   D — Excluded:             never propagates (project-state files).
@@ -53,7 +55,7 @@ patterns = [
 
 
 # CLASS B — Overlay-customized: differs per branch by intent.
-# Source-of-truth = consumer's overlay. sync-overlays does NOT touch these.
+# Source-of-truth = consumer's overlay. A hand sync never overwrites these.
 # When the universal portion of a Class B file changes, edit each overlay branch manually.
 [overlay-customized]
 patterns = [
