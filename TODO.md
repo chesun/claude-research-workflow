@@ -11,14 +11,13 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 - [ ] **card-auditor review point (ADR-0005 item 3):** after five audited nodes, count the auditor's catches and false alarms in the session log; the owner decides whether it stays. Audited so far: 1 (`prop:nstar-interior-ac`, 2026-10-14, FAITHFUL, agreed with the owner).
 - [ ] **Modernize Track A, remaining steps** (plan `quality_reports/plans/2026-09-16_modernize-and-simplify-plan.md`):
-  - step 3: DONE locally 2026-10-14 (`behavioral` `ab9f5f0`, worktree `~/wt/crw-behavioral`; Class A sync 62 copied + 17 deleted, 5 Class B hand-merged; gate passed). Push of `behavioral` awaits the owner. Guard redesign re-synced too;
+  - step 3: DONE locally 2026-10-14 (`behavioral` `ab9f5f0`, worktree `~/wt/crw-behavioral`; Class A sync 62 copied + 17 deleted, 5 Class B hand-merged; gate passed). `behavioral` pushed (`a827624`, then `60258ec` with the 2026-10-15 agent-rule sync). Guard redesign re-synced too;
   - step 4: DONE 2026-10-14 for both live projects: BDD `43ee165`, `bdm_bic` `2c10c3f` (tags `pre-simplify-2026-10`, local only; session log §21, §23).
   - step 5: DONE 2026-10-14 (propagate.py and sync_overlays.py deleted; `/tools` subcommands and CLAUDE.md section retired; manifest kept as the hand-sync reference).
 - [ ] **Voice preservation** (the committed next build from the 2026-09-22 infra survey): two per-paradigm voice profiles; needs the owner's exemplar papers. Folds in the anti-AI-prose academic carve-outs (Backlog).
 
 ## Waiting On
 
-- [ ] **BDD Python environments — owner decision** (found 2026-10-14): `requirements.txt` pins the analysis environment (pandas, statsmodels, numba, numpy 2.2.4), but the `.venv` on this machine holds the theory-check environment (sympy, z3, hypothesis, numpy 2.5.3), and sympy is pinned nowhere. Recommendation: keep `requirements.txt` for the analysis and add a pinned `theory/requirements.txt` (with the python version line) for the checks, each with its own environment; merging may not resolve (numba 0.61.2 needs numpy < 2.3). Theorists should run checks with BDD's theory environment, not a temp venv.
 - [ ] **Model-routing experiment read-out** (ADR-0003/0004) — waiting on the voice-preservation build, which ADR-0003 names as the revisit point. Pilot evidence so far: verifier fable vs opus near-identical; opus slightly stricter in calibration round 1 and about twice as fast (session log 2026-10-11 §6). Revisit the `writer` exception after the voice build. Per-review severity counts and fix rounds keep accumulating in the session logs (2026-10-14: §13–§17, all reviewers on fable; no new fable-vs-opus pair).
 
 - [ ] **Paper wording, BDD Props 1–2** — the author (or the writer) rewords `theory/quadratic_loss_model_paper_v2.tex` from the checked nodes `prop:nstar-interior` and `prop:vol-commit-equiv-int`; the martingale lemma also needs its edge-case wording (`lem:martingale-horizon`). Also from the 2026-10-14 round, `theory/quadratic_loss_model_paper_v2.tex`: gap closure's comparative statics hold for n ≥ 1 only (:726, `prop:gap-closure-pos`); the Commitment benchmark is the rational optimum on the grid, not the closed-form n* (:507, `prop:commit-cogcons-grid`); :650 cites Proposition prop:vol-commit-equiv, which should point at the integer form; the wedge's 'histories each of positive probability' should read 'sets of histories' (:600); cor:gap-rank(4)'s 'every regime' should name the three regimes; seq-vs-commit-bias part 3's q ∈ (0,1) qualifier is redundant.
@@ -48,6 +47,8 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 - [ ] **`/tools data-status`**, and a pre-push block when `dvc push` is pending (revisit only if it bites).
 
 ## Done (recent)
+
+- [x] 2026-10-15 — **BDD Python environments settled** (owner): the analysis stays in `requirements.txt` (Mac, `myvenv`); the theory checks use the root `.venv`, pinned in full in `theory/requirements-theory.txt` (BDD `8727073`). That file already pinned sympy; the 2026-10-14 note saying otherwise was wrong.
 
 - [x] 2026-10-15 — **BDD theory: the 13 `proved` variants verified.** 9 checked (3 after self-contained rewrites); 3 refuted on reachability or attainment and repaired by owner choice (`-beta-bernoulli-cap`, `-threshold-loss-reach`, `-location-loss-value`, all checked); det-variance superseded by `-2` (checked). No node left at `proved`. Session log §25.
 
