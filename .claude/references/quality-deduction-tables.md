@@ -14,4 +14,4 @@ The rule keeps the score gates, the severity gradient, the § 3 Enforcement bloc
 
 A paper that does not compile, a script that does not run, and slides that do not compile each cost -100, so they always fail the gate. Talk scores are reported as "Talk: XX/100" but do **not** block commits or PRs.
 
-Until 2026-10-19 this file held separate tables copied from `quality.md` § 3, whose values differed from the agents' (compile failure -100 here against -20 in writer-critic, so a non-compiling paper could score 80 and pass the commit gate). The agents' values were kept, the -100 failure rows were adopted, and the rows that existed only here were added to the agents. The old tables are in git history (`c44ed88`).
+Until 2026-10-19 this file held separate tables copied from `quality.md` § 3, whose values differed from the agents' (compile failure -100 here against -20 in writer-critic, so a non-compiling paper could score 80 and pass the commit gate). The agents' values were kept, the -100 failure rows were adopted, and the rows that existed only here were added to the agents. The old tables are in git history (`7fb606c`).
