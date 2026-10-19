@@ -801,3 +801,13 @@ Each node got a theorist prove-or-refute pass (examples, counterexample search, 
 
 - **Owner decision:** `agents.md` § 3 is the authoritative three-strikes routing. `orchestrator.md` § 3 now points to it (its own table sent coder to Strategist, storyteller to Writer, and had no theorist or designer rows). Aligned: coder-critic strike 3 → strategist-critic / designer-critic; storyteller-critic strike 3 → User; writer-critic strike 3 → Orchestrator, keeping its issue-type table as routing input for the orchestrator. `docs/concepts/worker-critic-pairs.md` already matched.
 - Behavioral's `orchestrator.md` and `agents.md` differ from main (Class B); reconcile by hand at its next sync.
+
+## 30. `behavioral` synced with the instruction-budget changes (2026-10-19)
+
+- **Method:** as §19, manifest-driven. 38 Class A files copied (behavioral matched main's pre-change versions, checked per file). Class B merged three-way from base `6a5073c` after normalising line endings:
+  - `quality.md`: behavioral weights and severity kept; § 3 follows the owner decision (critic files authoritative). Behavioral's tables added no deductions of their own; its Stata-primary order and "design / strategy memo" reading are kept as a note in behavioral's `quality-deduction-tables.md`.
+  - `workflow.md`: loop, dispatch rows (designer, Qualtrics, oTree), dependency graph and standalone skills moved verbatim to behavioral's own `orchestration-loop.md`; the pre-registration hard gate stays in the rule.
+  - `orchestrator.md`: both escalation tables replaced by the `agents.md` § 3 pointer (owner decision); Qualtrics and oTree pairs, absent from that table, keep routing to the Designer.
+  - `verifier.md`, `new-project/SKILL.md`: pointer updates.
+- **Gate:** agent lint PASS (48); hook and bin suites pass (`test_derive_lib` needs pytest, as on main); every new reference pointer resolves; behavioral session-start load 90.7k chars. `CLAUDE.md` and `README.md` untouched (Class D); behavioral's `CLAUDE.md` has none of the stale text fixed on main.
+- Committed and pushed `behavioral` `2c816cf`. Not independently reviewed: the merged content was reviewed on main (r2), and the hand resolutions follow the owner's two decisions.
