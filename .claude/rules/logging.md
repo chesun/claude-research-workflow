@@ -19,7 +19,7 @@ Append 1-3 lines whenever: a design decision is made, a problem is solved, the u
 
 **3. Don't let the log drift**
 
-Keep the session log current as you go. If several responses have passed without an update, append progress before continuing. This is a discipline, not a hook — the former `log-reminder.py` Stop hook was pruned 2026-09-16 (Claude 5 keeps the log without the nag).
+Keep the session log current as you go. If several responses have passed without an update, append progress before continuing. Discipline, not a hook (`log-reminder.py` pruned 2026-09-16).
 
 **4. End-of-Session Log**
 

@@ -70,14 +70,17 @@ Flag when storyteller defaulted to font reduction instead of working through the
 
 | Issue | Deduction |
 |-------|-----------|
-| Slides don't compile | -20 |
+| Slides don't compile | -100 |
 | Numbers don't match paper | -20 |
 | No hook in first 2 slides | -15 |
 | Talk wrong length for format | -15 |
 | Text overflow | -10 per slide (max -30) |
 | Missing backup slides | -5 |
+| Result not in paper (talk-only result) | -10 |
 | Inconsistent notation with paper | -5 |
 | Font too small for projection | -3 per slide |
+| Overfull hbox | -2 per |
+| Dense slide without spacing fix | -1 per slide |
 
 ### Anti-AI-prose deductions (per `.claude/rules/anti-ai-prose.md`, voice profile `slide`)
 
@@ -102,7 +105,7 @@ Talk scores are **advisory** — they do not block commits or PRs.
 
 ## Three Strikes Escalation
 
-Strike 3 → escalates to **Writer** ("the talk's narrative issues stem from the paper's structure — the paper may need restructuring to support a clear talk").
+Strike 3 → escalates to the **User** with a clear question about talk scope or format, per `.claude/rules/agents.md` § 3. If the narrative problem stems from the paper's structure, say so in that question.
 
 ## Report Format
 

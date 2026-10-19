@@ -13,4 +13,4 @@ When a response would exceed **15 lines** of terminal output, write it to a mark
 
 ## Enforcement
 
-Guidance, not a hook. Apply the 15-line rule as you write: export long structured output to a `.md` and leave short confirmations, errors, and follow-up questions inline. The former `output-length-check.py` Stop hook was pruned 2026-09-16.
+Guidance, not a hook (`output-length-check.py` pruned 2026-09-16).

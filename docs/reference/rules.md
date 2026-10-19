@@ -15,7 +15,7 @@ This page is a catalogue with one-line summaries. For full rule semantics, read 
 | `no-assumptions.md` | Don't guess about user-side facts (preferences, deadlines, target journal, infrastructure). Ask, leave out, or explicitly disclose the assumption. |
 | `primary-source-first.md` | Don't make framing claims about external papers without reading them. Hook-enforced. Includes citation-style convention (two-coauthor "Author and Author (year)"). |
 | `derive-dont-guess.md` | Don't fabricate facts the repo encodes (filepaths, variable names, macros, output conventions). Cite source `file:line` for derived entities. |
-| `adversarial-default.md` | Don't claim compliance without evidence. Verification ledger caches results to prevent re-check bloat. Six per-domain checklists. |
+| `adversarial-default.md` | Don't claim compliance without evidence. Verification ledger caches results to prevent re-check bloat. Six per-domain checklists (in `.claude/references/adversarial-default-detail.md`). |
 
 See [`../concepts/epistemic-rules.md`](../concepts/epistemic-rules.md) for depth.
 
@@ -24,10 +24,10 @@ See [`../concepts/epistemic-rules.md`](../concepts/epistemic-rules.md) for depth
 | Rule | One-line summary |
 |---|---|
 | `agents.md` | Worker–critic pairing, separation of powers (critics never create), three-strikes escalation routing. |
-| `workflow.md` | Plan-first protocol, the orchestrator loop, dependency graph, parallel dispatch, simplified mode for explorations. |
-| `quality.md` | Weighted aggregate score, severity gradient by phase, per-target deduction tables, gates (80 / 90 / 95). |
+| `workflow.md` | Plan-first protocol, the orchestrator loop, dependency graph, parallel dispatch, simplified mode for explorations (loop, dispatch table and dependency graph in `.claude/references/orchestration-loop.md`). |
+| `quality.md` | Weighted aggregate score, severity gradient by phase, gates (80 / 90 / 95); per-target deduction tables in `.claude/references/quality-deduction-tables.md`. |
 | `logging.md` | Session logs (incremental + hard-cap reminder), session report (consolidated), research journal (agent-output append-only log). |
-| `revision.md` | R&R cycle: comment classification (NEW ANALYSIS / CLARIFICATION / DISAGREE / MINOR), routing to agents, response-letter mapping. |
+| `revision.md` | R&R cycle: comment classification (NEW ANALYSIS / CLARIFICATION / DISAGREE / MINOR), routing to agents (detail in `.claude/references/revision-protocol.md`), response-letter mapping. |
 
 ### Writing / output
 

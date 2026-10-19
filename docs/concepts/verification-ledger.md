@@ -25,7 +25,7 @@ This page covers the format, lookup protocol, when entries become stale, and how
 ## Columns
 
 - **Path** — repo-relative path to the artifact under check.
-- **Check** — slug from the per-domain table in `adversarial-default.md` (e.g., `no-hardcoded-paths`, `seed-set-once`, `parallel-trends`, `incentive-compatibility`, `bibliography-resolves`).
+- **Check** — slug from the per-domain checklists in `.claude/references/adversarial-default-detail.md` (e.g., `no-hardcoded-paths`, `seed-set-once`, `parallel-trends`, `incentive-compatibility`, `bibliography-resolves`).
 - **Verified At** — ISO 8601 UTC, minute precision. The timestamp the check ran.
 - **File hash** — `sha256(<path>) | head -c 12`. The file's content hash at the moment of check, truncated for readability.
 - **Result** — `PASS`, `FAIL`, or `ASSUMED` (cost-prohibitive / infrastructure-unavailable).

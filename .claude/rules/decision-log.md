@@ -17,49 +17,11 @@ Write one when any of the following gets committed:
 
 Do **not** write an ADR for literature reading, reading-note additions, code/repo logistics, or tentative thoughts that have not been committed to. Draft those in a session log or analysis doc; promote to an ADR once settled.
 
-## File format
+## Format, fields and supersession
 
-- Filename: `NNNN_short-slug.md`, zero-padded to four digits. Number is permanent and never reused.
-- Template, sections, and full rules live in `decisions/README.md`.
-- Title ≤ 80 chars. One decision per file.
+One decision per file, `NNNN_short-slug.md`. Required fields: **Date**, **Status**, **Data quality** and **Sources**; missing any of them = not a valid ADR. When a decision changes, write a new ADR with a `Supersedes: #NNNN` line and edit the old ADR's Status line to `Superseded by #NNNN`, the only edit ever allowed on a Decided entry; leave its body intact. Cite decisions by number (`ADR-0008`). When a decision lands, write both a session log entry *and* the ADR; cross-link them.
 
-## Required fields
-
-Every ADR must have:
-
-- **Date** (YYYY-MM-DD).
-- **Status:** `Decided`, `Proposed`, or `Superseded by #NNNN`.
-- **Data quality:** `Full context` or `Reconstructed — partial context`.
-- **Sources** pointing to the analysis doc or session log that holds the reasoning (section or line range), plus relevant git commit hashes.
-
-Recommended (add when unambiguous):
-
-- **Scope:** one tag identifying which component the decision serves. Suggested categories for behavioral projects: `Research framing`, `IC foundation`, `Behavioral theory`, `Experimental design`, `Methodology`. For applied-micro projects: `Research framing`, `Identification`, `Data`, `Specification`, `Inference`. A decision should belong to one component. If two components are entangled, write two ADRs.
-
-Missing any of the required fields = not a valid ADR.
-
-## Supersession rule
-
-When a decision changes:
-
-1. Write a new ADR with the current date and Status `Decided` (or `Proposed`). Include a `Supersedes: #NNNN` line in its header.
-2. Edit the old ADR's Status line from `Decided` → `Superseded by #NNNN`. This is the only edit ever allowed on a Decided entry.
-3. Update the `decisions/README.md` index.
-4. Leave the old ADR's body intact. The history stays.
-
-## Reference by number
-
-In session logs, analysis docs, commit messages, and other ADRs, cite decisions as `ADR-0008` (or whatever the number is). Numbers are durable across file renames.
-
-## Relationship to other records
-
-- **Session logs** (`quality_reports/session_logs/`) — chronological narrative of what happened in a working session. Records the *process* leading to a decision and any incremental reasoning. When a decision lands, write both a session log entry *and* the ADR; cross-link them.
-- **Analysis docs** (e.g., `quality_reports/*_analysis.md`) — deep reasoning, alternatives considered, evidence. Stay as-is; ADRs point at them.
-- **TODO.md Done section** — tracks completed tasks, not decisions. A completed task may or may not correspond to an ADR. Keep both (see `todo-tracking.md`).
-
-## Pending decisions
-
-Decisions that need to happen but haven't yet are listed under **Pending decisions** in `decisions/README.md`. They get an ADR file only once resolved, not before.
+**Read** `.claude/references/decision-log-detail.md` for the filename and title rules, the field values and scope tag, the supersession steps, how ADRs relate to session logs, analysis docs and `TODO.md`, and pending decisions (open it when writing or superseding an ADR); `decisions/README.md` holds the entry template and the index.
 
 ## Enforcement
 

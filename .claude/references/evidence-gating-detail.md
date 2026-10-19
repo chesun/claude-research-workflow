@@ -164,3 +164,18 @@ These add *blocking* on top of the always-on *recording*. The guarantee (record 
 - **Presence ≠ authenticity.** Schema enforcement guarantees evidence is *attached*, not that it is *true*. Tier 2 catches fabricated *artifacts*; Tier 3 catches fabricated *reasoning*; neither catches a fabrication that survives both.
 - **Only Edit/Write-tool edits are recorded.** External-editor changes and `git commit --no-verify` bypass the recorder. Closing this needs the optional commit hook, which `--no-verify` still bypasses.
 - **The normalizer is heuristic.** Path-normalization is imperfect (per ADR-0011 reasoning); false positives exist, which is why Tier-1 blocking is opt-in (`refactor-mode`) and the recorder only records — the critic gate adjudicates.
+
+---
+
+## Enforcement strength and binding boundary (moved from the rule on 2026-10-19)
+
+Verbatim from `.claude/rules/adversarial-default.md` § Evidence gating, which keeps a one-line summary of each. The `.enabled` precedent named in the first paragraph refers to the opt-in blocking variant of `derive-dont-guess`, pruned 2026-09-16.
+
+**Enforcement strength — block only where the check is deterministic.** Hard *block* is reserved for **Tier 1** (script-decidable), and even there it ships advisory-by-default with opt-in blocking (the `derive-dont-guess` `.enabled` precedent). **Tier 2 / Tier 3** checks and the operationalization gate **advise + deduct** — never hard-block, because a probabilistic check has too many false positives to stop legitimate work. The audible-failure guarantee (`UNVERIFIED` is never silent) still holds at every tier.
+
+**Binding boundary (M9, updated for Phase 3).** Two mechanisms bind, with distinct scopes:
+
+- **Tier 1 (no-logic-change)** binds via the **deterministic recorder + verification ledger** in every context — it is script-decidable, so the residue is real evidence regardless of who reads it.
+- **Tier 2 (locatable-judgment verdicts)** is now **schema-enforceable**: when a critic runs inside a schema-routed JS `Workflow()` (via `agent(…, { schema })` with `required: [claim, artifact_citation]`), `StructuredOutput` mechanically rejects an empty-evidence verdict, and a fabricated/absent `artifact_citation` is caught by `.claude/hooks/citation_existence_lib.py` (`resolve_citation`). The schema mechanism *exists* as of Phase 3.
+
+**Be precise — do not overclaim.** Tier-2 binding holds **only inside a schema-routed workflow**. In **ad-hoc / standalone** critic use (a `/review` invocation, an orchestrator dispatch with no schema, a human reading an agent file) there is no `StructuredOutput` gate, so the Tier-2 evidence requirement reverts to **advisory prose**. The citation-existence check is available in both contexts but only runs when invoked; the schema is what *forces* the citation to exist. Do not claim blanket binding for Tier 2.

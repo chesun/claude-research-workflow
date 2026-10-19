@@ -115,7 +115,7 @@ If any script under review is Stata (`.do` or `.doh`), **Read `.claude/skills/st
 |-------|-----------|----------|
 | Domain-specific bugs (clustering, estimand) | -30 | Strategic |
 | Code doesn't match strategy memo | -25 | Strategic |
-| Scripts don't run | -25 | Strategic |
+| Scripts don't run (syntax errors included) | -100 | Strategic |
 | Sign of main result implausible | -20 | Strategic |
 | Hardcoded absolute paths | -20 | Code Quality |
 | Missing robustness checks from memo | -15 | Strategic |
@@ -134,6 +134,7 @@ If any script under review is Stata (`.do` or `.doh`), **Read `.claude/skills/st
 | Stata: unbalanced `/*` vs `*/` via state-machine check (greedy parser bug) | -25 | Code Quality |
 | Stata: Variant-8 over-flatten artifacts present (`^-+<x>$` or `^\s*<x>\s*$`) | -25 | Code Quality |
 | Stata: path-glob `*` inside comment context (`/* */`, `*`-line, `//`-line) | -5 per occurrence, cap -25 | Code Quality |
+| Stata: missing `esttab`/`outreg2` table output | -5 | Code Quality |
 | Stata: `//*****`-style banner (parser-safe but trips grep-balance, adds noise) | -3 per occurrence, cap -10 | Code Quality |
 
 ## Standalone Mode
@@ -142,7 +143,7 @@ When invoked via `/review [file.R]` or `/review --code`, run categories **4–12
 
 ## Three Strikes Escalation
 
-Strike 3 → escalates to **Strategist**: "The specification cannot be implemented as designed. Here's why: [specific issues]."
+Strike 3 → escalates to **strategist-critic** (applied-micro) or **designer-critic** (behavioral), per `.claude/rules/agents.md` § 3: "The specification cannot be implemented as designed. Here's why: [specific issues]."
 
 ## Report Format
 

@@ -93,7 +93,7 @@ Review the specified file thoroughly and produce a detailed scored report of all
 | Issue | Deduction |
 |-------|-----------|
 | Numbers in text don't match tables | -25 |
-| Paper doesn't compile | -20 |
+| Paper doesn't compile | -100 |
 | Broken citations (`\cite{}`) | -15 |
 | Broken references (`\ref{}`) | -15 |
 | Overfull hbox > 10pt | -10 per |
@@ -110,8 +110,11 @@ Review the specified file thoroughly and produce a detailed scored report of all
 | Logical symbol in running text | -2 per |
 | Symbol used before definition | -3 per |
 | >3 decimal places | -2 per |
+| Typo in equation | -10 per |
 | Notation inconsistency | -5 |
+| Missing figure/table at referenced path | -5 per |
 | Overfull hbox 1–10pt | -1 per |
+| Long lines >100 chars (except math formulas) | -1 per |
 
 ## Format-Aware Severity
 
@@ -122,10 +125,12 @@ Review the specified file thoroughly and produce a detailed scored report of all
 
 ## Three Strikes Escalation
 
-| Issue Type | Escalation Target |
+Strike 3 escalates to the **Orchestrator** for a structural rewrite, per `.claude/rules/agents.md` § 3. Name the issue type so the orchestrator can route the work:
+
+| Issue Type | Where the orchestrator sends it |
 |-----------|-------------------|
 | Claims don't match results | Coder (results may be wrong) |
-| Strategy misrepresented | Strategist (paper deviates from design) |
+| Strategy misrepresented | strategist-critic (applied-micro) / designer-critic (behavioral): paper deviates from design |
 | Framing/structure issues | User (needs human judgment on narrative) |
 
 ## Report Format

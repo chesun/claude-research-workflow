@@ -1,3 +1,15 @@
+---
+paths:
+  - "paper/**"
+  - "talks/**"
+  - "figures/**"
+  - "tables/**"
+  - "supplementary/**"
+  - "replication/**"
+  - "**/*.tex"
+  - "**/*.bib"
+---
+
 # Single Source of Truth: Paper-Centric Protocol
 
 **The paper `paper/main.tex` is the authoritative source for all research content.** Everything else is derived.
@@ -59,4 +71,4 @@ Before referencing any figure or table in a talk:
 
 - `storyteller-critic` verifies paper-to-talk fidelity when dispatched on talks.
 - `writer-critic` verifies internal paper consistency (tables vs prose) via the "tables are source of truth over prose" rule.
-- Any deviation is a -10 deduction in talk scoring (see `quality.md` §3 Talks table).
+- Any deviation is a -10 deduction in talk scoring (see `.claude/references/quality-deduction-tables.md` § Talks).

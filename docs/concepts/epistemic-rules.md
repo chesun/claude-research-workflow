@@ -60,7 +60,7 @@ The hook is satisfied when either (a) a PDF exists at `master_supporting_docs/li
 
 When no precedent exists in the repo (the project is new, or the entity is genuinely first), the agent must explicitly disclose: "Creating a new convention here because no existing pattern was found in [files searched]."
 
-**Per-entity-type lookup table.** The rule includes concrete `grep` commands for each entity type — datasets, macros, packages, output paths, seeds, etc. — so agents have a deterministic recipe rather than judgement-based shortcut.
+**Per-entity-type lookup table.** The rule points to `.claude/references/derive-lookup-table.md`, which holds concrete `grep` commands for each entity type — datasets, macros, packages, output paths, seeds, etc. — so agents have a deterministic recipe rather than judgement-based shortcut.
 
 ---
 
@@ -74,7 +74,7 @@ When no precedent exists in the repo (the project is new, or the entity is genui
 
 This is the rule that makes "adversarial" sustainable. Without the ledger, demanding evidence on every check would slow every task. With the ledger, first check pays the verification cost; subsequent checks on unchanged artifacts pay only the lookup cost.
 
-**Six per-domain checklists.** Each domain (Stata code, R code, Python code, data, design, identification, replication, bibliography) has a concrete list of `(check_name, command, PASS criterion)` triples that critics reference. The full table is in the rule file.
+**Six per-domain checklists.** Each domain (Stata code, R code, Python code, data, design, identification, replication, bibliography) has a concrete list of `(check_name, command, PASS criterion)` triples that critics reference. The full tables are in `.claude/references/adversarial-default-detail.md`.
 
 ---
 

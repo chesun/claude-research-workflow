@@ -18,7 +18,7 @@ Structure point-by-point referee responses with classification, agent routing pe
 ### Step 1: Parse Inputs
 1. Read referee report(s) from `$ARGUMENTS`
 2. Read the paper (paper/main.tex or specified path)
-3. Read revision protocol from rules
+3. Read `.claude/rules/revision.md` and `.claude/references/revision-protocol.md`
 4. Read existing scripts to know what analyses already exist
 
 ### Step 2: Classify Every Comment

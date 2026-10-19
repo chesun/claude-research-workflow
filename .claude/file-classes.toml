@@ -3,6 +3,13 @@
 # The automated propagation it was built for was retired on 2026-10-14; it remains the
 # reference for syncing an overlay or a live project by hand (see CLAUDE.md).
 #
+# HAND SYNC PROCEDURE (moved from CLAUDE.md on 2026-10-19)
+#   Class A (universal): copy main's version, or delete where main deleted the file.
+#   Class B (overlay-customized): merge three-way from the common base, by hand.
+#   Class C (overlay-only) and Class D (project state): never touched.
+#   Worked example: the 2026-10-14 `behavioral` sync (session log 2026-10-11 §19). A live project
+#   is refreshed the same way, keeping any local customization (§21).
+#
 # Design and rationale: quality_reports/plans/2026-05-07_comprehensive-propagation-plan.md
 # Bootstrap audit:      quality_reports/plans/proposals/proposed-file-classes-2026-05-07.toml
 # Approved:             2026-05-07 (Christina + Claude)
@@ -64,6 +71,8 @@ patterns = [
   ".claude/agents/writer.md",                       # behavioral references domain-profile-behavioral; different examples
   ".claude/rules/quality.md",                       # overlay-specific component weights (design 25%, qualtrics 7%; theory 15% is now on main too)
   ".claude/rules/workflow.md",                      # overlay-specific phase + dispatch tables (design/qualtrics/otree; theory dispatch is on main)
+  ".claude/references/orchestration-loop.md",       # moved from workflow.md 2026-10-19: dispatch table + dependency graph (behavioral: pre-registration gate)
+  ".claude/references/quality-deduction-tables.md", # moved from quality.md §3 2026-10-19; behavioral overlay has its own rows
   ".claude/skills/analyze/SKILL.md",                # behavioral defaults to Stata 17 + behavioral domain-profile
   ".claude/skills/discover/SKILL.md",               # overlay-flavored discovery pipeline
   ".claude/skills/new-project/SKILL.md",            # overlay-pipeline-specific

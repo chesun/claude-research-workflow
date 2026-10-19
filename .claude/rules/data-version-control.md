@@ -1,3 +1,18 @@
+---
+paths:
+  - "data/**"
+  - "**/*.dvc"
+  - ".dvc/**"
+  - ".dvcignore"
+  - ".gitattributes"
+  - ".gitignore"
+  - "bin/setup-machine.sh"
+  - "templates/setup-machine.sh"
+  - "templates/gitattributes-lfs.txt"
+  - "templates/data-*.md"
+  - "master_supporting_docs/literature/papers/**"
+---
+
 # Data Version Control
 
 **Scope:** all research projects with paper PDFs as load-bearing content, or with data files that need versioning beyond plain backup.

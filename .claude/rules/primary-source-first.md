@@ -45,50 +45,11 @@ The `README.md` in `master_supporting_docs/literature/reading_notes/` specifies 
 
 Use this section to head off future conflation errors. When downstream docs (ADRs, analysis memos, hypotheses, session logs) have previously misframed the paper, record the misreading and the corrected reading side-by-side.
 
-## Citation extraction — the filter stack
+## Citation extraction
 
-The hook extracts citations via an Author-Year regex, then applies a filter stack in order:
+The hooks extract Author-Year citations with a regex and then drop false positives through a filter stack: a built-in never-a-surname blocklist, an optional org skip-list (`.claude/state/primary_source_orgs.txt`), cue-word and abstract-noun guards, all-caps and sentence-start filters, and an optional surname allowlist (`.claude/state/primary_source_surnames.txt`). Each block is logged to `.claude/state/primary-source-blocks.jsonl` (fail-open: a logging failure never stops the block).
 
-1. **Built-in blocklist (`NEVER_SURNAMES`).** Hard-coded set of words that are *never* surnames in academic prose: function words ("the", "in", "from"), seasons, months, days of the week, document-structure words ("table", "figure", "section", "panel", "cohort"), pronouns, role-placeholder words used in citation-style examples ("Author", "Coauthor", "Editor"), book/series-title nouns ("Handbook", "Journal", "Review", "Volume"), mixed-case ADR/workflow status words ("Decided", "Superseded", "Pending", ...), changes-table verbs ("Added", "Fixed", "Merged", ...), software/tool/product names ("Stata", "Qualtrics", "Overleaf", "Photoshop", ...), document-lifecycle nouns ("Draft", "Version", "Meeting", ...), institution/program/legislation/dataset nouns ("Census", "Medicaid", "Act", "Bank", "Commission", "Compustat", "Datastream", ...), and calendar/event/award nouns ("Quarter", "Semester", "Cup", "Prize", "Medal", holidays, ...). These drop regardless of allowlist state. Collision-risk words that ARE real surnames ("Grant", "Law", "Bill", "Nielsen") are deliberately excluded — they are handled by the org skip-list or escape hatch instead.
-
-1b. **Org skip-list (`.claude/state/primary_source_orgs.txt`).** Optional per-project list (same loader/format as the surname allowlist) of mixed-case corporate/data authors to skip ("Gallup", "Pew", Nielsen-the-company). These can't go in `NEVER_SURNAMES` safely because one project's data vendor is another project's cited author. Missing/empty file = no skipping.
-
-1c. **Preceding-token cue filter.** A named-entity cue word ("Hurricane Katrina (2005)"), an all-caps acronym ("NSF Grant 2026"), or any other capitalized word directly before the head token ("Great Recession (2008)", "Journal of Public Economics (2019)", "Statistics Canada (2023)") marks the match as the tail of a multi-word proper noun and skips it — unless the head surname is explicitly allowlisted. Surname particles (La Ferrara, El Ghoul, De Loecker) are exempt so particle surnames still extract; the El Niño / La Niña event bigrams are carved back out. Punctuation between the preceding word and the name breaks the cue, so `IPUMS USA (Ruggles et al. 2024)` still extracts.
-
-1d. **Abstract-noun suffix guard.** Head tokens ending in `-tion/-sion/-ism/-nomics/-demic` (length ≥ 7) or `-ment` (length ≥ 8) are event/process/doctrine nouns, essentially never surnames — "after Liberalization (1991)", "the Settlement (1998)", "under Abenomics (2013)" — caught structurally instead of by enumeration. The length floors keep short real surnames citable (`Sion`, `Nation`, `Clement`), and an allowlist entry rescues any colliding surname.
-
-2. **All-caps token filter.** A captured surname written entirely in uppercase (length ≥ 2) is rejected. Real surnames in academic prose are written `Smith`, never `SMITH`; real two-letter surnames (`Ng`, `Wu`, `Li`) are written mixed-case. Catches status markers (`COMPLETED (2026)`, `WIP (2026)`) and acronym corporate authors (`BLS (2024)`, `OECD (2023)`, `EU (2024)`, `AY 2026`). Corporate-author citations are *data* attributions, not framing claims about research papers, so they don't require reading notes. Mixed-case surnames (`McGregor`, `DeAngelo`, `O'Brien`) still match.
-
-3. **Sentence-start / structural-boundary filter.** A capitalized first word right after a sentence terminator (`.?!:;` or paragraph break) **or at a markdown structural boundary — line start, bullet, numbered item, heading, blockquote, table cell —** is dropped *unless* it appears in the project allowlist. This kills the dominant false-positive class in workflow docs (person + year in TODO tables, standup bullets, session-log lines) while a real citation in those positions still extracts once the surname is allowlisted. Mid-sentence prose citations are unaffected.
-
-4. **Hyphenated-name decomposition.** A 3+ part hyphenated capitalized token (e.g., `Chetty-Friedman-Rockoff`) is split into separate surnames and the stem is built with underscores (`chetty_friedman_rockoff_2014`). This matches reading-notes filename conventions. Two-part hyphenated tokens (`Goldsmith-Pinkham`) are preserved as single hyphenated surnames since real hyphen-containing surnames are common.
-
-5. **Project allowlist (`.claude/state/primary_source_surnames.txt`).** Optional, one lowercase surname per line. When the file is empty or missing, all matches that pass the earlier filters are accepted. Populated allowlists tighten the filter further — only Author-Year matches whose leading surname is in the allowlist extract — and rescue real citations at structural boundaries (filter 3) and after cue tokens (filter 1c). Recommended: populate as you accumulate cited authors.
-
-### Structural guards in the regex itself (before any filter)
-
-- **ISO-date/range guard.** A year immediately followed by dash/slash + digit is the leading component of a date or range, not a citation year — `Kickoff 2026-09-01`, `Snapshot 2026/07/15`, `Coverage 2019–2021` never extract. This kills the "CapitalizedWord YYYY-MM-DD" class generically, including words no blocklist enumerates.
-- **Full author-list capture.** The author list is captured as one repeated span and split in Python, so comma-only lists (`Bohren, Imas, Rosenberg (2019)`) and the AEA 4-author form (`Smith, Jones, Brown, and Lee (2024)`) extract with the lead author intact at any author count. (The earlier 3-slot pattern restarted mid-list and silently dropped the lead author.)
-
-### Unicode and typographic handling
-
-The extractor ASCII-folds text before matching (NFD-decompose + strip combining marks, plus a precomposed-letter map for `ł ø ß æ œ ð þ`), so accented surnames (`Székely`, `García`, `Müller`, `Bénabou`, `Łukasz`) match as their ASCII forms. Typographic characters are folded too: curly quotes/apostrophes → ASCII apostrophe, en/em-dash → hyphen, NBSP → space — so curly-apostrophe surnames and en-dash compounds no longer mis-parse to the wrong author. Possessives are normalized (`Chetty's (2014)` → `chetty_2014`; `Smith et al.'s (2020)` and `Smith and colleagues (2020)` extract), and stems are apostrophe-free (`O'Brien` → `obrien_2020`) to match filename conventions. Reading-notes filenames should use ASCII, apostrophe-free stems — `szekely_rizzo_2013.md`, `obrien_2020.md`. The notes/PDF lookups also try a hyphen→underscore stem fallback, so a 2-part hyphenated dual-author citation (stem `szekely-rizzo_2013`) resolves to the conventional underscore filename, and accented `**Citation:**` metadata lines are folded before matching.
-
-### Known residue (by design)
-
-Bare place-name + year (`Tokyo 2020`), titles that are also surnames, and mixed-case polling orgs are irreducible by syntax — the org skip-list or escape hatch handles them. Particle surnames (`van Reenen`, `de Chaisemartin`) build stems without the lowercase particles; name the notes file by the extracted stem or rely on the `**Citation:**`-line match, which resolves regardless of filename.
-
-**The structural limit (verify-loop conclusion, 2026-07-02):** "capitalized common noun + year" is a productive open class — an adversarial hunter can always mint fresh members (a new disaster, platform, or policy episode). The blocklist and suffix guards cover the high-frequency core; the tail is handled per-project by the org skip-list, the escape hatch, and block telemetry. The one *rejected* general fix, for the record: a lowercase-determiner cue ("the X (year)" ⇒ not a citation) kills legitimate eponymous forms — "the Heckman (1979) correction", "the Card and Krueger (1994) study" — and must not be added; a regression test pins this.
-
-### Block telemetry
-
-Every block by either hook appends a JSONL record to `.claude/state/primary-source-blocks.jsonl` (gitignored, per-project; rotates to `.old` past ~1MB; fail-open — telemetry never breaks the hook). Each record carries the timestamp, which hook fired, the source (file path or `session-prose`), and the missing stems with their status. This is the evidence base for residual-false-positive tuning: a stem that blocks repeatedly without ever gaining a notes file is a false-positive candidate (or a chronically unread citation — the judgment is human). Aggregate before a tuning pass:
-
-```bash
-jq -r '.missing[].stem' .claude/state/primary-source-blocks.jsonl | sort | uniq -c | sort -rn
-```
-
-Route confirmed false positives to the right mechanism: never-a-surname words → `NEVER_SURNAMES` upstream in the workflow repo (propagates to everyone); project-local names (orgs, tools, colleagues) → the org skip-list; one-off framing-free mentions → the escape hatch.
+**Read** `.claude/references/primary-source-filter-stack.md` when tuning a false positive or naming a notes file for an unusual surname (accents, particles, hyphens). It holds the full stack, the Unicode handling, the known residue and the telemetry query.
 
 ## Escape hatch
 
@@ -115,13 +76,7 @@ The comment only applies to the scope where it appears — it is not session-wid
 
 ## Citation-style convention (AEA / Chicago author-date)
 
-The project uses the AEA reference style. Per the AER style guide, "Text citations and reference list entries should follow author-date style (see *Chicago Manual of Style*)." AER specifies the et al. threshold; everything else inherits from Chicago author-date. This applies to all in-text citations in load-bearing artifacts: paper, talks, ADRs, plans, reviews, session logs, response letters, and any external-facing prose.
-
-References: https://www.aeaweb.org/journals/aer/style-guide (AER style — et al. thresholds), https://www.aeaweb.org/journals/policies/sample-references (sample reference entries), https://www.aeaweb.org/journals/data/references (data citations).
-
-### In-text citation form
-
-AER explicitly states: "1–4 authors: include all author names" and "5+ authors: list only the name of the first author followed by 'et al.'"
+The project uses the AEA reference style (Chicago author-date). This applies to all in-text citations in load-bearing artifacts: paper, talks, ADRs, plans, reviews, session logs, response letters, and any external-facing prose. In-text form:
 
 | Authors | Form | Examples |
 |---|---|---|
@@ -129,53 +84,18 @@ AER explicitly states: "1–4 authors: include all author names" and "5+ authors
 | 2 | `Author and Author (year)` — never `&`, never comma-separated | `Roth and List (2022)`; `Healy and Leo (2024)`; `(Romer and Romer 2010)` |
 | 3 | `Author, Author, and Author (year)` — Oxford comma required | `Gaduh, Hanna, and Olken (2021)`; `Smith, Jones, and Brown (2020)` |
 | 4 | `Author, Author, Author, and Author (year)` — all four listed, Oxford comma | `Smith, Jones, Brown, and Lee (2024)` |
-| 5+ | `First-author et al. (year)` from first cite onward; reference list shows more (see below) | `Smith et al. (2024)` |
+| 5+ | `First-author et al. (year)` from first cite onward; reference list shows more (see the reference) | `Smith et al. (2024)` |
 | Same author, same year | suffix-disambiguate with lowercase letter | `Smith (2020a)`, `Smith (2020b)` — order matches the reference list |
 
-### Multiple works in one parenthetical
+No comma between author and year in the parenthetical form; semicolons between works in one parenthetical; always `et al.` with the period.
 
-Use semicolons between works; chronological order within author, alphabetical between authors:
-
-- `(Smith 2020; Jones 2021; Brown 2022)`
-- `(Smith 2020a, 2020b; Jones 2021)` — same-author works comma-separated within their cluster
-
-### Punctuation and form details
-
-- Always `and` between names; never `&` in running text. The ampersand belongs in tables and footnotes only when journal style permits, and AEA does not.
-- Always include the period in `et al.` (Latin abbreviation requires it).
-- Year in parentheses when the author is part of the running sentence (`Smith (2020) shows...`); year inside the parenthetical when the whole citation is parenthetical (`...is shown elsewhere (Smith 2020).`).
-- No comma between author and year in the parenthetical form: `(Smith 2020)`, not `(Smith, 2020)`. Chicago author-date omits the author-year comma; this distinguishes it from APA.
-
-### Reference list form (AEA / Chicago)
-
-The reference list itself is rendered by `biblatex` with `style=authoryear` per `working-paper-format.md`. AER specifies: "Reference list entries with one to ten authors should include all author names; for eleven or more authors, list the first seven, followed by a comma and 'et al.'" Note this is laxer than the in-text et al. threshold — the reference list shows up to 10 authors before truncating, while in-text uses et al. at 5+.
-
-Manual reference entries follow Chicago author-date form:
-
-- **Journal article:** `Author, FirstName M., and FirstName M. Author. Year. "Title of Article." Journal Name Volume (Issue): Pages.`
-- **Book:** `Author, FirstName M. Year. Title in Italics. City: Publisher.`
-- **Working paper:** `Author, FirstName M. Year. "Title." Series Name Working Paper No. NNNN.`
-- **Edited volume chapter:** `Author, FirstName M. Year. "Chapter Title." In Volume Title, edited by FirstName M. Editor, pages. City: Publisher.`
-- **Dataset:** `Author. Year. Title in Italics, Version. Database. Publisher. URL or DOI (accessed date).`
-
-Authors after the first list given-name first within a single entry: `Smith, John A., Jane Doe, and Mary Roe.` (Oxford comma between Doe and Roe).
-
-### Why this matters for the hook
-
-The Author-Year regex in `primary_source_lib.py` is permissive on the parser side — it still detects `&`-form, comma-form, and various malformed citations so that no real citation slips past the audit. But the writing convention is strict: prose that follows AEA form produces no false positives, never invokes the escape hatch, and ports cleanly to AEA submission without retroactive rewrites. The writer-critic enforces AEA form via deduction rows (see `agents/writer-critic.md`).
-
-### One-author and corporate-author cases
-
-- **Single author:** `Author (year)` or `(Author year)`.
-- **Corporate / institutional author:** spell out on first mention, abbreviate thereafter — `(Bureau of Labor Statistics 2024)`, then `(BLS 2024)` with the abbreviation introduced parenthetically on first use.
-- **Anonymous / no author:** use a short form of the title in italics — `(Title in Italics 2020)`.
-- **Forthcoming:** use `forthcoming` in place of the year — `Smith (forthcoming)`.
+**Read** `.claude/references/aea-citation-style.md` for the multiple-works, punctuation, reference-list and corporate-author forms and the AER sources (open it when writing or reviewing citations in prose or a reference list).
 
 ## Why this exists
 
-Claude has, in prior projects, propagated an incorrect framing claim about a paper through multiple load-bearing documents — a decision log, an identification analysis, a session log, and a slide review — without ever opening the PDF despite it being in the repo the whole time. The error originates in a paraphrase, gets amplified across derivative docs, and each downstream claim inherits and amplifies the distortion.
+Claude has, in prior projects, propagated an incorrect framing claim about a paper through several load-bearing documents without ever opening the PDF that was in the repo. The hooks make each of the three failure modes above deterministically blocking rather than relying on the model to remember to open the primary source.
 
-The rule exists to make this failure mode deterministically catchable rather than relying on the model to remember to open the primary source. Three failure modes — missing notes with PDF present, missing notes with no PDF, existing notes not consulted in-session — are each paths the failure could have been caught; the hooks make all three deterministically blocking.
+**Read** `.claude/references/primary-source-filter-stack.md` § Why this exists for the full narrative (open it when explaining or revising the rule).
 
 ## Intended behavior
 

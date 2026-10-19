@@ -28,8 +28,8 @@ The four-rule epistemic stack and seven additional rules:
 
 | Rule | Purpose |
 |---|---|
-| `adversarial-default.md` | Burden-of-proof inversion for compliance claims; six per-domain checklists; backed by the verification ledger |
-| `derive-dont-guess.md` | Don't fabricate facts the repo encodes; per-entity-type lookup table; cite source `file:line` |
+| `adversarial-default.md` | Burden-of-proof inversion for compliance claims; six per-domain checklists (in a reference); backed by the verification ledger |
+| `derive-dont-guess.md` | Don't fabricate facts the repo encodes; per-entity-type lookup table (in a reference); cite source `file:line` |
 | `no-assumptions.md` | Don't guess about user-side facts; ask, leave out, or explicitly disclose |
 | `primary-source-first.md` | Don't make framing claims about external papers without reading them; hook-enforced; citation-style convention |
 | `decision-log.md` | ADR convention for substantive design decisions in `decisions/NNNN_slug.md` |

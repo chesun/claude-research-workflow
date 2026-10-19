@@ -61,7 +61,7 @@ If a path doesn't match any profile, the humanizer asks before applying.
 
 ## Pattern catalog
 
-Six categories, ~35 patterns. Severity tiers (Critical / Major / Minor) drive the writer-critic and storyteller-critic deduction tables (see `quality.md` § 3).
+Six categories, ~35 patterns. Severity tiers (Critical / Major / Minor) drive the writer-critic and storyteller-critic deduction tables (see `.claude/references/quality-deduction-tables.md`).
 
 ### 1. Lexical (vocabulary tells)
 
@@ -124,7 +124,7 @@ Six categories, ~35 patterns. Severity tiers (Critical / Major / Minor) drive th
 
 ## Severity → deduction mapping
 
-The severity tiers above plug into the writer-critic and storyteller-critic deduction tables (see `quality.md` § 3 — Per-Target Deduction Tables). Headline:
+The severity tiers above plug into the writer-critic and storyteller-critic deduction tables (see `.claude/references/quality-deduction-tables.md`). Headline:
 
 | Severity | Per-instance deduction | Cap per document |
 |---|---|---|
@@ -168,7 +168,7 @@ The comment scopes to the paragraph it appears in. Auditable: `grep -R "anti-ai-
 
 ## Cross-references
 
-- `quality.md` § 3 — deduction tables (writer-critic, storyteller-critic)
+- `.claude/references/quality-deduction-tables.md` — deduction tables (writer-critic, storyteller-critic)
 - `agents/writer.md` — writer's humanizer pass (now references this rule instead of duplicating the catalog)
 - `agents/storyteller.md` — slide humanizer reference
 - `skills/humanize/SKILL.md` — universal entry point

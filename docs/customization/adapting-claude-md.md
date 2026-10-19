@@ -113,7 +113,7 @@ To add a project-specific rule:
    ```
 3. Follow the same structure as existing rules: principle / scope / mechanics / examples / cross-references.
 4. Reference the rule from `CLAUDE.md`'s "Core Principles" section so it loads at session start.
-5. If the rule should affect critic deductions, update `quality.md`'s deduction table for the relevant target.
+5. If the rule should affect critic deductions, update `.claude/references/quality-deduction-tables.md` and the critic's agent file for the relevant target.
 
 For deeper guidance on rule structure, read several existing rules in `.claude/rules/` — they share a common shape.
 
