@@ -244,7 +244,7 @@ The preamble's `biblatex` settings (`style=authoryear, maxcitenames=4, mincitena
 - Multiple cites: `\citep{Smith2020,Jones2021}` → `(Smith 2020; Jones 2021)` (semicolon-separated)
 - Same author same year: distinguish in BibTeX with year suffix — `Smith2020a`, `Smith2020b` keys; biblatex renders `Smith (2020a)` and `Smith (2020b)` automatically.
 
-In-text writing conventions (the AEA/Chicago author-date rules in detail) live in `.claude/rules/primary-source-first.md` § "Citation-style convention". The writer-critic enforces them via deduction rows.
+In-text writing conventions live in `.claude/rules/primary-source-first.md` § "Citation-style convention" (in-text table); the full AEA/Chicago author-date rules are in `.claude/references/aea-citation-style.md`. The writer-critic enforces them via deduction rows.
 
 **Do not** use `\&` between authors in `\textcite{...}` constructions or in raw prose. AEA convention is `and` in running text. The biblatex `authoryear` style produces `and` automatically; the failure mode here is hand-written `Smith \& Jones (2020)` outside `\citet`.
 
@@ -277,4 +277,4 @@ The writer-critic deducts points for:
 - `hyperref` not loaded last (-2)
 - Missing caption styling (`captionsetup`) (-2)
 - Using `bibtex` instead of `biber` (-3)
-- AEA citation form violation in running text — `&` between author names, missing Oxford comma in 3-author cite, or comma between author and year in parenthetical (per `primary-source-first.md` § "Citation-style convention"): -3 per occurrence (max -15)
+- AEA citation form violation in running text — `&` between author names, missing Oxford comma in 3-author cite, or comma between author and year in parenthetical (per `.claude/references/aea-citation-style.md`): -3 per occurrence (max -15)

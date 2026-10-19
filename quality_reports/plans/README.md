@@ -94,4 +94,4 @@ Maintained by the agent that creates or completes a plan, in the same commit.
 ## Cross-references
 
 - `.claude/rules/workflow.md` § 1 — Plan-First Protocol
-- `.claude/rules/agents.md` § 2a — Review and Plan Lifecycle
+- `.claude/rules/agents.md` § 2a and `.claude/references/review-plan-lifecycle.md` — Review and Plan Lifecycle

@@ -103,5 +103,5 @@ Critics consult `INDEX.md` before writing a new review — if an `Active` entry 
 ## Cross-references
 
 - `.claude/rules/agents.md` § 2 — Separation of Powers (source vs report artifacts)
-- `.claude/rules/agents.md` § 2a — Review and Plan Lifecycle
+- `.claude/rules/agents.md` § 2a and `.claude/references/review-plan-lifecycle.md` — Review and Plan Lifecycle
 - `.claude/rules/logging.md` — research journal conventions

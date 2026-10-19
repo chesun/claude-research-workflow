@@ -4,7 +4,7 @@ This repository is both a working project and a public template for empirical so
 
 ## Working Project
 - We develop research papers, seminars, guides, and documentation
-- We accumulate project-specific learnings and institutional context (UAB)
+- We accumulate project-specific learnings and institutional context
 - We test and iterate on the architecture itself
 
 ## Public Template

@@ -11,16 +11,7 @@ This rule is the codified enforcement layer for the prose-level guidance in `adv
 
 ## Why this exists
 
-On 2026-04-25, a Claude Code session ran `git filter-repo --invert-paths` on a Dropbox-shared git repo (3 coauthors) to shrink it for a failing push. The operation rewrote history *and* silently rewrote the working tree, deleting `output/dta/most_recent/` and several dated regression-export folders. Dropbox propagated the deletion to all coauthors. The session then force-pushed to origin, making the rewrite permanent on GitHub.
-
-The session log claimed *"Working tree = 8.8 GB unchanged (all .dta files still present)"* — never verified with `ls`/`du`, and false. The deletion surfaced 8 days later when a coauthor noticed missing files.
-
-Two failure modes compounded:
-
-1. **No enforced gate on history rewrites** despite prose-level rules saying "destructive operations need explicit re-authorization."
-2. **False-success narration** — the agent reported success without producing positive evidence (`ls`/`du` output) of what the rule actually required.
-
-This rule installs hooks that close both gaps.
+On 2026-04-25 a session ran `git filter-repo` on a Dropbox-shared repo, which silently deleted coauthors' files, then force-pushed and reported the working tree unchanged without checking. The lesson: history rewrites need an enforced gate, and no success claim after one stands without `ls`/`du` evidence.
 
 ## Always-blocked commands (regardless of cwd)
 
@@ -66,11 +57,7 @@ Anchored on canonical macOS cloud-storage mount points; substring matches (e.g.,
 
 Path resolution is realpath-aware: a symlink in a non-shared location that points into shared storage *will* trigger the guard. Tested case: `cd ~/foo && rm -rf bar` where `~/foo` symlinks into Dropbox → blocked.
 
-## `cd X && ...` chain handling
-
-The guard parses leading `cd <path> &&` directives in the command string and updates the effective cwd before checking path arguments. Concretely, `cd ~/dropbox-repo && rm -rf output/` is evaluated as `rm -rf ~/dropbox-repo/output/` for the purposes of the path check.
-
-This handles the realistic case where Claude prefixes a `cd` to localize a destructive command.
+**On Windows the delete check does not fire for OneDrive or Dropbox folders:** the prefixes above are macOS mount points.
 
 ## Chains, heredocs and unparseable commands
 
@@ -104,37 +91,9 @@ After any history rewrite (`filter-repo`, `filter-branch`, `rebase` non-resumpti
 
 The agent is **not allowed** to narrate success (e.g., "working tree unchanged", "all files present") without `ls`/`du` output captured in its response. This is the adversarial-default rule applied to a specific failure mode: compliance is a positive claim that requires positive evidence.
 
-## Audit log
+## Audit log, coverage and limits
 
-`.claude/state/destructive-action-guard.log` is an append-only JSONL record of every guard-eligible Bash invocation:
-
-```json
-{"ts": "2026-05-03T12:00:00+00:00", "decision": "BLOCK", "command": "git filter-repo --invert-paths", "cwd": "/Users/foo/Dropbox/repo", "effective_cwd": "...", "bypass": false}
-{"ts": "2026-05-03T12:01:00+00:00", "decision": "ALLOW", "command": "BYPASS_SHARED_GUARD=1 git filter-repo --invert-paths", "cwd": "...", "bypass": true}
-```
-
-Rotates at ~1MB to `destructive-action-guard.log.old`. Failure to write the log never breaks the hook (fail-open on logging only).
-
-## Subagent coverage assumption
-
-This rule assumes `PreToolUse` and `PostToolUse` hooks fire on Bash invocations made by *any* agent — parent or subagent dispatched via the `Task` tool. Claude Code documentation (https://code.claude.com/docs/en/hooks) confirms this: hook input includes `agent_id` and `agent_type` fields when the call originates in a subagent, but the same hook script runs.
-
-**Re-verification command** (run after any Claude Code version upgrade):
-
-```bash
-# Check that subagent Bash invocations show up in the audit log
-grep '"agent_id"' .claude/state/destructive-action-guard.log | head -5
-```
-
-Note: `agent_id` is not currently logged by `destructive-action-guard.py` — extend the log entry to include it if subagent visibility becomes load-bearing.
-
-## What this rule does NOT cover
-
-- **Non-Bash tools.** `Edit`, `Write`, `NotebookEdit`, etc. do not pass through these hooks. Other rules (`primary-source-first`, `protect-files`) cover those for specific concerns.
-- **`mv` overwrites within shared storage.** Renaming files that happen to overwrite existing targets is currently allowed; the v1 spec deemed friction outweigh protection. Revisit if a real incident hits this path.
-- **`git pull --rebase`.** The command string is `git pull`, not `git rebase`, so it doesn't match the always-blocked patterns. Documented limitation; the underlying rebase is generally non-destructive (fast-forward + replay of local commits).
-- **Non-macOS shared-storage paths.** WSL / Linux Dropbox mounts use different paths. If the workflow is forked to a Linux setup, extend `_shared_prefixes()` accordingly. On Windows the delete check does not fire for OneDrive or Dropbox folders either.
-- **Repo-internal corruption from non-rewrite operations.** A normal `git checkout` that overwrites uncommitted local changes is not gated; standard git warnings handle that.
+**Read** `.claude/references/destructive-actions-detail.md` for the full 2026-04-25 incident, the audit-log format, the subagent coverage assumption and what this rule does not cover (open it when debugging the guard or judging whether an operation is gated).
 
 ## Cross-references
 

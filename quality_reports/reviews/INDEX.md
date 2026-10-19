@@ -8,6 +8,9 @@ When writing a new review, consult this index first. If an `Active` entry exists
 
 ## 2026-10
 
+- [2026-10-19_instruction-budget-r2_consistency_review.md](2026-10-19_instruction-budget-r2_consistency_review.md) — instruction budget r2 (16 rules, CLAUDE.md, file-classes), consistency, 87, Active
+- [2026-10-19_instruction-budget-r2_bloat_review.md](2026-10-19_instruction-budget-r2_bloat_review.md) — instruction budget r2 (always-loaded set), bloat, 91, Active
+- [2026-10-19_instruction-budget-r2-references_correctness_review.md](2026-10-19_instruction-budget-r2-references_correctness_review.md) — instruction budget r2 (13 references, 3 agent/skill files), correctness, 92, Active
 - [2026-10-19_instruction-budget_consistency_review.md](2026-10-19_instruction-budget_consistency_review.md) — instruction budget (3 rules), consistency, 88, Active
 - [2026-10-19_instruction-budget_bloat_review.md](2026-10-19_instruction-budget_bloat_review.md) — instruction budget (always-loaded set), bloat, 60, Active
 - [2026-10-19_instruction-budget-references_correctness_review.md](2026-10-19_instruction-budget-references_correctness_review.md) — instruction budget (2 references), correctness, 92, Active

@@ -4,7 +4,7 @@ An append-only record of substantive research, design, and methodology decisions
 
 This log is the *record*. Analysis docs in `quality_reports/` are the *reasoning*. When we need to know **what** was decided, read here. When we need to know **why** in depth, follow the Sources link.
 
-**Rule:** `.claude/rules/decision-log.md`.
+**Rule:** `.claude/rules/decision-log.md` (detail: `.claude/references/decision-log-detail.md`).
 
 ---
 

@@ -26,7 +26,7 @@ When a component hasn't been scored yet (e.g., a project still in early discover
 
 ## Per-component scoring
 
-Each critic starts at 100 and deducts based on a per-target rubric. The deduction tables are the meat of `.claude/rules/quality.md`. A few illustrative rows:
+Each critic starts at 100 and deducts based on a per-target rubric. The deduction tables live in `.claude/references/quality-deduction-tables.md` and in each critic's agent file. A few illustrative rows:
 
 ### Paper LaTeX (writer-critic)
 
@@ -54,7 +54,7 @@ Each critic starts at 100 and deducts based on a per-target rubric. The deductio
 | Major | Missing `esttab`/`outreg2` output | -5 |
 | Minor | No documentation headers | -5 |
 
-The full deduction tables for paper LaTeX, R scripts, Stata scripts, Python scripts, talks, identification claims, design claims, and bibliography all live in `quality.md`. Critics read them; you don't have to memorize them. The point is that scoring is mechanical — apply the rubric, sum the deductions, that's the score.
+The full deduction tables for paper LaTeX, R scripts, Stata scripts, Python scripts, talks, identification claims, design claims, and bibliography live in `.claude/references/quality-deduction-tables.md` and the critic agent files. Critics read them; you don't have to memorize them. The point is that scoring is mechanical — apply the rubric, sum the deductions, that's the score.
 
 ---
 
@@ -122,7 +122,7 @@ Talk scores are reported as "Talk: XX/100" but **do not block** commits or PRs. 
 
 ## Cross-references
 
-- `.claude/rules/quality.md` — the full deduction tables and per-target rubrics
+- `.claude/rules/quality.md` — scoring, gates and severity; `.claude/references/quality-deduction-tables.md` — the per-target deduction tables
 - [`worker-critic-pairs.md`](worker-critic-pairs.md) — how critics produce the per-component scores
 - [`epistemic-rules.md`](epistemic-rules.md) — the four rules whose violations show up as deductions in the relevant component's table
 - [`appropriate-use.md`](appropriate-use.md) — context for when scoring catches issues vs when human judgment is needed (scoring catches mechanical defects; substantive defects need you)

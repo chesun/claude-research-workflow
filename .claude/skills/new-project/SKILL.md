@@ -113,7 +113,7 @@ The pipeline pauses for user input at these points:
 - After peer review (review feedback before revision)
 - Before submission (approve journal choice)
 
-Between pauses, the orchestrator runs autonomously per `workflow.md`.
+Between pauses, the orchestrator runs autonomously per `workflow.md` § 2 and `.claude/references/orchestration-loop.md`.
 
 ---
 

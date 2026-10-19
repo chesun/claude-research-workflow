@@ -2,34 +2,7 @@
 
 **When referee reports arrive, `/revise` classifies each comment and routes it to the right agent.**
 
-## Comment Classification
-
-| Classification | What It Means | Routed To |
-|---------------|---------------|-----------|
-| **NEW ANALYSIS** | Requires new estimation or data work | Coder → coder-critic |
-| **CLARIFICATION** | Text revision sufficient | Writer → writer-critic |
-| **DISAGREE** | Diplomatic pushback needed | Flagged for User review |
-| **MINOR** | Typos, formatting | Writer |
-
-## The R&R Flow
-
-```
-Referee reports arrive (real, not simulated)
-        │
-        ▼
-   /revise classifies each comment
-        │
-        ├── NEW ANALYSIS → Coder → coder-critic → Writer updates
-        ├── CLARIFICATION → Writer → writer-critic
-        ├── DISAGREE → User decides → diplomatic response drafted
-        └── MINOR → Writer
-        │
-        ▼
-   Revised paper → writer-critic → Orchestrator re-checks
-        │
-        ▼
-   Response letter produced
-```
+**Read** `.claude/references/revision-protocol.md` for the comment classes (NEW ANALYSIS, CLARIFICATION, DISAGREE, MINOR), the agent each routes to, and the R&R flow from referee report to response letter (open it when classifying referee comments or running `/revise`).
 
 ## Rules
 

@@ -1,6 +1,6 @@
 # Primary-Source-First — citation extraction detail
 
-**Class:** A (universal). Pointer-loaded detail for `.claude/rules/primary-source-first.md` § Citation extraction (moved there from the rule on 2026-10-19); there is no auto-load.
+**Class:** A (universal). Pointer-loaded detail for `.claude/rules/primary-source-first.md` § Citation extraction and § Why this exists (both moved from the rule on 2026-10-19); there is no auto-load.
 
 The rule states what is enforced; this file documents how its two hooks, `primary-source-check.py` (PreToolUse, file edits) and `primary-source-audit.py` (Stop, conversation prose), decide what counts as a citation. Both use `.claude/hooks/primary_source_lib.py`. The escape hatch named below is the `<!-- primary-source-ok: ... -->` comment described in the rule.
 
@@ -48,3 +48,9 @@ jq -r '.missing[].stem' .claude/state/primary-source-blocks.jsonl | sort | uniq 
 ```
 
 Route confirmed false positives to the right mechanism: never-a-surname words → `NEVER_SURNAMES` upstream in the workflow repo (propagates to everyone); project-local names (orgs, tools, colleagues) → the org skip-list; one-off framing-free mentions → the escape hatch.
+
+## Why this exists
+
+Claude has, in prior projects, propagated an incorrect framing claim about a paper through multiple load-bearing documents — a decision log, an identification analysis, a session log, and a slide review — without ever opening the PDF despite it being in the repo the whole time. The error originates in a paraphrase, gets amplified across derivative docs, and each downstream claim inherits and amplifies the distortion.
+
+The rule exists to make this failure mode deterministically catchable rather than relying on the model to remember to open the primary source. Three failure modes — missing notes with PDF present, missing notes with no PDF, existing notes not consulted in-session — are each paths the failure could have been caught; the hooks make all three deterministically blocking.

@@ -92,6 +92,10 @@ Paste a starter prompt like:
 
 Claude reads the config, adapts placeholders, and enters contractor mode — planning, implementing, reviewing, verifying.
 
+### 4. Start the research
+
+Run `/discover interview [topic]` to build your research specification, or `/new-project [topic]` for the full orchestrated pipeline.
+
 ---
 
 ## How It Works
@@ -128,7 +132,7 @@ Weighted aggregate score across components (literature, data, identification/des
 - **90** — PR gate
 - **95** — submission gate (plus every component ≥ 80)
 
-See `.claude/rules/quality.md` for the full rubric and per-target deduction tables.
+See `.claude/rules/quality.md` for the full rubric and `.claude/references/quality-deduction-tables.md` for the per-target deduction tables.
 
 ### Verification Ledger
 

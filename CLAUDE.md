@@ -33,7 +33,7 @@
 - **Worker-critic pairs** — every creator has a paired critic; critics never edit files (see `agents.md`)
 - **Primary source first** — before citing a paper in a load-bearing artifact, read the PDF and produce reading notes in `master_supporting_docs/literature/reading_notes/`; hooks block edits otherwise (see `primary-source-first.md`)
 - **Derive, don't guess** — look up repo facts (paths, macros, variables, configs) before referencing them; an advisory hook flags read/input paths that don't resolve on disk and points to the source you should derive from (see `derive-dont-guess.md`)
-- **Adversarial default** — a claim is a positive assertion needing evidence; before asserting a bug/error *cause*, investigate or consult the `diagnosis:` rows in the verification ledger — a Stop hook blocks unverified causal claims (see `adversarial-default.md`)
+- **Adversarial default** — a claim is a positive assertion needing evidence; before asserting a bug/error *cause*, investigate or consult the `diagnosis:` rows in the verification ledger (see `adversarial-default.md`)
 - **Evidence gating** — a verdict is only as good as the evidence it carries; gate on *claims*, not actions; verdicts are `{PASS, UNVERIFIED, FAIL}` (never a silent default-PASS), and the verification mechanism scales to checkability (block only deterministic Tier-1 checks; advise+deduct for judgment). A no-logic-change claim is gated against the residue the recorder writes to the verification ledger (see `adversarial-default.md` § Evidence gating and `.claude/references/evidence-gating-detail.md`)
 - **Decisions are ADRs** — substantive decisions live in `decisions/NNNN_slug.md` (see `decision-log.md`)
 - **Track TODOs** — project root `TODO.md` (see `todo-tracking.md`)
@@ -44,12 +44,7 @@
 
 ## Getting Started
 
-1. Fill in the `[BRACKETED PLACEHOLDERS]` in this file.
-2. Decide whether you want an overlay:
-   - Observational-data, identification-strategy research → `git checkout applied-micro`
-   - Experimental, theoretical, or behavioral research → `git checkout behavioral`
-   - General-purpose → stay on `main`.
-3. Run `/discover interview [topic]` to build your research specification, or `/new-project [topic]` for the full orchestrated pipeline.
+New fork: fill in the `[BRACKETED PLACEHOLDERS]` above, then follow `README.md` § Quick Start (overlay choice, `/discover interview` or `/new-project`).
 
 ---
 
@@ -84,44 +79,19 @@
     └── supporting_papers/       # Methodology references, textbook chapters
 ```
 
-**If using Overleaf:** keep `paper/` and `talks/` as stubs (or symlinks to your Overleaf directory). Point compile and verify tooling at the Overleaf path via the `Overleaf path:` header above — rules and skills honor that override.
+**If using Overleaf:** keep `paper/` and `talks/` as stubs (or symlinks to your Overleaf directory). Point compile and verify tooling at the Overleaf path via the `Overleaf path:` header above — rules and skills honor that override. Path-scoped rules do not load for files outside the repo, so read `.claude/rules/single-source-of-truth.md` before editing the paper or talks there.
 
 ---
 
 ## Bulk Content Storage
 
-This template ships with three storage tiers for content that doesn't fit plain git well:
-
-- **Plain git** — code, LaTeX, ADRs, plans, reading notes (markdown), data documentation
-- **Git LFS** (opt-in) — paper PDFs (`master_supporting_docs/literature/papers/*.pdf`), large generated figures
-- **DVC** (opt-in) — data files (`data/raw/`, `data/cleaned/`); pointers in git, blobs in a private remote (Dropbox is the default)
-
-Default state for a fresh fork: PDFs gitignored, no LFS, no DVC. Each project decides whether to enable LFS / DVC based on whether it has a substantial paper library and / or evolving data that needs versioning.
-
-**Setup on a new machine** (after `git clone`):
-
-```bash
-brew install git-lfs dvc        # one-time per machine
-git lfs install                 # registers LFS hooks
-./bin/setup-machine.sh          # if present; else: git lfs pull && dvc pull
-```
-
-**Daily workflow:** LFS is filesystem-transparent (use normal git commands). DVC is two-step (`git push` + `dvc push` after committing data changes). Before declaring a session done, run `/tools sync-status` to verify everything is pushed.
-
-For full architecture, enabling instructions, and rollback: see `.claude/rules/data-version-control.md` and `quality_reports/plans/*lfs-dvc-migration-plan.md`.
+Plain git by default; Git LFS (paper PDFs) and DVC (data) are opt-in per project, and a fresh fork has neither. Where DVC is enabled, `git push` needs a matching `dvc push`, and `/tools sync-status` runs before a session is declared done. Setup, daily workflow and rollback: `.claude/rules/data-version-control.md` (path-scoped; read it before any LFS or DVC command).
 
 ---
 
 ## Overlays and consumer repos
 
-The automated propagation tooling (`/tools propagate`, `/tools sync-overlays`, `/tools list-consumers`) was retired on 2026-10-14 (modernize plan, Track A step 5). The `applied-micro` overlay and the dormant consumers are frozen.
-
-To bring an overlay up to date by hand, use `.claude/file-classes.toml`:
-- Class A (universal): copy main's version, or delete where main deleted the file;
-- Class B (overlay-customized): merge three-way from the common base, by hand;
-- Class C (overlay-only) and Class D (project state): never touched.
-
-The 2026-10-14 `behavioral` sync is the worked example (session log 2026-10-11 §19). A live project is refreshed the same way, file by file under `.claude/`, keeping any local customization (§21).
+Propagation tooling was retired on 2026-10-14; the `applied-micro` overlay and dormant consumers are frozen. Sync an overlay or a live project by hand, file by file under `.claude/`, per the class procedure in the header of `.claude/file-classes.toml`.
 
 ---
 
@@ -148,7 +118,7 @@ See `.claude/skills/tools/SKILL.md` for the `/tools compile` subcommand that aut
 | 95 | Submission | Aggregate + all components >= 80 |
 | — | Advisory | Talks (non-blocking) |
 
-See `quality.md` for weighted aggregation formula and per-target deduction tables.
+See `quality.md` for the weighted aggregation formula and `.claude/references/quality-deduction-tables.md` for the per-target deduction tables.
 
 ---
 
