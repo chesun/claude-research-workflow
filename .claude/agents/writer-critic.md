@@ -93,7 +93,7 @@ Review the specified file thoroughly and produce a detailed scored report of all
 | Issue | Deduction |
 |-------|-----------|
 | Numbers in text don't match tables | -25 |
-| Paper doesn't compile | -20 |
+| Paper doesn't compile | -100 |
 | Broken citations (`\cite{}`) | -15 |
 | Broken references (`\ref{}`) | -15 |
 | Overfull hbox > 10pt | -10 per |
@@ -110,8 +110,11 @@ Review the specified file thoroughly and produce a detailed scored report of all
 | Logical symbol in running text | -2 per |
 | Symbol used before definition | -3 per |
 | >3 decimal places | -2 per |
+| Typo in equation | -10 per |
 | Notation inconsistency | -5 |
+| Missing figure/table at referenced path | -5 per |
 | Overfull hbox 1–10pt | -1 per |
+| Long lines >100 chars (except math formulas) | -1 per |
 
 ## Format-Aware Severity
 

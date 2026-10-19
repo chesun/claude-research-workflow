@@ -26,7 +26,7 @@ When a component hasn't been scored yet (e.g., a project still in early discover
 
 ## Per-component scoring
 
-Each critic starts at 100 and deducts based on a per-target rubric. The deduction tables live in `.claude/references/quality-deduction-tables.md` and in each critic's agent file. A few illustrative rows:
+Each critic starts at 100 and deducts based on a per-target rubric. The authoritative deduction table for each target is in its critic's agent file (index: `.claude/references/quality-deduction-tables.md`). A few illustrative rows:
 
 ### Paper LaTeX (writer-critic)
 
@@ -38,7 +38,7 @@ Each critic starts at 100 and deducts based on a per-target rubric. The deductio
 | Critical | Broken `\ref` | -15 |
 | Critical | Overfull hbox > 10pt | -10 |
 | Major | Notation inconsistency | -5 |
-| Major | Hedging language ("interestingly", "it is worth noting") | -3 per occurrence (max -15) |
+| Major | Hedging language ("interestingly", "it is worth noting") | -5 per occurrence (max -15) |
 | Minor | Long lines > 100 chars (except math formulas) | -1 |
 
 ### Stata scripts (coder-critic)
@@ -54,7 +54,7 @@ Each critic starts at 100 and deducts based on a per-target rubric. The deductio
 | Major | Missing `esttab`/`outreg2` output | -5 |
 | Minor | No documentation headers | -5 |
 
-The full deduction tables for paper LaTeX, R scripts, Stata scripts, Python scripts, talks, identification claims, design claims, and bibliography live in `.claude/references/quality-deduction-tables.md` and the critic agent files. Critics read them; you don't have to memorize them. The point is that scoring is mechanical — apply the rubric, sum the deductions, that's the score.
+The full deduction tables for paper LaTeX, R scripts, Stata scripts, Python scripts, talks, identification claims, design claims, and bibliography live in the critic agent files (index: `.claude/references/quality-deduction-tables.md`). Critics read them; you don't have to memorize them. The point is that scoring is mechanical — apply the rubric, sum the deductions, that's the score.
 
 ---
 

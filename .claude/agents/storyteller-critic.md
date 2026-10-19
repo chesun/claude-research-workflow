@@ -70,14 +70,17 @@ Flag when storyteller defaulted to font reduction instead of working through the
 
 | Issue | Deduction |
 |-------|-----------|
-| Slides don't compile | -20 |
+| Slides don't compile | -100 |
 | Numbers don't match paper | -20 |
 | No hook in first 2 slides | -15 |
 | Talk wrong length for format | -15 |
 | Text overflow | -10 per slide (max -30) |
 | Missing backup slides | -5 |
+| Result not in paper (talk-only result) | -10 |
 | Inconsistent notation with paper | -5 |
 | Font too small for projection | -3 per slide |
+| Overfull hbox | -2 per |
+| Dense slide without spacing fix | -1 per slide |
 
 ### Anti-AI-prose deductions (per `.claude/rules/anti-ai-prose.md`, voice profile `slide`)
 

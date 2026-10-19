@@ -96,7 +96,7 @@ Early phases are about getting the direction right. Late phases are about gettin
 
 Each critic scores its target with the deduction table in its own agent file in `.claude/agents/` (for example `writer-critic.md`, `coder-critic.md`, `storyteller-critic.md`). Talk scores are reported as "Talk: XX/100" but do **not** block commits or PRs.
 
-**Read** `.claude/references/quality-deduction-tables.md` for the per-target tables for the paper, R scripts, Stata scripts and talks (open it when scoring one of those targets without dispatching its critic).
+That agent file is authoritative. A paper that does not compile, or a script that does not run, costs -100 and always fails the gate. When scoring a target without dispatching its critic, read the critic's agent file (index: `.claude/references/quality-deduction-tables.md`).
 
 ### Enforcement
 
