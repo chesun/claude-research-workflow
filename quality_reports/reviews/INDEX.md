@@ -8,6 +8,9 @@ When writing a new review, consult this index first. If an `Active` entry exists
 
 ## 2026-10
 
+- [2026-10-19_instruction-budget_consistency_review.md](2026-10-19_instruction-budget_consistency_review.md) — instruction budget (3 rules), consistency, 88, Active
+- [2026-10-19_instruction-budget_bloat_review.md](2026-10-19_instruction-budget_bloat_review.md) — instruction budget (always-loaded set), bloat, 60, Active
+- [2026-10-19_instruction-budget-references_correctness_review.md](2026-10-19_instruction-budget-references_correctness_review.md) — instruction budget (2 references), correctness, 92, Active
 - [2026-10-14_destructive-guard-r3_verification_review.md](2026-10-14_destructive-guard-r3_verification_review.md) — destructive guard rev 3, verification, 74, Active
 - [2026-10-14_destructive-guard-redesign_red-team_review.md](2026-10-14_destructive-guard-redesign_red-team_review.md) — destructive guard rev 2, red-team, 62, Active
 - [2026-10-14_destructive-guard-redesign_correctness_review.md](2026-10-14_destructive-guard-redesign_correctness_review.md) — destructive guard rev 2, correctness, 83, Active

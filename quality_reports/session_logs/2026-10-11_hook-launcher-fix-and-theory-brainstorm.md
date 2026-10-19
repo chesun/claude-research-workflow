@@ -775,3 +775,10 @@ Each node got a theorist prove-or-refute pass (examples, counterexample search, 
 - **Parent claims cleared:** `prop:cogcons-wedge`'s proof already carries the on-path argument (Steps 4–5(b)). `-no-objective`'s closing clause names the superseded `lem:martingale`; the dependency graph confirms the claim with `lem:martingale-horizon`.
 - **Paper wording:** say `lem:martingale-horizon` where the text names `lem:martingale`; the Beta–Bernoulli caveat needs the cost cap; the threshold-loss wedge needs μ₀ near w.
 - **Cost:** about 50 agent runs (verifiers about 90–125k tokens each, theorists about 105–205k).
+
+## 26. Instruction budget under 150k (2026-10-19)
+
+- **Problem:** session start warned 23 instruction files totalled 163.2k chars, over Claude Code's 150k limit.
+- **Change:** `data-version-control.md` path-scoped (data, DVC, LFS and setup files, `.gitignore`); the primary-source filter stack and the destructive guard's Tier 3 and chain-parsing detail moved verbatim to `.claude/references/primary-source-filter-stack.md` and `destructive-actions-detail.md`, with summaries and pointers left in the rules. Always-loaded total about 139k.
+- **Review (`/review-build`):** consistency 88, correctness 92, bloat 60. Fixed: `.gitignore` glob; Windows OneDrive caveat and unparseable fail-open restored to the rule summaries; telemetry "fail-open" wording; filter order documented as the code runs it (`primary_source_lib.py`, decomposition before sentence-start); `protect-files.py` matcher is `Edit|Write|MultiEdit`; `Class: A` headers and self-contained intros on both references. Accepted: consistency F4 (Bash-only DVC work does not trigger the path scope; CLAUDE.md and the `tools` skill point to the rule), correctness 4–5 (shorthand, CRLF normalised by autocrlf). Bloat findings 1–18 (about 43k further) are a separate decision for the owner.
+- **Cost:** 3 fable reviewers, about 439k agent tokens, about 8.5 min wall-clock (parallel); findings: 0 Critical/High on the change, 3 Medium and 6 Low across consistency and correctness.
