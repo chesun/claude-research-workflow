@@ -105,7 +105,7 @@ Talk scores are **advisory** — they do not block commits or PRs.
 
 ## Three Strikes Escalation
 
-Strike 3 → escalates to **Writer** ("the talk's narrative issues stem from the paper's structure — the paper may need restructuring to support a clear talk").
+Strike 3 → escalates to the **User** with a clear question about talk scope or format, per `.claude/rules/agents.md` § 3. If the narrative problem stems from the paper's structure, say so in that question.
 
 ## Report Format
 

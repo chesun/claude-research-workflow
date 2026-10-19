@@ -796,3 +796,8 @@ Each node got a theorist prove-or-refute pass (examples, counterexample search, 
 - **Owner decision:** each critic's agent file holds the authoritative deduction table; failure to compile or run costs -100 (was -20 writer-critic, -25 coder-critic, -20 storyteller-critic, so a non-compiling paper could score 80 and pass the commit gate). Agent values kept where they differed (hedging -5, talk length -15).
 - **Rows added to agents** that existed only in quality.md § 3: writer-critic (typo in equation, missing figure/table at path, long lines); coder-critic (Stata `esttab`/`outreg2` output); storyteller-critic (talk-only result, overfull hbox, dense slide). `quality-deduction-tables.md` is now an index; `quality.md` § 3 names the agent file as authoritative. Behavioral's three critic files match main, so no overlay conflict; behavioral's own quality.md § 3 rows are reconciled by hand at its next sync (Class B).
 - No independent review: mechanical edit of values the owner chose (docs-class change, advisory).
+
+## 29. Escalation routing: agents.md § 3 authoritative (2026-10-19)
+
+- **Owner decision:** `agents.md` § 3 is the authoritative three-strikes routing. `orchestrator.md` § 3 now points to it (its own table sent coder to Strategist, storyteller to Writer, and had no theorist or designer rows). Aligned: coder-critic strike 3 → strategist-critic / designer-critic; storyteller-critic strike 3 → User; writer-critic strike 3 → Orchestrator, keeping its issue-type table as routing input for the orchestrator. `docs/concepts/worker-critic-pairs.md` already matched.
+- Behavioral's `orchestrator.md` and `agents.md` differ from main (Class B); reconcile by hand at its next sync.

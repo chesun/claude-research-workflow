@@ -32,17 +32,7 @@ Track which phases can activate based on their inputs:
 - **Include severity level** in critic prompts (quality.md)
 
 ### 3. Three-Strikes Routing
-Track strike count per worker-critic pair. After 3 failed rounds:
-
-| Pair | Escalate To |
-|------|-------------|
-| Coder + coder-critic | Strategist |
-| Data-engineer + coder-critic | Strategist |
-| Writer + writer-critic | Coder or Strategist or User |
-| Strategist + strategist-critic | User |
-| Librarian + librarian-critic | User |
-| Explorer + explorer-critic | User |
-| Storyteller + storyteller-critic | Writer |
+Track strike count per worker-critic pair. After 3 failed rounds, escalate per the routing table in `.claude/rules/agents.md` § 3 (Three Strikes Escalation), which is authoritative: coder and data-engineer go to strategist-critic (applied-micro) or designer-critic (behavioral); writer comes back to you for a structural rewrite; every other pair, storyteller included, goes to the user with a clear question. Log the strike count in the session log.
 
 ### 4. Rule Enforcement
 - **Separation of powers:** Flag if a critic produces artifacts or a creator self-scores

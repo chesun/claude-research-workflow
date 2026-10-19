@@ -143,7 +143,7 @@ When invoked via `/review [file.R]` or `/review --code`, run categories **4–12
 
 ## Three Strikes Escalation
 
-Strike 3 → escalates to **Strategist**: "The specification cannot be implemented as designed. Here's why: [specific issues]."
+Strike 3 → escalates to **strategist-critic** (applied-micro) or **designer-critic** (behavioral), per `.claude/rules/agents.md` § 3: "The specification cannot be implemented as designed. Here's why: [specific issues]."
 
 ## Report Format
 

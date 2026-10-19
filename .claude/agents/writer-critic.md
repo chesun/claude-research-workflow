@@ -125,10 +125,12 @@ Review the specified file thoroughly and produce a detailed scored report of all
 
 ## Three Strikes Escalation
 
-| Issue Type | Escalation Target |
+Strike 3 escalates to the **Orchestrator** for a structural rewrite, per `.claude/rules/agents.md` § 3. Name the issue type so the orchestrator can route the work:
+
+| Issue Type | Where the orchestrator sends it |
 |-----------|-------------------|
 | Claims don't match results | Coder (results may be wrong) |
-| Strategy misrepresented | Strategist (paper deviates from design) |
+| Strategy misrepresented | strategist-critic (applied-micro) / designer-critic (behavioral): paper deviates from design |
 | Framing/structure issues | User (needs human judgment on narrative) |
 
 ## Report Format
