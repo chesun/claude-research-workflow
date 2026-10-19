@@ -556,6 +556,26 @@ def test_cli(tmp: Path) -> None:
     check("lc_cli_node_without_lean_2", rc == 2 and "lean:" in out, f"{rc} {out}")
 
 
+def test_card_fields_ignore_comments(tmp: Path) -> None:
+    """A commented-out example field above the real one is not read (as in blueprint_check.header_fields)."""
+    root, node, proj, sfile = setup(tmp)
+    card = root / "theory" / "blueprint" / "cards" / "prop-thing.md"
+    real = card.read_text(encoding="utf-8")
+    card.write_text("<!--\nExample header, not the card's own:\n**Node:** prop:example\n"
+                    f"**Statement SHA-256:** {'0' * 64}\n-->\n" + real, encoding="utf-8")
+    f = lc.card_fields(card)
+    check("lc_card_fields_skip_comment", f.get("Node") == "prop:thing"
+          and f.get("Statement SHA-256") == lc.statement_sha256(sfile), str(f))
+    res = result(node, statements_only=True)
+    check("lc_card_check_passes_with_comment", not failed(res, "card"),
+          str([c for c in res.checks if c[0] == "card"]))
+    card.write_text("```\n**Node:** prop:example\n```\n" + real, encoding="utf-8")
+    check("lc_card_fields_skip_fence", lc.card_fields(card).get("Node") == "prop:thing", str(lc.card_fields(card)))
+    card.write_text("<!--\n" + real + "-->\n", encoding="utf-8")
+    res = result(node, statements_only=True)
+    check("lc_card_header_in_comment_fails", failed(res, "card"), str([c for c in res.checks if c[0] == "card"]))
+
+
 def test_card_template_readable(tmp: Path) -> None:
     """ADR-0005: both checkers read every header field of the card template; its checklist is unmarked."""
     tpl = (Path(__file__).resolve().parent.parent / "templates" / "theory" / "fidelity-card.md").read_text(

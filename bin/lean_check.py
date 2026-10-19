@@ -580,9 +580,11 @@ def tools_from_config(repo_root: Path | None) -> dict:
 
 
 def card_fields(path: Path) -> dict[str, str]:
+    """Header fields of a card: the first 60 lines, with HTML comments and code fences blanked out
+    (as `blueprint_check.header_fields` reads them), so a commented example field is never read."""
     fields: dict[str, str] = {}
     try:
-        for ln in _read(path).splitlines()[:60]:
+        for ln in bc._visible(_read(path)).splitlines()[:60]:
             m = FIELD_RE.match(ln.strip())
             if m and m.group(1) not in fields:
                 fields[m.group(1)] = m.group(2)
