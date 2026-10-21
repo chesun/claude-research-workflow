@@ -8,6 +8,7 @@ When writing a new review, consult this index first. If an `Active` entry exists
 
 ## 2026-10
 
+- [2026-10-22_repo-catch-up-survey.md](2026-10-22_repo-catch-up-survey.md) — repo state brief (supersedes 2026-10-11's); arc since September, open work, record drift, Active
 - [2026-10-19_instruction-budget-r2_consistency_review.md](2026-10-19_instruction-budget-r2_consistency_review.md) — instruction budget r2 (16 rules, CLAUDE.md, file-classes), consistency, 87, Active
 - [2026-10-19_instruction-budget-r2_bloat_review.md](2026-10-19_instruction-budget-r2_bloat_review.md) — instruction budget r2 (always-loaded set), bloat, 91, Active
 - [2026-10-19_instruction-budget-r2-references_correctness_review.md](2026-10-19_instruction-budget-r2-references_correctness_review.md) — instruction budget r2 (13 references, 3 agent/skill files), correctness, 92, Active
@@ -44,7 +45,6 @@ When writing a new review, consult this index first. If an `Active` entry exists
 - [2026-10-11_theory-survey_B-lean-tooling.md](2026-10-11_theory-survey_B-lean-tooling.md) — Lean toolchain on Windows + Claude integration, Active
 - [2026-10-11_theory-survey_C-practice.md](2026-10-11_theory-survey_C-practice.md) — how mathematicians use AI; blueprint + verification practice, Active
 - [2026-10-11_theory-survey_D-fidelity-checks.md](2026-10-11_theory-survey_D-fidelity-checks.md) — statement fidelity, non-vacuity, deterministic checks, Active
-- [2026-10-11_repo-catch-up-survey.md](2026-10-11_repo-catch-up-survey.md) — repo state brief; found hooks silently failing open (fixed same day), Active
 
 ## 2026-07
 

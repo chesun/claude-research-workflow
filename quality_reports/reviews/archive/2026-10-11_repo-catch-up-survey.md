@@ -1,6 +1,7 @@
 # Repo catch-up survey — where things stand
 
 **Date:** 2026-10-11
+**Status:** Superseded by `quality_reports/reviews/2026-10-22_repo-catch-up-survey.md`
 **Sources read:** `CLAUDE.md`, `README.md`, `CHANGELOG.md`, `TODO.md` (last updated 2026-09-24), `decisions/` (ADR-0001–0003), session logs 2026-09-16 / 09-21 / 09-24, plans `2026-09-16_modernize-and-simplify-plan.md` and `2026-09-22_infra-survey-and-integration-method.md`, `2026-09-22_infra-survey_synthesis.md`, the archived work branch (plan `2026-09-15_claude-only-repo-split-and-personal-class.md`), git state, `.claude/settings.json`, `.claude/hooks/`.
 
 ## 1. What this repo is now

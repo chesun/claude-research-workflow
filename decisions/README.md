@@ -101,4 +101,5 @@ What this commits us to. What it rules out. Open questions it creates.
 
 Decisions that need to happen but aren't resolved. They get an ADR when resolved, not before.
 
-- *(none listed yet)*
+- **Destructive guard on Windows shared storage**: whether `rm -r` / `find -delete` inside OneDrive or Dropbox folders on Windows is gated, and how to keep routine scratch deletes in repos that live in OneDrive unblocked (`TODO.md` Backlog; shelved branch `guard-windows-shared`).
+- **Keep the `card-auditor`** (ADR-0005 item 3): decided after five audited nodes from the count of catches and false alarms. One audited so far.

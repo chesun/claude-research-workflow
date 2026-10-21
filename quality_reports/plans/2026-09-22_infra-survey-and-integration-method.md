@@ -1,6 +1,6 @@
 # Deep survey of Claude Code research infrastructure + an integrate/adapt/skip method
 
-**Status:** RUNNING (v5) — owner chose the **broad** ecosystem scope (cost is not a constraint) with the **voice stream in mechanism-only mode** (design the machinery now; plug the owner's exemplar papers in at build time). Method + harmonization framing carried over from the reviewed lean version; the two plan reviews (`..._infra-survey-plan_review.md` 62/100, `..._infra-survey-plan-v3_review.md` 84/100) still bind — no re-importing pruned nags, no re-growing the template, decisions not dumps.
+**Status:** COMPLETED 2026-09-23 (synthesis `reviews/2026-09-22_infra-survey_synthesis.md`, independently reviewed 78/100; voice preservation is the one committed next build). Previously: RUNNING (v5) — owner chose the **broad** ecosystem scope (cost is not a constraint) with the **voice stream in mechanism-only mode** (design the machinery now; plug the owner's exemplar papers in at build time). Method + harmonization framing carried over from the reviewed lean version; the two plan reviews (`..._infra-survey-plan_review.md` 62/100, `..._infra-survey-plan-v3_review.md` 84/100) still bind — no re-importing pruned nags, no re-growing the template, decisions not dumps.
 
 ## Goal
 

@@ -8,13 +8,51 @@ All notable changes to this fork are documented here. The format follows [Keep a
 
 ### Added
 
+- **Theory phase 2: an opt-in Lean lane (ADR-0004, ADR-0005; 2026-10-12 to 10-14).** A `checked` node can be formalized in Lean 4 and kernel-checked.
+  - `bin/lean_check.py` builds a node's Lean project and reports `sorry`, axioms and statement changes. The validator gains rules for `formalized` and `verified`.
+  - The `formalizer` agent works statement first. It writes the Lean statement and a draft fidelity card, then proves only after the owner signs the card.
+  - ADR-0005 makes the owner's signature the approval, backed by a checklist and a blind `card-auditor` agent. In a sealed calibration the auditor caught 6 of 6 planted defects with no false alarm.
+  - `/theory` gains `formalize` and `prove` modes.
+  - The pilot node in a live project reached `verified`.
+- **Theory tooling (2026-10-12).** `bin/blueprint_tools.py` adds three commands:
+  - `verify-input`, which builds a verifier's sealed input;
+  - `dependents`;
+  - `repoint`, with cascade.
+
+  The validator now checks cited labels and declared mentions. `bin/agent_lint.py` checks agent frontmatter.
+- **Mandatory independent review for code (ADR-0002; 2026-09-21, fail-closed amendment 09-22).** The PreToolUse hook `review-receipt-check.py` blocks a `git commit` whose staged hooks, `bin/` scripts or `.githooks/` lack a fresh review receipt in `quality_reports/reviews/`. The `/review-build` skill dispatches the review lenses. Docs changes are advised, not blocked. `REVIEW_WAIVE=1` is the escape.
+- **Model routing (ADR-0003; 2026-09-24).** Critics, referees, `editor`, `verifier` and `tikz-reviewer` run on `fable`, and workers on `opus`. The reviewer is never on a weaker model than the author.
+- **`/tools sync-status` (2026-10-14).** `bin/sync_status.py` reports git, LFS, DVC and backup state, with 22 tests. It catches unpushed LFS objects when the LFS hook is bypassed, plain blobs under LFS rules, and missing upstreams.
+- **Python virtual environments by default (2026-10-12).** `python-code-conventions.md`: new analysis runs through the project's `.venv` interpreter with a fully pinned `requirements.txt`.
+
+### Changed
+
+- **Destructive-action guard redesigned (2026-10-14).** The guard checks every command of a chain, with `cd` carried across. It reads heredocs quote-aware and applies the bypass per command. Wrappers and git options are normalized. The unparseable-command false positive is fixed. 136 tests; an audit-log replay showed 0 new blocks.
+- **Always-loaded instructions cut from 165.8k to 103.4k characters (2026-10-19), under Claude Code's 150k limit.**
+  - On-demand detail moved verbatim into 13 files in `.claude/references/`.
+  - `data-version-control.md` and `single-source-of-truth.md` are now path-scoped.
+  - No behavioural rule was removed.
+- **Critic agent files hold the authoritative deduction tables (2026-10-19).** A failure to compile or run now costs -100 in every critic. It was -20 or -25, so a non-compiling paper could pass the commit gate. `agents.md` § 3 is the authoritative three-strikes escalation routing.
+- **Overlays are synced by hand** per the class procedure in the header of `.claude/file-classes.toml`. The applied-micro overlay and the dormant consumers are frozen.
+
+### Removed
+
+- **Ten nag hooks pruned (2026-09-16):**
+  - `log-reminder`, `plan-persist-check`, `output-length-check`, `verify-reminder`;
+  - `context-monitor`, `pre-compact`, `post-compact-restore`, `session-reset`;
+  - `diagnostic-claim-audit`, `derive-check-block`.
+
+  Their libs and tests went with them. Claude 5's instruction-following and native compaction cover what they policed. The fabrication and irreversibility gates stay.
+- **Propagation tooling retired (2026-10-14).** `propagate.py`, `sync_overlays.py` and the `/tools propagate`, `sync-overlays` and `list-consumers` subcommands are gone. `.claude/file-classes.toml` stays as the hand-sync reference.
+- **Shell hooks replaced (2026-09-16).** `notify.sh` and `protect-files.sh` became `notify.py` and `protect-files.py`, which run on Windows and macOS. `notify.py` fails open.
+
 - **Theory workflow on a blueprint (ADR-0004).** Theory is developed as a dependency graph of small nodes in `theory/blueprint/`. Each node has an immutable statement, a status ladder (`conjecture → survived-search → proved → checked → formalized → verified`, plus `refuted`, `conditional`, `superseded`) and an append-only evidence log.
   - `bin/blueprint_check.py` (stdlib only) enforces the graph, status and evidence rules, returning PASS / UNVERIFIED / FAIL, and writes a `STATUS.md` with a Mermaid dependency graph.
   - `theorist` and `theorist-critic` move from the behavioral overlay to `main`. `theorist` works under prove-or-refute: examples and counterexample search first, then assumption variants, and it may raise a node only as far as `proved`.
   - New blind `proof-verifier` critic: it sees only a node's statement, its cleaned proof, and the statements of the nodes it uses. Two must PASS for `checked`.
   - `theorist-critic` cross-checks every result in the paper against the blueprint.
   - `/theory` modes: explore, node, variants, verify (with a `--model` override), status, review, develop.
-  - A Lean formalization lane (with user-signed fidelity cards) is planned as phase 2.
+  - Phase 2, the Lean lane, shipped as well (entry above).
 - **Evidence-gating discipline** — operationalizes `adversarial-default`: a verdict is only as good as the evidence behind it, and the verification mechanism scales to how checkable the claim is. Prompted by a real incident where a critic passed a contaminated "no-logic-change" mechanical refactor. Built phase by phase, each phase adversarially reviewed by a multi-agent workflow and independently re-verified; those reviews caught real defects at every phase. Design of record: `quality_reports/reviews/2026-05-28_whole-picture-critic-gates-dispatch.md` §7; build plan: `quality_reports/plans/2026-05-29_evidence-gating-build-plan.md`.
   - **Tier-1 recorder** (`.claude/hooks/normdiff_lib.py` + `evidence-gate-recorder.py`, PostToolUse): records a normalized-content diff (`no-logic-change` ledger row) on each edit to a research artifact. Silent, non-blocking, fail-open. Language-agnostic core plus per-language normalizers (Stata/R/Python/LaTeX). Scope is per-repo configurable via an `**Analysis roots:**` header in CLAUDE.md (default-fallback, path-traversal-hardened). `/tools normdiff` CLI.
   - **The gate** (`.claude/agents/coder-critic.md`): consults the ledger at review time; a recorded residue forbids a clean-refactor PASS. Verdict vocabulary `{PASS, UNVERIFIED, FAIL}`. Gate on claims, not actions: evidence is gathered continuously, gating happens when a claim is made.
@@ -45,6 +83,7 @@ All notable changes to this fork are documented here. The format follows [Keep a
 
 ### Fixed
 
+- **Hooks were silently failing open on Windows (2026-10-11).** `python3` resolved to the Microsoft Store stub, so every hook exited without running. The launcher now probes `python3`, `python` and `py` in turn, and forces UTF-8 output. All 8 hook test suites pass on Windows.
 - **`primary-source-first` hook all-caps filter** — added Filter 1a in `.claude/hooks/primary_source_lib.py` that rejects captured surnames where `len >= 3 and isupper()`. Eliminates false positives on status markers (`COMPLETED (2026)`, `DRAFT (2025)`, `DONE`, `BLOCKED`, `ACTIVE`, `TODO`, `FIXME`, `WIP`, `PENDING`) and acronym corporate authors (`BLS`, `OECD`, `USDA`, `IRS`, `CDC`). Real surnames in academic prose are never written ALL-CAPS; mixed-case surnames (`McGregor`, `DeAngelo`, `O'Brien`) still match. Rule doc updated in `primary-source-first.md` ("four filters" → "five filters"). +17 test assertions.
 - **Markdown math-delimiter convention** — `~/.claude/rules/markdown-macdown-compat.md` made the rule explicit: use `$...$` for inline math and `$$...$$` for display math. MacDown's MathJax does not render `\(...\)` or `\[...\]`. The prior rule documented escape-for-currency but never said which delimiters to USE for math, so Claude defaulted to LaTeX-native forms which silently broke. Sibling `belief_distortion_discrimination/quality_reports/plans/2026-05-01_analysis-upgrade-memo.md` converted accordingly.
 

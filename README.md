@@ -2,7 +2,7 @@
 
 > **Preview release (v0.1.0).** A fork-and-adapt foundation for AI-assisted empirical research — identification, analysis, manuscript, talks, peer review, and submission. Based on Pedro Sant'Anna's [claude-code-my-workflow](https://github.com/pedrohcgs/claude-code-my-workflow) and Hugo Sant'Anna's clo-author template, re-targeted from lecture/slide production to research-paper production.
 
-**Last Updated:** 2026-04-28
+**Last Updated:** 2026-10-22
 
 You describe what you want — an identification strategy, a data analysis, a paper draft, a replication package, a conference talk — and Claude plans the approach, runs specialized agents, fixes issues, verifies quality, and presents results. Like a contractor who handles the job end-to-end.
 
@@ -12,11 +12,11 @@ You describe what you want — an identification strategy, a data analysis, a pa
 
 ## Three branches, three surfaces
 
-- **`main` (universal).** Paradigm-agnostic research template. 20 agents, 18 skills, ~18 rules. Everything a general empirical project needs: discovery, data engineering, analysis, writing, peer review, submission.
+- **`main` (universal).** Paradigm-agnostic research template. 22 agents, 18 skills, 29 rules (several path-scoped, so they load only when a matching file is touched). Everything a general empirical project needs: discovery, data engineering, analysis, writing, peer review, submission.
 - **`applied-micro`** (overlay). Adds identification-strategy tooling for observational/administrative-data research: `strategist` + `strategist-critic` agents, `/strategize`, `/balance`, `/event-study` skills, `air-gapped-workflow` rule.
 - **`behavioral`** (overlay). Adds experimental-economics tooling: `designer`, `otree-specialist`, `qualtrics-specialist` agents, `/design`, `/otree`, `/qualtrics`, `/preregister` skills, `experiment-design-principles` rule, experiments folder tree. Theory tooling (`theorist`, `proof-verifier`, `/theory`) is on `main`.
 
-Main is the trunk. The two overlays are thin diffs maintained on their own branches. Universal improvements land on main and flow to both overlays via rebase.
+Main is the trunk. The two overlays are thin diffs maintained on their own branches. Universal improvements land on main and are synced to an overlay by hand, file by file, per the class procedure in the header of `.claude/file-classes.toml`. `behavioral` is kept current; `applied-micro` is frozen.
 
 ---
 
@@ -148,45 +148,51 @@ Substantive decisions live in `decisions/NNNN_slug.md` — append-only, immutabl
 
 ### Context Survival
 
-Pre-compact hook saves state to disk. Session logs capture incremental progress. ADRs preserve decisions. A new session can pick up from `CLAUDE.md` + most recent plan + `git log` and know where it is. The `context-monitor` PostToolUse hook also writes a state snapshot at 90% context as a fallback for when Claude Code's PreCompact silently bypasses (a known interaction with MCP servers).
+Claude Code compacts context automatically. Session logs capture incremental progress, plans live on disk in `quality_reports/plans/`, and ADRs preserve decisions. A new session can pick up from `CLAUDE.md`, the most recent plan and `git log` and know where it is.
 
 ---
 
 ## What's Included
 
-### Agents (`.claude/agents/` — 20 universal)
+### Agents (`.claude/agents/`: 22 universal)
 
-Creators: librarian, explorer, data-engineer, coder, writer, storyteller, theorist
-Critics: librarian-critic, explorer-critic, coder-critic, writer-critic, storyteller-critic, tikz-reviewer, proof-verifier, theorist-critic
+Creators: librarian, explorer, data-engineer, coder, writer, storyteller, theorist, formalizer
+Critics: librarian-critic, explorer-critic, coder-critic, writer-critic, storyteller-critic, tikz-reviewer, proof-verifier, theorist-critic, card-auditor
 Peer review: domain-referee, methods-referee, editor
 Infrastructure: orchestrator, verifier
 
 Overlays add their own paradigm-specific agents.
 
-### Skills (`.claude/skills/` — 18 universal)
+### Skills (`.claude/skills/`: 18 universal)
 
 Pipeline: `/new-project`, `/discover`, `/analyze`, `/theory`, `/write`, `/review`, `/revise`, `/talk`, `/submit`
-Utilities: `/commit`, `/context-status`, `/learn`, `/challenge`, `/deep-audit`, `/tools`
+Writing and review: `/humanize`, `/challenge`, `/review-build`
+Utilities: `/commit`, `/context-status`, `/learn`, `/deep-audit`, `/stata`, `/tools`
 
-`/tools` is a multi-subcommand router (compile, validate-bib, journal, deploy, learn, upgrade).
+`/tools` is a multi-subcommand router (commit, compile, validate-bib, context, deploy, learn, sync-status, normdiff, cite-check, stata-sweep).
 
-### Rules (`.claude/rules/` — 25 universal)
+### Rules (`.claude/rules/`: 29 universal)
 
 - **Epistemic stack** ("don't fabricate" guards): `no-assumptions`, `primary-source-first`, `derive-dont-guess`, `adversarial-default`
 - **Workflow:** agents, workflow, quality, logging, revision
-- **Writing:** working-paper-format, figures, tables, tikz-visual-quality, single-source-of-truth, replication-protocol, verification-protocol
+- **Writing:** anti-ai-prose, working-paper-format, figures, tables, tikz-visual-quality, single-source-of-truth, replication-protocol, verification-protocol
 - **Code:** stata-code-conventions, r-code-conventions, python-code-conventions
-- **Discipline:** decision-log, todo-tracking, output-length, meta-governance
+- **Discipline:** decision-log, todo-tracking, output-length, meta-governance, independent-review
+- **Safety and storage:** destructive-actions, data-version-control
 - **Sandbox:** exploration-folder-protocol, exploration-fast-track
 
-### Hooks (`.claude/hooks/` — 11 scripts)
+### Hooks (`.claude/hooks/`: 10 registered)
 
-- `primary-source-check` (PreToolUse) + `primary-source-audit` (Stop) — citation-grounding enforcement (Author-Year regex with sentence-start filter, hyphenated-name decomposition, project-allowlist; escape-hatch comments for illustrative citations)
-- `log-reminder` (Stop) — hard-cap reminder to write session logs every 10 responses
-- `verify-reminder` (PostToolUse) — prompts verification after edits
-- `context-monitor` (PostToolUse) — usage warnings at 40/55/65/80/90%; writes pre-compact-state.json snapshot at 90% as fallback for the MCP-induced PreCompact bypass
-- `pre-compact` + `post-compact-restore` — state preservation across context compaction
-- `protect-files` (PreToolUse) — guards against accidental writes to sensitive files (settings.json, etc.)
+Kept only where the failure does not improve with a smarter model: fabrication and irreversible actions.
+
+- `primary-source-check` (PreToolUse) + `primary-source-audit` (Stop): citation-grounding enforcement (Author-Year regex with a filter stack; escape-hatch comments for illustrative citations)
+- `derive-check-advisory` (PostToolUse): flags newly introduced read/input paths that do not resolve on disk
+- `evidence-gate-recorder` (PostToolUse): records a normalized-content diff per edit to the verification ledger, for no-logic-change claims
+- `destructive-action-guard` (PreToolUse, Bash) + `post-rewrite-verify` (PostToolUse): blocks history rewrites, force pushes and shared-storage deletes; demands `ls`/`du` evidence after a rewrite
+- `review-receipt-check` (PreToolUse, Bash): blocks a commit of unreviewed code when `git config review.required` is `true` (ADR-0002)
+- `stata-comment-balance-check` (PreToolUse): blocks edits that would introduce Stata's greedy-`/*` comment bug into a `.do`/`.doh` file
+- `protect-files` (PreToolUse): guards against accidental writes to sensitive files (settings.json, etc.)
+- `notify` (Notification): desktop notification on Windows or macOS; fails open
 
 ---
 

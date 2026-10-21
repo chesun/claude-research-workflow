@@ -1,7 +1,7 @@
 <!-- primary-source-ok: santanna_2026, korinek_2025, kohler_zollikofer_einsiedler_hoyle_ash_2026 -->
 # Modernize-and-simplify plan — personal research template for Claude 5
 
-**Status:** DRAFT v2 (review-clean) — revised after two independent reviews (`quality_reports/reviews/2026-09-16_modernize-plan_independent_review.md` → FIT WITH CHANGES; `..._modernize-plan-v2_independent_review.md` → READY WITH MINOR CHANGES, all five v1 findings verified resolved). The v2 review's three fixes are folded in: `stop_hooks_lib` deletion corrected, Track-A step 4 (live-project update) given a safe mechanism, `notify.py` fail-open + `python3` launcher fallback. Awaiting approval.
+**Status:** COMPLETED 2026-10-14 for Track A (all five steps; session log `2026-10-11_hook-launcher-fix-and-theory-brainstorm.md` §19, §21–§23). Track B stays deferred and uncommitted. Previously: DRAFT v2 (review-clean) — revised after two independent reviews (`quality_reports/reviews/2026-09-16_modernize-plan_independent_review.md` → FIT WITH CHANGES; `..._modernize-plan-v2_independent_review.md` → READY WITH MINOR CHANGES, all five v1 findings verified resolved). The v2 review's three fixes are folded in: `stop_hooks_lib` deletion corrected, Track-A step 4 (live-project update) given a safe mechanism, `notify.py` fail-open + `python3` launcher fallback. Awaiting approval.
 **Basis:** survey brief `quality_reports/reviews/2026-09-16_ai-econ-workflow-landscape-and-direction.md`
 
 ## What the review changed (v1 → v2)

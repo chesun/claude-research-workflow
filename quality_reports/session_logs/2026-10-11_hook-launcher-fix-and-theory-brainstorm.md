@@ -4,7 +4,7 @@
 
 ## 1. Catch-up survey
 
-Read CLAUDE.md, README, CHANGELOG, TODO, ADR-0001–0003, the September session logs and plans, and the archived work branch. Brief: `quality_reports/reviews/2026-10-11_repo-catch-up-survey.md`.
+Read CLAUDE.md, README, CHANGELOG, TODO, ADR-0001–0003, the September session logs and plans, and the archived work branch. Brief: `quality_reports/reviews/archive/2026-10-11_repo-catch-up-survey.md`.
 
 ## 2. Hooks were silently failing open — fixed
 

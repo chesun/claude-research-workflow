@@ -1,6 +1,6 @@
 # Port the mandatory independent-review pattern into this personal template
 
-**Status:** DRAFT v2 — revised after independent review (`quality_reports/reviews/2026-09-21_port-mandatory-review-plan_review.md`, 75/100, fit-with-fixes) and two owner decisions. Awaiting go to build.
+**Status:** COMPLETED 2026-09-21 (ADR-0002; `review-receipt-check.py` and `/review-build` built and reviewed; fail-closed amendment 2026-09-22). Previously: DRAFT v2 — revised after independent review (`quality_reports/reviews/2026-09-21_port-mandatory-review-plan_review.md`, 75/100, fit-with-fixes) and two owner decisions. Awaiting go to build.
 **Source pattern:** a sibling work repository's ADR-0016 + `independent-review.md` + `bin/commit-msg-guard.py` + `/review-build`.
 
 ## What v2 changed (from the review)
