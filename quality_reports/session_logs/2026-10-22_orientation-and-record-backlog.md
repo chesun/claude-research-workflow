@@ -47,3 +47,15 @@
   - Done pruned to 10 per `todo-tracking.md`. The 18 older entries are in the session logs and git.
 - **`decisions/README.md`:** two pending owner decisions listed, the scope of the Windows guard and whether to keep the card-auditor.
 - **No independent review:** these are status and record edits to docs (advisory class, ADR-0002), with every fact taken from git or the logs.
+
+## 4. BDD v2 pair compiled on the laptop
+
+- **Correction from the owner (via a side agent):** the plan's "compile on the Mac" step could not work, since the 27 edits are uncommitted here. Step 1 and this repo's TODO now say to compile on the laptop (`15b7cfe`).
+- **TeX Live 2026** installed by the owner at `C:\texlive\2026`. It is not on PATH in shells opened before the install.
+- **Result:** three `pdflatex` passes from `theory/`, 0 errors, 0 undefined references, 52 pages. Appendix A and the band figure (Figure 3) render.
+- **Carried into the `/theory review` round:** the Figure 3 legend covers the `+√b1` label; four overfull hboxes over 1pt (28, 73, 1.4 and 70pt), all in edited lines. Locations are in BDD's handover plan, step 1. Not fixed here: the plan reserves edits to the pair for compile errors.
+- **Owner OK to push.** On BDD branch `theory-v2-edits`:
+  - `5289b9d`: the two `.tex` files and the recompiled PDF;
+  - `53e718f`: the handover plan, its index line and the TODO pointer.
+  - The branch was pushed, and the pre-push guard passed both commits. `main` is untouched at `6017123`.
+- **The handover plan gains a "Pick up here" block.** It covers switching to the branch, and says step 1 is done and step 2 is next. Steps 3–4 now commit on the branch, then merge to `main` with the owner's OK.
