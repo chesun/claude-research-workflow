@@ -1,6 +1,6 @@
 # TODO — claude-research-workflow
 
-Last updated: 2026-10-22
+Last updated: 2026-10-28
 
 Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans and session logs; this file tracks what is left.
 
@@ -10,7 +10,6 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 ## Up Next
 
 - [ ] **card-auditor review point (ADR-0005 item 3):** after five audited nodes, count the auditor's catches and false alarms in the session log; the owner decides whether it stays. Audited so far: 1 (`prop:nstar-interior-ac`, 2026-10-14, FAITHFUL, agreed with the owner).
-- [ ] **Hand-sync the 2026-10-19 instruction-budget changes into BDD and `bdm_bic`** — both `.claude/` trees were refreshed 2026-10-14 and lack the new `.claude/references/` files (BDD checked 2026-10-22), so a session there may still load over 150k chars. Same manifest-driven method as the `behavioral` sync (session log §30).
 - [ ] **Voice preservation** (the committed next build from the 2026-09-22 infra survey): two per-paradigm voice profiles; needs the owner's exemplar papers. Folds in the anti-AI-prose academic carve-outs (Backlog).
 
 ## Waiting On
@@ -18,7 +17,12 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 - [ ] **Mac worktrees** (owner, on the Mac) — the `beh` and `wt-behavioral` worktree entries were removed from `.git/worktrees/` on 2026-10-19 (stale here; git could not delete the folders itself). If those worktrees still exist on the Mac, run `git worktree repair` inside each, or `git worktree prune` if they are gone.
 - [ ] **Model-routing experiment read-out** (ADR-0003/0004) — waiting on the voice-preservation build, which ADR-0003 names as the revisit point. Pilot evidence so far: verifier fable vs opus near-identical; opus slightly stricter in calibration round 1 and about twice as fast (session log 2026-10-11 §6). Revisit the `writer` exception after the voice build. Per-review severity counts and fix rounds keep accumulating in the session logs (2026-10-14: §13–§17, all reviewers on fable; no new fable-vs-opus pair).
 
-- [ ] **BDD theory v2 pair**: the 27-entry edit list (BDD `quality_reports/2026-10-15_paper-v2_edit-list.md`) is committed and pushed on BDD branch `theory-v2-edits` (`5289b9d`, with the handover docs in `53e718f`), and it compiles (2026-10-22). Next, in a BDD session: `/theory review`, which also fixes the Figure 3 legend and four overfull hboxes, then commit on the branch, then the owner merges to `main`, pushes and signs off. Tracked in BDD's handover plan `quality_reports/plans/2026-10-22_handover-theory-v2-to-jebo.md`, under "Pick up here".
+- [ ] **BDD theory v2 pair: owner merge and sign-off.** The BDD branch `theory-v2-edits` is reviewed, fixed and pushed:
+  - `5289b9d`: the 27 edits;
+  - `53e718f`: the handover docs;
+  - `a93f41b` (2026-10-22): the review round, theorist-critic 86 → 99/100 PASS, seven fixes, 0 overfull hboxes, 53 pages.
+
+  Next, all with the owner: merge the branch into BDD `main` (no rebase), push, read the compiled pair and promote v2 over the canonical filenames. Tracked in BDD's handover plan `quality_reports/plans/2026-10-22_handover-theory-v2-to-jebo.md`, Workstream 1 steps 4–5.
 - [ ] **Work-repo fixes** (in a session opened in the consulting repo; prompt given 2026-10-11): guard launchers that trust the Store stub; recognising the `personal` repo class. Pushing from this machine depends on the second.
 - [ ] **BDD `data/PROVENANCE.md` backfill** — IRB, fielding dates, PII status and authorized users need facts only Christina has.
 - [ ] **csac2026 year-specific CLAUDE.md fields** — fill when the 2026 survey specifics are known.
@@ -45,6 +49,8 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Done (recent)
 
+- [x] 2026-10-28 — **BDD and `bdm_bic` synced with the instruction-budget changes** (from `behavioral` `2c816cf`; gates pass). BDD: `5dd2de7`, merged into `theory-v2-edits` as `50f61f1` and pushed; it reaches BDD `main` with that branch. `bdm_bic`: `a9f0023` on `main`, pushed. Always-loaded instructions: BDD 153.2k → 94.2k, `bdm_bic` 148.4k → 89.4k. Session log `2026-10-22_orientation-and-record-backlog.md` §5.
+
 - [x] 2026-10-22 — **Records caught up**: CHANGELOG [Unreleased] and README brought current; stale plan headers closed (modernize, port-mandatory-review, infra survey, context-tightening) and 2026-09 added to the plans index; catch-up survey `quality_reports/reviews/2026-10-22_repo-catch-up-survey.md`; BDD handover plan written. Session log `2026-10-22_orientation-and-record-backlog.md`.
 - [x] 2026-10-14 — **Modernize Track A complete**: steps 3–5 (`behavioral` synced, BDD and `bdm_bic` refreshed, propagation retired); steps 1–2 were 2026-09-16. Session log §19, §21–§23.
 - [x] 2026-10-19 — **`behavioral` synced with the instruction-budget changes** (`2c816cf`, pushed): 38 Class A files copied; quality, workflow, orchestrator, verifier and new-project merged by hand, keeping behavioral's weights, dispatch rows and pre-registration gate. Session log §30.
@@ -54,4 +60,3 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 - [x] 2026-10-14 — **BDD theory: all 7 conjecture claims settled.** Checked as written: `lem:var0`, `prop:seq-vs-commit-bias`, `prop:cogcons-wedge`, `prop:commit-vs-seq-size`, `cor:gap-rank`. Repaired with the owner's approval, then checked: `prop:gap-closure` → `prop:gap-closure-pos` (n ≥ 1), `prop:commit-cogcons` → `prop:commit-cogcons-grid` (grid benchmark). Validator PASS (54 nodes).
 - [x] 2026-10-14 — **lean_check `card_fields` ignores comments and fences**, matching `blueprint_check` (review 88/100).
 - [x] 2026-10-14 — **Destructive-action guard**: the unparseable-command false positive fixed, and the guard redesigned over three review rounds (every command of a chain, quote-aware heredocs, per-command bypass); 136 tests; audit-log replay 0 new blocks (session log §20).
-- [x] 2026-10-14 — **`/tools sync-status`**: `bin/sync_status.py` + 22 tests; catches unpushed LFS when the LFS hook is bypassed, plain blobs under LFS rules, missing upstreams (session log §18).
