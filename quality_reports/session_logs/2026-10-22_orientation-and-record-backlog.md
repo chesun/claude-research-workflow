@@ -88,4 +88,4 @@
   - Proposed: merge the sync branch into `theory-v2-edits` with a merge commit and no rebase, then push.
 - **Merged and pushed (owner's OK):** BDD `claude-sync-2026-10-28` merged into `theory-v2-edits` as `50f61f1`, with a merge commit and no conflicts. The BDD folder now loads 94.2k characters of project instructions.
   - Pushed: BDD `theory-v2-edits` (`a93f41b..50f61f1`) and `bdm_bic` `main` (`2920761..a9f0023`). The pre-push guard passed every commit.
-  - The worktree `~/wt/bdd-claude-sync` and its local branch remain; both can go once the owner is done with them.
+  - The worktree and its local branch were removed on the owner's request (branch was `5dd2de7`, merged). Left: an unreadable `.pytest_cache` in `~/wt/bdd-claude-sync` and in `bdm_bic`, for the owner to delete in Explorer.
