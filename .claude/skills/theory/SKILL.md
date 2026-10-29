@@ -55,7 +55,12 @@ Blind two-verifier check of a node at `proved`. **You** (the dispatcher) build t
    - the node is at `proved`, with no `[GAP:` marker;
    - every claim, variant or imported node in its `uses` is `checked` or above, and every definition and assumption is `stated`;
    - the validator reports no error on the node or on anything it rests on;
-   - every node label its statement or proof cites is in `uses` or declared as a mention.
+   - every node label its statement or proof cites is in `uses` or declared as a mention;
+   - the proof never points into another node's proof (proof-verifier item 11).
+     - Refused: "Step 2 of lem:x", "the base case of lem:x", "the proof (or argument) of lem:x" and "lem:x's proof".
+     - Allowed: "part 1 of lem:x", which names a part of the statement.
+     - A pronoun ("its Step 2") is not caught, so the verifiers' item 11 still applies.
+     - A remark that only contrasts with another proof goes in an HTML comment.
 
    On a refusal, stop, report the reasons, and point to `develop`: a node cannot be `checked` on unchecked foundations. (If verifier reports already exist for the current proof hash, they stay valid; append the `-> checked` line once the dependencies are checked.)
 2. The input it prints is the whole of what the verifiers see:

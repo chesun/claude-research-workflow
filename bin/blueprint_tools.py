@@ -13,6 +13,7 @@ from __future__ import annotations
 import dataclasses
 import importlib.util
 import os
+import re
 import sys
 from datetime import date
 from pathlib import Path
@@ -76,13 +77,72 @@ def _closure(n, nodes: dict) -> list[str]:
 
 # --- verify-input ------------------------------------------------------------------
 
+# A step that points into another node's proof ("Step 2 of lem:x", "the proof of lem:x",
+# "lem:x's proof"). The verifier sees only statements, so such a step is unjustified
+# (proof-verifier item 11). "part 1 of lem:x" names a part of the statement and stays allowed.
+# The patterns run on a scanning view (_scan_view) with emphasis, LaTeX macros and braces
+# dropped. Items and separators cannot overlap (no item is "to" or "and"), so matching stays
+# linear on any input. This is a floor under the verifiers' item 11, not a proof of absence.
+# Known limits: a pronoun ("its Step 2") is not tied to a label; "the claim of lem:x" and
+# "case 2 of lem:x" can mean the statement, so a claim is not matched and a statement case
+# is refused (write "case 2 of the statement of lem:x"); the comma form "(lem:x, Step 1(b))"
+# is the proof's own step and is allowed; a lone letter is an item, so "step t in lem:x" is refused.
+_WS = r"[\s~]+"
+_NUM = r"one|two|three|four|five|six|seven|eight|nine|ten"
+_ITEM = (rf"(?:\d+(?:\.\d+)*[a-z]?|[ivxIVX]{{2,6}}|[A-Za-z]|(?i:{_NUM})|\([0-9A-Za-z]{{1,6}}\))"
+         r"(?:\([0-9A-Za-z]{1,6}\))*")
+_ITEMS = rf"{_ITEM}(?:\s*[–—,&-]\s*{_ITEM}|\s+(?i:to|and|through|thru)\s+{_ITEM})*"
+_ADJ = (r"(?i:final|last|penultimate|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|"
+        r"tenth|\d+(?:st|nd|rd|th)|next|base|induction|inductive|key|main|remaining|each|every)")
+_KIND = r"(?i:lemma|proposition|corollary|theorem|remark|variant)"
+_LBL = rf"[(`]?(?:(?i:the){_WS})?(?:{_KIND}{_WS})?{bc.CITED_RE.pattern}"
+_TAIL = rf"(?:(?:\s*,\s*{_LBL})*\s*,?\s*(?:&|(?i:and))\s*{_LBL})?"  # a list needs its "and"
+_PROOF_OF = rf"(?:(?i:the){_WS})?(?i:proof){_WS}(?i:of|for|in){_WS}"
+_OF = rf"{_WS}(?i:of|in){_WS}(?:{_PROOF_OF})?{_LBL}"  # no list tail: "Step 2 of def:x and lem:b"
+# A singular step or case needs a number or a qualifier word: a framing sentence such as "the
+# proof is the $T-1$ step of prop:x, re-derived ..." passed blind verification on a live blueprint.
+_UNIT = r"(?:steps?|(?:sub)?cases?)"
+_STEP_WORD = rf"(?:{_ADJ}{_WS}(?:(?i:{_NUM}){_WS})?)?(?i:steps?)"
+PROOF_REF_RES = (
+    re.compile(rf"(?i:\b(?:{_ADJ}{_WS}(?:(?i:{_NUM}){_WS})?{_UNIT}(?:{_WS}{_ITEMS})?"
+               rf"|{_UNIT}{_WS}{_ITEMS}|steps)){_OF}"),
+    re.compile(rf"(?i:\b(?:proofs?|arguments?|derivations?)){_WS}(?:(?i:given|used|written){_WS})?"
+               rf"(?i:of|for|in|as){_WS}{_LBL}{_TAIL}"),
+    re.compile(rf"{bc.CITED_RE.pattern}`?\s*['’]s{_WS}(?:(?i:own){_WS})?"
+               rf"(?:(?i:proofs?|arguments?|derivations?)|{_STEP_WORD})\b"),
+)
+
+
+def _scan_view(proof: str) -> str:
+    """The cleaned proof with emphasis, LaTeX macros, braces and invisible spaces taken out."""
+    t = _clean(proof)
+    t = re.sub(r"[\u200b\u200c\u200d\u2060\u2062\u00ad\ufeff]", "", t)
+    t = re.sub(r"\$(\d+[a-z]?)\$", r"\1", t)  # "Step $2$" reads as "Step 2"
+    t = re.sub(r"\\[,;:! ()\[\]]", " ", t)
+    t = re.sub(r"\\[A-Za-z]+\*?", " ", t)
+    return re.sub(r"[{}\[\]*_]", " ", t)
+
+
+def proof_references(proof: str, own: str) -> list[tuple[str, str]]:
+    """[(label, phrase)] in text order: each other label the proof points into, first phrase."""
+    found = {}
+    text = _scan_view(proof)
+    for rx in PROOF_REF_RES:
+        for m in rx.finditer(text):
+            for label in bc.CITED_RE.findall(m.group(0)):
+                if label != own and (label not in found or m.start() < found[label][0]):
+                    found[label] = (m.start(), " ".join(m.group(0).split()))
+    return [(lbl, ph) for lbl, (_, ph) in sorted(found.items(), key=lambda kv: kv[1][0])]
+
+
 def verify_input(node_path: Path) -> tuple[list[str], str]:
     """(problems, text). Text is the blind verifier input; it is empty unless problems is empty.
 
     Ready means: the node is `proved` with a non-empty, gap-free proof; the validator reports no
     error on it or on anything it rests on; every direct dependency is ready (claims `checked`
-    or above, definitions and assumptions `stated`); and every node its statement or proof
-    cites is in `uses` or declared as a mention.
+    or above, definitions and assumptions `stated`); every node its statement or proof
+    cites is in `uses` or declared as a mention; and `proof_references` finds no phrase that
+    points into another node's proof (a floor under the verifiers' item 11; limits above it).
     """
     node_path = Path(node_path)
     try:
@@ -111,6 +171,18 @@ def verify_input(node_path: Path) -> tuple[list[str], str]:
     for m in n.mentions:
         if m not in nodes:
             problems.append(f"mentions {m}, but there is no such node (a typo leaves a dangling label)")
+    for lbl, phrase in proof_references(n.proof, n.label):
+        if lbl in nodes and nodes[lbl].kind in bc.BASE_KINDS:
+            continue  # a definition or assumption has no proof; "Step 2 of def:x" is its statement
+        if lbl not in nodes:
+            problems.append(f"the proof points into the proof of {lbl} ({phrase!r}), and no node has that "
+                            f"label; the verifier sees no such proof, so name a node in uses, or rephrase "
+                            f"if {lbl} is an equation or outside label (proof-verifier item 11)")
+            continue
+        problems.append(f"the proof points into another node's proof ({phrase!r}); the verifier sees only "
+                        f"{lbl}'s statement, so justify the step from that statement, standard mathematics "
+                        f"or an earlier step, or write the argument out (proof-verifier item 11). A remark "
+                        f"that only contrasts with that proof can go in an HTML comment")
     closure = _closure(n, nodes)
     subjects = {n.label, *closure}
     for e in bc.check_blueprint(bp).errors:

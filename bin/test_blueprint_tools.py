@@ -579,6 +579,129 @@ def test_review_round2_pins(tmp: Path) -> None:
           and "M-PROOF-SENTINEL" not in text and "proved" not in text, f"{problems} {text}")
 
 
+def test_cross_proof_refusal(tmp: Path) -> None:
+    """A proof that points into another node's proof is refused (proof-verifier item 11)."""
+    def attempt(proof: str, label: str = "prop:a"):
+        root, bp = fx.mkrepo(tmp)
+        fx.write_node(bp, "def:x", kind="definition", statement="x is built in Steps 1 and 2.")
+        fx.claim_at(bp, "lem:b", "checked", root=root, statement="b holds.", proof="B.")
+        fx.claim_at(bp, "lem:c", "checked", root=root, statement="c holds.", proof="C.")
+        p = fx.claim_at(bp, label, "proved", uses=["lem:b", "lem:c", "def:x"], root=root,
+                        statement="a holds.", proof=proof)
+        return p, bt.verify_input(p)
+
+    refused = {
+        "xp_step_of": "By Step 2 of lem:b, the bound holds.",
+        "xp_steps_range_of_the_proof_of": "Steps 0–4 of the proof of lem:b carry over.",
+        "xp_step_sub_item": "This is the variance identity (Step 1(ii) of lem:b).",
+        "xp_step_range_sub_items": "As in Step 3(iii)–(iv) of lem:b, the term vanishes.",
+        "xp_steps_and_list": "Steps 1 and 3 of the proof of lem:b derive the recursion.",
+        "xp_step_in": "The bound is shown in Step 4 in lem:b.",
+        "xp_latex_tilde": "By Step~2 of~lem:b the map is monotone.",
+        "xp_as_in_the_proof_of": "As in the proof of lem:b, the map is monotone.",
+        "xp_proof_for": "The proof for lem:b applies verbatim.",
+        "xp_plural_proofs": "The proofs of lem:b and lem:c combine.",
+        "xp_possessive": "lem:b's proof gives the bound.",
+        "xp_possessive_curly": "lem:b’s proof gives the bound.",
+        "xp_capitalized": "STEP 2 OF lem:b gives it.",
+        "xp_line_break": "By Step 2\nof lem:b the map is monotone.",
+        "xp_ref_macro": "By Step 2 of \\ref{lem:b} the map is monotone.",
+        # Review round 1 (2026-10-28): emphasis, wrappers, unnumbered units, other nouns.
+        "xp_bold_markdown": "By **Step 2** of lem:b the map is monotone.",
+        "xp_bold_latex": "By \\textbf{Step 2} of lem:b the map is monotone.",
+        "xp_emph_proof": "As in the \\emph{proof} of lem:b, done.",
+        "xp_bold_possessive": "**lem:b**'s proof gives the bound.",
+        "xp_cref": "By Step 2 of \\cref{lem:b} the map is monotone.",
+        "xp_brackets": "By Step 2 of [lem:b] the map is monotone.",
+        "xp_parens": "By Step 2 of (lem:b) the map is monotone.",
+        "xp_final_step": "The final step of lem:b applies.",
+        "xp_each_step": "Each step of lem:b carries over.",
+        "xp_base_case": "The base case of lem:b gives it.",
+        "xp_case_numbered": "Mirror Case 2 of lem:b.",
+        "xp_subcase": "Subcase 1a of the proof of lem:b carries over.",
+        "xp_argument_in": "The argument in lem:b applies verbatim.",
+        "xp_same_proof_as": "This takes the same proof as lem:b.",
+        "xp_kind_word": "As in the proof of Lemma lem:b, done.",
+        "xp_proof_in": "The proof in lem:b applies.",
+        "xp_upper_and": "Steps 1 AND 3 of lem:b derive the recursion.",
+        "xp_latex_thin_space": "By Step\\,2 of lem:b the map is monotone.",
+        "xp_nbsp": "By Step 2 of lem:b the map is monotone.",
+        "xp_number_word": "By Step two of lem:b the map is monotone.",
+        # Review round 2 (2026-10-28).
+        "xp_possessive_step": "lem:b's Step 2 gives the bound.",
+        "xp_possessive_final_step": "lem:b's final step gives the bound.",
+        "xp_possessive_derivation": "lem:b's derivation gives the bound.",
+        "xp_possessive_plural": "lem:b's proofs give the bound.",
+        "xp_plural_bare_steps": "The steps of lem:b carry over.",
+        "xp_ordinal_word": "The fourth step of lem:b carries over.",
+        "xp_ordinal_numeric": "The 2nd step of lem:b carries over.",
+        "xp_penultimate": "The penultimate step of lem:b carries over.",
+        "xp_qualifier_count": "The final two steps of lem:b carry over.",
+        "xp_through": "Steps 1 through 3 of lem:b carry over.",
+        "xp_math_number": "By Step $2$ of lem:b the map is monotone.",
+        "xp_latex_math_parens": "By Step 2 of \\(lem:b\\) the map is monotone.",
+        "xp_the_kind_word": "As in the proof of the lemma lem:b, done.",
+    }
+    for name, proof in refused.items():
+        _, (problems, text) = attempt(proof)
+        check(name, text == "" and any("lem:b" in x and "proof-verifier item 11" in x for x in problems),
+              f"{problems}")
+
+    allowed = {
+        "xp_ok_statement_part": "By part 1 of lem:b and Part (2) of lem:c, the claim follows.",
+        "xp_ok_own_steps": "By lem:b. In Step 2 below we bound the rest; Step 1 above gives the start.",
+        "xp_ok_proof_of_the_claim": "The proof of the claim uses lem:b and lem:c.",
+        "xp_ok_no_label": "By Step 2 of Lemma 3 in the standard reference, and lem:b, done.",
+        "xp_ok_comment": "By lem:b and lem:c. <!-- mirrors the proof of lem:b, Step 2 of lem:c -->",
+        # The live corpus's own-step form: lem:c, plus this proof's own Step 1(b).
+        "xp_ok_comma_own_step": "Stop at T (lem:c, Step 1(b)); by lem:b the bound holds.",
+        "xp_ok_in_the_case_of": "In the case of lem:b with T = 2, the bound is tight.",
+        "xp_ok_steps_used_in": "The steps used in lem:b are not needed; by lem:c, done.",
+        "xp_ok_definition_steps": "By Step 2 of def:x and lem:b, the object exists.",
+        "xp_ok_claim_of": "The claim of lem:b gives the bound.",
+        # A live checked node frames its self-contained proof this way.
+        "xp_ok_framing_step": "The proof is the $T-1$ step of lem:b, re-derived from lem:c alone.",
+        # A bare comma is not a list: own label first, then an unrelated clause.
+        "xp_ok_comma_not_list": "By lem:c. This completes the proof of prop:a, lem:b being immediate.",
+    }
+    for name, proof in allowed.items():
+        _, (problems, text) = attempt(proof)
+        check(name, problems == [] and text != "", f"{problems}")
+    _, (problems, _) = attempt("By lem:b. Step 2 of prop:a's argument is the proof of prop:a itself.")
+    check("xp_ok_own_label", problems == [], f"{problems}")
+
+    _, (problems, _) = attempt("Step 2 of lem:b and the proof of lem:b again; then Step 1 of lem:c.")
+    hits = [x for x in problems if "proof-verifier item 11" in x]
+    check("xp_one_problem_per_label", len(hits) == 2 and any("lem:c" in x for x in hits), f"{problems}")
+
+    _, (problems, _) = attempt("The proofs of lem:b and lem:c combine.")
+    hits = [x for x in problems if "proof-verifier item 11" in x]
+    check("xp_list_reports_every_label", len(hits) == 2, f"{problems}")
+    refs = bt.proof_references("lem:b's proof starts it; Step 2 of lem:c; Step 1 of lem:b.", "prop:a")
+    check("xp_text_order_first_phrase", [r[0] for r in refs] == ["lem:b", "lem:c"]
+          and refs[0][1] == "lem:b's proof", f"{refs}")
+
+    # Linear time on adversarial text (review round 1 found exponential backtracking).
+    import time
+    worst, found_all = 0.0, True
+    for text in ("step " + "to" * 400, "Step " + "1 and " * 400 + "x", "Steps " + "1, " * 2000,
+                 "proof of " * 2000, "lem:b" * 2000, "Step " + "(i)" * 2000 + " of"):
+        t0 = time.perf_counter()
+        found = bt.proof_references(text + " Step 2 of lem:zz.", "prop:a")
+        worst = max(worst, time.perf_counter() - t0)
+        found_all = found_all and any(lbl == "lem:zz" for lbl, _ in found)
+    check("xp_linear_on_adversarial_text", worst < 1.0 and found_all, f"worst {worst:.2f}s")
+
+    _, (problems, _) = attempt("By lem:b, and the derivation in eq:main, done.")
+    check("xp_non_node_label_message", any("eq:main" in x and "no node has that label" in x
+                                           for x in problems), f"{problems}")
+
+    p, _ = attempt("By Step 2 of lem:b, done.")
+    rc, out = run_cli(["verify-input", str(p)])
+    check("xp_cli_exit_1_no_input", rc == 1 and "Step 2 of lem:b" in out and "Proof submitted" not in out,
+          f"{rc} {out}")
+
+
 def main() -> int:
     global bc, bt, fx
     try:
