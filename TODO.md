@@ -6,13 +6,14 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Active (doing now)
 
+- [ ] **Voice preservation** (plan `quality_reports/plans/2026-10-29_voice-preservation.md` v2, ADR-0006): template part done (reviewed, committed). The private home `chesun/voice-profile` is cloned to `~/.claude/voice`; on the Mac it needs `git clone`. Next: the owner names the parts of the July 2025 draft that are theirs alone and supplies older unaided writing. Then `/voice-profile build`, owner approval, acceptance checks A2–A7, and the downstream copy (consumers to `behavioral`, BDD, `bdm_bic`).
+
 
 ## Up Next
 
 - [ ] **Copy the proof-rewrite route docs to `behavioral`, BDD and `bdm_bic`** once committed here (Class A: `.claude/skills/theory/SKILL.md`, `.claude/agents/theorist.md`, `templates/theory/blueprint-node.md`; `bdm_bic` has no template). In BDD, wait until the owner's `lem:band` session is committed.
 - [ ] **BDD `lem:band` (checked) points into another node's proof** (red-team r1, 2026-10-28). Line 33 calls the variance identity "its Step 1(ii)", which is a step of lem:martingale-horizon's proof. This is the pronoun form, which the tool does not catch. Owner: rewrite the step from the statement and re-verify, or accept it.
 - [ ] **card-auditor review point (ADR-0005 item 3):** after five audited nodes, count the auditor's catches and false alarms in the session log; the owner decides whether it stays. Audited so far: 1 (`prop:nstar-interior-ac`, 2026-10-14, FAITHFUL, agreed with the owner).
-- [ ] **Voice preservation** (the committed next build from the 2026-09-22 infra survey): two per-paradigm voice profiles; needs the owner's exemplar papers. Folds in the anti-AI-prose academic carve-outs (Backlog).
 
 ## Waiting On
 
@@ -40,7 +41,6 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 - [ ] **Destructive-action guard on Windows OneDrive** — hardening SHELVED by the owner 2026-10-11 on branch `guard-windows-shared` (`d6d84c2`) after 3 review cycles. Four merge-blockers are listed in that branch's `quality_reports/reviews/2026-10-11_guard-windows-shared-r3_*`. Until then, `main`'s guard does not path-gate deletes inside OneDrive on Windows.
 - [ ] **Bulk LFS (+ selective DVC) migration** of the remaining research repos (ADR-0001: GO, forward-only, no history rewrites).
 - [ ] **Citation guard**: re-propagate the 07-02 lib/test/rule changes if any consumer still uses them; review the block telemetry periodically and route false positives.
-- [ ] **Anti-AI-prose academic carve-outs**: `Importantly,` / `Notably,` as literature signals; "implement an experiment"; "serves as the control". Update `anti-ai-prose.md`, `writer-critic.md` and `storyteller-critic.md`.
 - [ ] **Housekeeping automation** and **atomic commits as default discipline** (both added 2026-07-01; design TBD).
 - [ ] **derive-dont-guess / diagnostic-claim follow-ups** (plans 2026-05-28): overlay CLAUDE.md bullets; `/write` → `writer-critic`; file-granular evidence check; `diagnosis:` ledger rows from critics.
 - [ ] **Quarto normalizer** for the evidence-gating Tier-1 gate (with a future Quarto + R migration).

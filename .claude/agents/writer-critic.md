@@ -48,7 +48,7 @@ Review the specified file thoroughly and produce a detailed scored report of all
 5. Hedging: "interestingly", "it is worth noting", "arguably", "it is important to note", "needless to say"
 6. Filler: "of course", "clearly", "obviously"
 7. Intensifiers that add nothing: "very", "quite", "rather", "somewhat"
-8. Fancy synonym for plain word: "utilize" (use), "demonstrate" (show), "facilitate" (help), "implement" (do), "subsequent" (later)
+8. Fancy synonym for plain word: "utilize" (use), "demonstrate" (show), "facilitate" (help), "implement" (do), "subsequent" (later). Not a flag: `implement` an experiment, treatment, protocol or policy (a field convention, `anti-ai-prose.md` § Register profiles)
 9. Nominalizations: "the estimation of" (estimating), "the implementation of" (implementing)
 10. Unnecessary throat-clearing: "It is important to note that..." (just state the thing)
 11. Signposting overkill: "The remainder of this paper is organized as follows..."
@@ -202,7 +202,7 @@ Verification commands:
 
 ## Anti-AI-prose deductions (per `.claude/rules/anti-ai-prose.md`)
 
-Score against the rule's pattern catalog (~35 patterns, 6 categories: lexical, syntactic, structural, rhetorical, content, communication). Voice profile is `academic` for paper manuscripts. Patterns already deducted under McCloskey or Cochrane checks above (hedging, fancy synonyms, throat-clearing, roadmap signposting) are NOT double-counted here — focus on the AI-specific layer below.
+Score against the rule's pattern catalog (~35 patterns, 6 categories: lexical, syntactic, structural, rhetorical, content, communication). The register profile is `academic` for paper manuscripts, with its field conventions (`anti-ai-prose.md` § Register profiles) not flagged. Patterns already deducted under McCloskey or Cochrane checks above (hedging, fancy synonyms, throat-clearing, roadmap signposting) are NOT double-counted here — focus on the AI-specific layer below.
 
 | Severity | Issue | Deduction |
 |----------|-------|-----------|
@@ -225,3 +225,13 @@ Score against the rule's pattern catalog (~35 patterns, 6 categories: lexical, s
 **Cap:** Total anti-AI-prose deduction is capped at -30 per document so this subsection doesn't dominate the writer-critic score (which is primarily assessing structure, claims-evidence alignment, identification fidelity, and grammar). Patterns that overlap with McCloskey item 5 (hedging) or item 10 (throat-clearing) keep their existing deductions in the main General Deductions table; do not double-count here.
 
 Respect `<!-- anti-ai-ok: <reason> -->` escape comments per the rule. Patterns inside a paragraph containing such a comment are not flagged.
+
+If the dispatcher passes the path of the author's voice profile (`.claude/references/voice-profile.md`), do not deduct for the rows in its `carve_out_rows` or for its `signature_vocab` phrases. The floor rows are always deducted.
+
+## Voice conformance (advisory, not scored)
+
+Run only when the dispatcher passes a voice-profile path. Otherwise write "Voice: no profile at <path>" (or "Voice: no profile path passed").
+- Compare the draft with each of the profile's six sections.
+- List each departure with the draft location and the profile line it departs from ("deduction, not taste").
+- Quote the draft, never the profile's exemplar sentences (privacy rule, ADR-0006).
+- Report it below the score. It never changes the score.

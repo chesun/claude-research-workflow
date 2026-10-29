@@ -16,7 +16,7 @@ This page is a catalogue. For full skill behaviour, see the corresponding `SKILL
 | `/discover` | Discovery phase — literature search, data discovery, research interviews, ideation. Subcommands route to the right agents. | `librarian` + `librarian-critic`, `explorer` + `explorer-critic` |
 | `/analyze` | End-to-end data analysis dispatching coder + data-engineer for implementation, coder-critic for review. Stata, R, Python, Julia. | `coder`, `data-engineer`, `coder-critic` |
 | `/write` | Draft paper sections with the workflow's notation protocol, anti-hedging rules, contribution-statement-in-first-2-pages standard. | `writer` + `writer-critic` |
-| `/humanize` | Strip AI writing patterns from any external-facing document (paper, slides, README, blog post, cover/response letter). Voice profile inferred from path. Catalog: `.claude/rules/anti-ai-prose.md` (~35 patterns, 6 categories). | `writer` (humanizer mode) for paper/.tex; `storyteller` (humanizer mode) for talks/.tex; generic-prose dispatch for `.md` |
+| `/humanize` | Strip AI writing patterns from any external-facing document (paper, slides, README, blog post, cover/response letter). Register profile inferred from path; spares what the author's voice profile spares. Catalog: `.claude/rules/anti-ai-prose.md` (~35 patterns, 6 categories). | `writer` (humanizer mode) for paper/.tex; `storyteller` (humanizer mode) for talks/.tex; generic-prose dispatch for `.md` |
 | `/review` | All quality reviews — routes to appropriate critics by target file type and flags. `--paper`, `--code`, `--peer`, etc. | Various critics |
 | `/revise` | R&R cycle: classify referee comments (NEW ANALYSIS / CLARIFICATION / DISAGREE / MINOR) and route each to the right agent. | Various, depending on classification |
 | `/talk` | Create, audit, or compile Beamer presentations. Format-specific (job market / seminar / short / lightning). | `storyteller` + `storyteller-critic` |
@@ -31,6 +31,7 @@ This page is a catalogue. For full skill behaviour, see the corresponding `SKILL
 | `/learn` | Extract reusable knowledge from the current session into a persistent skill. Use when you discover something non-obvious worth keeping. |
 | `/challenge` | Devil's advocate. Modes: `--paper`, `--identification`, `--design`, `--theory`, `--fresh` (cold read with no context). Stress-tests the work. |
 | `/deep-audit` | Deep consistency audit of the entire repository. Launches 4 parallel specialist agents (factual errors, code bugs, count mismatches, cross-document inconsistencies). Loops until clean. |
+| `/voice-profile` | Build, audit or check the author's private voice profile (`~/.claude/voice/`, ADR-0006). `build` reads the author's own papers, and other authors' papers as style models, one fresh subagent per document; `audit <draft>` cites profile lines; `status` reports a stale profile. Explicit invocation only. |
 | `/tools` | Multi-subcommand router. Subcommands: `compile`, `validate-bib`, `journal`, `context-status`, `deploy`, `learn`, `verify`. |
 
 ---

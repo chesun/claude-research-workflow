@@ -1,6 +1,6 @@
 ---
 name: humanize
-description: Strip AI writing patterns from any external-facing document (paper, slides, README, blog post, cover/response letter). Universal entry point that infers the voice profile from the file path and dispatches the appropriate agent in humanizer mode. Replaces /write humanize.
+description: Strip AI writing patterns from any external-facing document (paper, slides, README, blog post, cover/response letter). Universal entry point that infers the register profile from the file path, respects the author's voice profile if one exists, and dispatches the appropriate agent in humanizer mode. Replaces /write humanize.
 argument-hint: "[file path] [--profile academic|slide|correspondence|blog|docs] [--audit | --apply]"
 allowed-tools: Read, Grep, Glob, Edit, Task
 ---
@@ -25,9 +25,9 @@ Read-only. Produces a review report listing every pattern hit (location, severit
 
 ---
 
-## Voice profile inference
+## Register profile inference
 
-The skill infers the profile from the file path (see `anti-ai-prose.md` § Voice profiles):
+The skill infers the register profile from the file path (see `anti-ai-prose.md` § Register profiles):
 
 | Path matches | Profile |
 |---|---|
@@ -54,9 +54,12 @@ The skill picks the right agent based on file type:
 
 The agent receives:
 - The target file path
-- The voice profile
+- The register profile
+- For the `academic` register only: an instruction to read the author's voice profile, which the `writer` resolves itself (`.claude/references/voice-profile.md`). Other registers get no profile.
 - The mode (audit or apply)
 - A pointer to `.claude/rules/anti-ai-prose.md`
+
+With a voice profile, the agent spares only the rows in its `carve_out_rows` and the phrases in its `signature_vocab`, and never a floor row (the reference lists both). The profile only removes flags, so idempotency holds. If the agent reports "Voice: no profile at <path>", pass that line to the user.
 
 ---
 

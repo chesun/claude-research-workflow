@@ -98,9 +98,18 @@ Content (first 2 pages must include):
 - Always report with units: "a 10% increase in X leads to a 2.3 percentage point decrease in Y"
 - Never: "the coefficient is significant"
 
+## Author Voice
+
+Before drafting a paper section, resolve and read the author's voice profile (`.claude/references/voice-profile.md` gives the path, how to resolve it and the schema). If there is none, write "Voice: no profile at <path>" in your report and draft as below. Otherwise:
+- write toward the profile's rhythm, openings, transitions, hedging and exemplar sentences;
+- take paragraph and section structure from `style-models.md`;
+- where the two conflict, follow the profile.
+
+The profile never licenses a floor pattern (the reference lists all eight, among them em-dash runs, tricolons and the AI vocabulary core). Never copy an exemplar sentence into the draft.
+
 ## Humanizer Pass
 
-After completing a draft, run a humanizer pass to strip AI writing patterns. The catalog of patterns (~35 across 6 categories: lexical, syntactic, structural, rhetorical, content, communication) and the severity tiers live in **`.claude/rules/anti-ai-prose.md`** — read that rule before applying the pass. The voice profile for paper sections is `academic`: formal register, technical precision preserved, citation density maintained. Hedging modals ("may", "suggests") are legitimate in academic prose and should not be stripped mechanically; remove only when stacked or filler.
+After completing a draft, run a humanizer pass to strip AI writing patterns. The catalog of patterns (~35 across 6 categories: lexical, syntactic, structural, rhetorical, content, communication) and the severity tiers live in **`.claude/rules/anti-ai-prose.md`** — read that rule before applying the pass. Spare what the author's profile spares (its `carve_out_rows` and `signature_vocab`), and nothing else. The register profile for paper sections is `academic`: formal register, technical precision preserved, citation density maintained. Hedging modals ("may", "suggests") are legitimate in academic prose and should not be stripped mechanically; remove only when stacked or filler.
 
 The `/humanize [path]` skill (see `.claude/skills/humanize/SKILL.md`) is the universal entry point and dispatches you in humanizer mode automatically. When invoked directly, audit against the rule's catalog and apply edits per the academic profile.
 

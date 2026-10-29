@@ -36,7 +36,7 @@ Unified review command that routes to the appropriate critic agents based on the
 ### Comprehensive Review (default for .tex paper)
 Dispatch in parallel:
 1. **strategist-critic** — causal design audit (4 phases)
-2. **writer-critic** — manuscript polish (6 categories)
+2. **writer-critic** — manuscript polish (6 categories), given the voice-profile path as in `--proofread`
 3. **Verifier** — compilation check
 Compute weighted aggregate score.
 
@@ -60,8 +60,9 @@ Dispatch **strategist-critic** standalone (applied-micro overlay):
 - Critic writes report to `quality_reports/reviews/YYYY-MM-DD_<target>_strategist_review.md`.
 
 ### Manuscript Polish (`--proofread`)
-Dispatch **writer-critic** standalone:
+Dispatch **writer-critic** standalone. First resolve the author's voice profile in a shell (`.claude/references/voice-profile.md`) and pass its absolute path, or "none"; pass any "Voice: no profile" line to the user:
 - 6 categories: structure, claims-evidence, ID fidelity, writing, grammar, compilation
+- an advisory Voice conformance section when a profile path is passed
 - Critic writes report to `quality_reports/reviews/YYYY-MM-DD_<target>_writer_review.md`.
 
 ### Cross-Language Replication (`--replicate [language]`)

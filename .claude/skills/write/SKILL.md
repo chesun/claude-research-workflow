@@ -25,14 +25,15 @@ Workflow:
 1. Read existing paper, research spec, literature review, results summary
 2. Read .claude/references/domain-profile.md for field conventions
 3. Check paper/references.bib for available citations
-4. Dispatch Writer with section standards:
+4. Tell the Writer to read the author's voice profile, which it resolves itself (`.claude/references/voice-profile.md`). If it reports "Voice: no profile at <path>", pass that line to the user.
+5. Dispatch Writer with section standards:
    - Introduction: contribution in first 2 pages, effect sizes with units
    - Strategy: estimating equation displayed and numbered, assumptions explicit
    - Results: every estimate with units and magnitudes
    - Conclusion: restate with effect size, limitations, implications
-5. Writer applies notation protocol and anti-hedging rules
-6. Humanizer pass runs automatically before finalizing
-7. Save to paper/sections/[section].tex
+6. Writer applies notation protocol and anti-hedging rules
+7. Humanizer pass runs automatically before finalizing
+8. Save to paper/sections/[section].tex
 
 ### Humanizer pass — moved to `/humanize`
 

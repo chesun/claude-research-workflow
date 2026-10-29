@@ -43,9 +43,9 @@ This rule is the **stylistic** counterpart to the four epistemic rules (`no-assu
 
 ---
 
-## Voice profiles
+## Register profiles
 
-The pattern catalog applies universally; the *register* and *flexibility* vary by document type. When a humanizer pass is invoked, the profile is inferred from path (table below) or set explicitly via flag.
+The pattern catalog applies universally; the *register* and *flexibility* vary by document type. When a humanizer pass is invoked, the register profile is inferred from path (table below) or set explicitly via the `--profile` flag.
 
 | Profile | Inferred from | Register | Notes |
 |---|---|---|---|
@@ -56,6 +56,13 @@ The pattern catalog applies universally; the *register* and *flexibility* vary b
 | `docs` | `README.md`, `docs/**` | Practical, instructional, second-person OK | Imperative voice fine. The signposting trap is real here ("In this section we will...") — strip aggressively. |
 
 If a path doesn't match any profile, the humanizer asks before applying.
+
+**Field conventions in the `academic` and `slide` registers.** These are not flags (they need no corpus):
+- **R1:** `Importantly,` / `Notably,` opening a sentence that reports a finding from the literature. `Of course,`, `Clearly,` and `It is worth noting` are still filler.
+- **L3:** `implement` an experiment, treatment, protocol or policy.
+- **L4:** role assignment, as in "Condition X serves as the control".
+
+**Author voice.** The author's own voice profile is separate and additive. It lives outside the repo, and may spare a few more flags on corpus evidence, never the floor rows. See `.claude/references/voice-profile.md` (ADR-0006).
 
 ---
 
@@ -69,8 +76,8 @@ Six categories, ~35 patterns. Severity tiers (Critical / Major / Minor) drive th
 |---|---|---|---|---|
 | L1 | AI vocabulary cluster | Critical | delve, navigate, leverage (as filler verb), tapestry, landscape, foster, garner, interplay, underscore | Use the plain-English verb. "Leverage X" → "use X"; "navigate the literature" → "read the literature". |
 | L2 | Promotional adjectives | Major | groundbreaking, comprehensive, robust (as filler), pivotal, transformative, cutting-edge, paradigm-shifting | Drop or replace with concrete claim. "Robust" is fine for SE methods; flag when it's a content puff word. |
-| L3 | Fancy synonyms for plain words | Major | utilize, demonstrate, facilitate, subsequent, aforementioned, methodology (when "method" works), implement (when "do" works) | Plain word. Already covered in writer-critic Cochrane checks; this rule reaffirms. |
-| L4 | Copula avoidance | Minor | "X serves as Y", "X represents Y", "X stands as Y" | "X is Y". |
+| L3 | Fancy synonyms for plain words | Major | utilize, demonstrate, facilitate, subsequent, aforementioned, methodology (when "method" works), implement (when "do" works) | Plain word. Already covered in writer-critic's McCloskey and Cochrane checks; this rule reaffirms. Not a flag: `implement` an experiment (§ Register profiles). |
+| L4 | Copula avoidance | Minor | "X serves as Y", "X represents Y", "X stands as Y" | "X is Y". Not a flag: role assignment (§ Register profiles). |
 | L5 | Vague intensifiers | Minor | very, quite, rather, somewhat, fairly, relatively (as filler) | Delete. |
 
 ### 2. Syntactic (sentence structure)
@@ -96,7 +103,7 @@ Six categories, ~35 patterns. Severity tiers (Critical / Major / Minor) drive th
 
 | # | Pattern | Severity | Example | Fix |
 |---|---|---|---|---|
-| R1 | Signposting filler | Major | "It's worth noting that...", "It is important to note...", "Of course,", "Clearly,", "Obviously,", "Needless to say," | Delete. State the thing directly. |
+| R1 | Signposting filler | Major | "It's worth noting that...", "It is important to note...", "Of course,", "Clearly,", "Obviously,", "Needless to say," | Delete. State the thing directly. Not a flag: a literature signal (§ Register profiles). |
 | R2 | Throat-clearing introductions | Major | "In today's increasingly complex world...", "Researchers have long debated..." | Cut to the substance in sentence 1. |
 | R3 | Roadmap signposting | Minor | "The remainder of this paper is organized as follows..." (already in McCloskey list); on slides: "In this section we will explore..." | Delete on slides; one short version OK in papers. |
 | R4 | Hedging stack | Minor | "may potentially", "could possibly", "might conceivably". Stacking modal hedges. | One hedge max. Academic profile tolerates single hedges. |
@@ -172,4 +179,5 @@ The comment scopes to the paragraph it appears in. Auditable: `grep -R "anti-ai-
 - `agents/writer.md` — writer's humanizer pass (now references this rule instead of duplicating the catalog)
 - `agents/storyteller.md` — slide humanizer reference
 - `skills/humanize/SKILL.md` — universal entry point
+- `.claude/references/voice-profile.md` — the author voice profile: what it may spare and the floor it never may (ADR-0006)
 - `working-paper-format.md` — earlier hedging deductions are subsumed under this rule's R1/R4 (consolidated)

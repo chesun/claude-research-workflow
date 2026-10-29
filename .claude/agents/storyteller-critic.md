@@ -82,7 +82,7 @@ Flag when storyteller defaulted to font reduction instead of working through the
 | Overfull hbox | -2 per |
 | Dense slide without spacing fix | -1 per slide |
 
-### Anti-AI-prose deductions (per `.claude/rules/anti-ai-prose.md`, voice profile `slide`)
+### Anti-AI-prose deductions (per `.claude/rules/anti-ai-prose.md`, register profile `slide`; its field conventions in § Register profiles are not flagged)
 
 Slides have less prose than papers, but AI tells stand out more on a projection screen. Score against the rule's catalog with the slide profile (terse, declarative, oral-friendly; tricolons and em-dashes especially overused on slides — hard cap).
 

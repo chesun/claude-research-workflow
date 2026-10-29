@@ -1,6 +1,6 @@
 # Voice preservation — build plan
 
-**Status:** DRAFT v2 (2026-10-29), for owner approval. v1 was reviewed: fit-for-purpose 72/100, efficiency 80/100 (`quality_reports/reviews/2026-10-29_voice-preservation-plan_{fit-for-purpose,efficiency}_review.md`); resolutions are at the end.
+**Status:** APPROVED v2 (owner, 2026-10-29); template part (deliverables 1–6) in build. v1 was reviewed: fit-for-purpose 72/100, efficiency 80/100 (`quality_reports/reviews/2026-10-29_voice-preservation-plan_{fit-for-purpose,efficiency}_review.md`); resolutions are at the end.
 **Date:** 2026-10-29
 **Design source:** `quality_reports/reviews/2026-09-22_infra-survey_C-voice.md` (survey C), adapted per synthesis `2026-09-22_infra-survey_synthesis.md` § Voice-preservation design and its review (`2026-09-23_infra-survey-synthesis_review.md`, 78/100).
 **Prior decisions:** ADR-0002 (review gate), ADR-0003 (`writer` stays on `fable` while this is built; revisit after).
@@ -11,10 +11,11 @@ The `writer` drafts toward the owner's own academic voice. `writer-critic` repor
 
 ## Owner decisions (2026-10-29)
 
-1. **Own-voice corpus:** the JMP draft `belief_distortion_discrimination/draft/sun_draft_july23.pdf` (79 pages, about 23,600 words). Its title page is dated **24 July 2025**; it was offered as "July 2023" from a misread filename.
-   - **BLOCKED until the owner confirms** that this draft predates AI writing help.
-   - The two later PDFs are dated 18 September 2025 and 28 October 2025. The JMP git history (`jmp_paper_overleaf`) shows Claude commits from 30 April 2026.
-   - More own papers will follow.
+1. **Own-voice corpus** (settled 2026-10-29):
+   - **The JMP draft** `belief_distortion_discrimination/draft/sun_draft_july23.pdf` (79 pages, about 23,600 words, dated 24 July 2025): the owner wrote it with ChatGPT help. Only the parts the owner declares their own enter the profile. **Which parts is pending (owner), asked at build time.**
+   - **Older unaided writing:** from before ChatGPT (late 2022), which the owner will supply.
+   - The two later PDFs (18 September and 28 October 2025) and the 2026 versions (Claude commits in `jmp_paper_overleaf` from 30 April 2026) are not used.
+   - The only pre-2022 own text on disk is a one-page funding abstract (`bdm_bic`, November 2021), too short to build from.
 2. **Style models:** the owner will add papers by other authors whose writing they admire. This is a new input the survey did not have.
 3. **One author profile,** not the survey's two paradigm profiles.
 4. **Private:** the filled profile, the notes and the source papers stay out of any public repo. The template ships only the mechanism and the schema.
@@ -86,9 +87,12 @@ No corpus text, excerpt, exemplar sentence or owner-written paragraph goes in an
    - CLAUDE.md skills-table row and `docs/reference/skills.md` row;
    - CHANGELOG, TODO and a session log (verdicts and counts only).
 
-### Owner's private files (user scope, never committed)
+### Owner's private files (user scope, never committed to a public repo)
 
-7. **`<home>/.claude/voice/`:** `sources/` (the owner's copies of the papers and their text extracts), `notes/`, `profile.md` and `style-models.md`. On the Mac the owner copies the folder over, or keeps it in a private repo of their choosing; this is recorded as a limitation.
+7. **`<home>/.claude/voice/`:** `sources/` (the owner's copies of the papers and their text extracts), `notes/`, `profile.md` and `style-models.md`.
+   - **Updated 2026-10-29:** the folder is a clone of the private repo `chesun/voice-profile`, created that day. It tracks the profile, the notes and the text extracts; PDFs are gitignored.
+   - On the Mac: `git clone` to `~/.claude/voice`.
+   - A missing profile is reported, never skipped silently.
 
 ## Order of work
 

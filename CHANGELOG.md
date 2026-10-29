@@ -20,6 +20,25 @@ All notable changes to this fork are documented here. The format follows [Keep a
   - `repoint`, with cascade.
 
   The validator now checks cited labels and declared mentions. `bin/agent_lint.py` checks agent frontmatter.
+- **Voice preservation, template part (2026-10-29, ADR-0006).** The `writer` drafts toward the author's own voice; `writer-critic` reports how far a draft is from it; `/humanize` stops stripping the author's genuine habits.
+  - **Where the profile lives:** one private author profile at `<home>/.claude/voice/`, a clone of the author's private git repo. The template holds no profile content.
+  - **New:** `.claude/references/voice-profile.md` (the schema, the qualification rule, the carve-outs a profile may use, the floor it never may, the privacy rule) and `/voice-profile` (`build`, `audit`, `status`).
+  - **`anti-ai-prose.md`:** § Voice profiles is renamed § Register profiles. Three field conventions are no longer flagged: `Importantly,` / `Notably,` as literature signals, `implement` an experiment, `serves as` the control. This closes the Backlog item.
+  - **Wiring:**
+    - `writer` reads the profile;
+    - `writer-critic` adds an advisory Voice conformance section and spares the profile's carve-outs;
+    - `/humanize` spares them for papers only;
+    - `/review` passes the profile path, since `writer-critic` has no shell.
+
+    A missing profile is reported, not skipped silently.
+  - **Advisory:** no hook, no gate.
+  - **Reviews:**
+    - plan v1: fit-for-purpose 72, efficiency 80;
+    - docs: correctness 74;
+    - rule: consistency and bloat 86.
+
+    All findings were fixed except one, declined with evidence (session log).
+  - **Deferred:** the profile build (it waits for the corpus) and `bin/voice_features.py`.
 - **`verify-input` refuses a proof that points into another node's proof (2026-10-28).** The verifier sees only statements (proof-verifier item 11), so such a proof is refused before any verifier runs.
   - **Refused:** numbered or qualified steps and cases ("Step 2 of lem:x", "Steps 0–4 of the proof of lem:x", "the base case of lem:x"), and "the proof, argument or derivation of, for, in or as lem:x". Also "lem:x's proof".
   - **Read through:** bold, LaTeX macros, `\cref` and brackets.

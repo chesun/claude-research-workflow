@@ -167,3 +167,27 @@
   - All adopted in v2 except one. Declined: "no LaTeX here, so `pdftotext` is unavailable", from a stale memory note (TeX Live 2026 installed 2026-10-22; `pdftotext` ran on the corpus PDF). The note is corrected.
   - Main changes: A4 rebuilt; a standing privacy rule; the Backlog closure made true; the sync list corrected; `bin/voice_features.py` deferred; one schema home.
   - Plan v2 awaits owner approval and corpus confirmation.
+- **Owner, 2026-10-29:** commit and push automatically at checkpoints (saved to memory). The July 2025 draft was written with ChatGPT help, so the corpus is:
+  - the parts of it the owner declares their own (which parts is pending);
+  - older unaided writing, to be supplied.
+
+  Plan v2 approved; the template part goes ahead now. Checkpoint `c8ad95e` pushed.
+- **Template part built (deliverables 1–6):**
+  - new files: ADR-0006; `.claude/references/voice-profile.md`, the single home of the schema, the carve-out list, the floor and the privacy rule; `/voice-profile` (build, audit, status);
+  - `anti-ai-prose.md`: § Register profiles, plus the R1/L3/L4 field conventions;
+  - wiring: `writer` (voice step), `writer-critic` (advisory Voice conformance; Cochrane item 8 carve-out; profile-aware deductions), `storyteller-critic`, `/humanize`, `/write` and `/review` (the dispatcher passes the profile path, since `writer-critic` has no shell);
+  - CLAUDE.md and `docs/reference/skills.md` rows.
+
+  Agent lint PASS (41 files). Reviews running: correctness (docs), and consistency + bloat (rule).
+- **Durable home** (a side agent's note, owner agreed): the profile lived only on this laptop, and a missing profile was skipped silently.
+  - With the owner's explicit OK, created the private repo `chesun/voice-profile` via the GitHub API and cloned it to `~/.claude/voice`, with the three guard settings and the personal identity set. The initial commit was pushed.
+  - Wired in: the reference, ADR-0006 and `/voice-profile` (build pushes; status checks the clone).
+  - A missing profile is now reported ("Voice: no profile at <path>").
+- **Reviews of the template part:**
+  - **Rule, consistency + bloat 86.** Fixed: the leftover rename in `storyteller.md:64` and `docs/concepts/upstream-differences.md:126`; R1/L3/L4 cells point to § Register profiles; the cross-reference; the L3 attribution. Kept: `CHANGELOG.md:99` (a dated release record).
+  - **Docs, correctness 74.** All fixed:
+    - High: `/write` and `/humanize` have no shell to resolve the path. Agents with a shell resolve it themselves, and `/review` passes it to `writer-critic`.
+    - Mediums: the profile reached slides through `/humanize` (now papers only); `/write` passed the path to a `writer-critic` it never dispatches.
+    - Lows: the floor pointer in `writer.md`; the audit report's score header; R4 says stacks are still flagged; `signature_vocab` split into phrase and count; the ADR's reason for advisory-only.
+  - No second cycle: the fixes change wiring, not the design.
+  - Cost: two agents, about 295k tokens, 8 min.
