@@ -92,7 +92,7 @@ For every novel definition:
 - **Divide into labeled units:** Step 1, Step 2, Case 1, Subcase 1a. Give titles indicating content.
 - **Gather ALL conditions BEFORE the conclusion.** Bad: "If A and B, then D since C." Good: "If A, B, and C, then D."
 - **Specify which assumptions each step uses.** Not "the above assumptions imply..." but "Assumptions Mon and Cont together imply..."
-- **A node's proof stands on its own.** Justify each step by a statement in `uses`, standard mathematics, or an earlier step; never by another node's proof ("Step 2 of lem:x", "as in the proof of prop:y"). The blind verifiers never see other proofs, and they FAIL such a step even when they could rebuild it (proof-verifier checklist item 11). If a variant repeats its parent's argument, write the argument out.
+- **A node's proof stands on its own.** Justify each step by a statement in `uses`, standard mathematics, or an earlier step; never by another node's proof ("Step 2 of lem:x", "as in the proof of prop:y"). The blind verifiers never see other proofs, and they FAIL such a step even when they could rebuild it (proof-verifier checklist item 11); `verify-input` refuses such a proof before any verifier runs. If a variant repeats its parent's argument, write the argument out.
 - **Make similar proof parts obvious.** Write Case 1 perfectly, mirror for Case 2 with minimal adjustments. Similarity of phrasing signals the reader can skim.
 - **Write proofs forward,** not backward (Halmos). No "let delta = epsilon/(3M^2+2)" without motivation.
 - **Target math-to-English ratio: 52--63.5%** in proof environments.

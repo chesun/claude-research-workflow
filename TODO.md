@@ -9,6 +9,8 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Up Next
 
+- [ ] **Copy the `verify-input` refusal to `behavioral`, BDD and `bdm_bic`** (Class A: `bin/blueprint_tools.py`, `bin/test_blueprint_tools.py`, `.claude/skills/theory/SKILL.md`, `.claude/agents/theorist.md`) once committed here.
+- [ ] **BDD `lem:band` (checked) points into another node's proof** (red-team r1, 2026-10-28). Line 33 calls the variance identity "its Step 1(ii)", which is a step of lem:martingale-horizon's proof. This is the pronoun form, which the tool does not catch. Owner: rewrite the step from the statement and re-verify, or accept it.
 - [ ] **card-auditor review point (ADR-0005 item 3):** after five audited nodes, count the auditor's catches and false alarms in the session log; the owner decides whether it stays. Audited so far: 1 (`prop:nstar-interior-ac`, 2026-10-14, FAITHFUL, agreed with the owner).
 - [ ] **Voice preservation** (the committed next build from the 2026-09-22 infra survey): two per-paradigm voice profiles; needs the owner's exemplar papers. Folds in the anti-AI-prose academic carve-outs (Backlog).
 
@@ -29,8 +31,6 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Backlog
 
-- [ ] **`verify-input`: refuse a proof that points at another node's proof** (2026-10-15). Verifiers judged "Step 2 of lem:x" citations unevenly: one passed, one failed, two passed after rebuilding the step. Item 11 in `proof-verifier.md` and a line in `theorist.md` now make it a uniform FAIL. A refusal in `blueprint_tools.py verify-input` on patterns like `Step N of <label>` / `proof of <label>` would catch it before any verifier runs. Gated code (ADR-0002 review).
-
 - [ ] **Destructive guard: Windows shared-storage prefixes** — `_shared_prefixes()` lists macOS mount points only, so on this Windows machine `rm -rf` / `find -delete` inside OneDrive or Dropbox folders is not blocked (red-team, 2026-10-14). Adding `%OneDrive%`, `%OneDriveCommercial%` and `~/Dropbox` would also block routine scratch deletes inside repos that live in OneDrive; decide the scope first. ADR-0002 review.
 - [ ] **Unclosed `<!--` or code fence in a card** (lean_check review M1, 2026-10-14): `blueprint_check.COMMENT_RE` needs the closing `-->`, so fields after an unclosed comment are still read, while a renderer hides them. Both checkers agree; the owner signs in a raw editor, so the impact is limited. The fix (blank an unclosed comment or fence to the end of the file) must not change node hashing, which also uses `COMMENT_RE`. ADR-0002 review.
 - [ ] **Review gate: accept directory targets** — `review-receipt-check.py` matches `**Target:**` by exact path or unique basename only, so files inside a reviewed directory (e.g. `bin/fixtures/lean_check/lean-toolchain`) need a waiver (used once, 2026-10-12). Needs an ADR-0002 review.
@@ -49,6 +49,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Done (recent)
 
+- [x] 2026-10-28 — **`verify-input` refuses a proof that points into another node's proof** (proof-verifier item 11): steps, cases, "proof/argument of", possessives, read through emphasis and LaTeX; statement parts and own steps allowed; linear time. Reviews r2: red-team 87, correctness 92 (round 1: 68, 88; ReDoS fixed). 141 tests; live blueprint flags only 2 refuted variants. Session log `2026-10-22_orientation-and-record-backlog.md` §6.
 - [x] 2026-10-28 — **BDD and `bdm_bic` synced with the instruction-budget changes** (from `behavioral` `2c816cf`; gates pass). BDD: `5dd2de7`, merged into `theory-v2-edits` as `50f61f1` and pushed; it reaches BDD `main` with that branch. `bdm_bic`: `a9f0023` on `main`, pushed. Always-loaded instructions: BDD 153.2k → 94.2k, `bdm_bic` 148.4k → 89.4k. Session log `2026-10-22_orientation-and-record-backlog.md` §5.
 
 - [x] 2026-10-22 — **Records caught up**: CHANGELOG [Unreleased] and README brought current; stale plan headers closed (modernize, port-mandatory-review, infra survey, context-tightening) and 2026-09 added to the plans index; catch-up survey `quality_reports/reviews/2026-10-22_repo-catch-up-survey.md`; BDD handover plan written. Session log `2026-10-22_orientation-and-record-backlog.md`.
@@ -59,4 +60,3 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 - [x] 2026-10-15 — **BDD theory: the 13 `proved` variants verified.** 9 checked (3 after self-contained rewrites); 3 refuted on reachability or attainment and repaired by owner choice (`-beta-bernoulli-cap`, `-threshold-loss-reach`, `-location-loss-value`, all checked); det-variance superseded by `-2` (checked). No node left at `proved`. Session log §25.
 - [x] 2026-10-14 — **BDD theory: all 7 conjecture claims settled.** Checked as written: `lem:var0`, `prop:seq-vs-commit-bias`, `prop:cogcons-wedge`, `prop:commit-vs-seq-size`, `cor:gap-rank`. Repaired with the owner's approval, then checked: `prop:gap-closure` → `prop:gap-closure-pos` (n ≥ 1), `prop:commit-cogcons` → `prop:commit-cogcons-grid` (grid benchmark). Validator PASS (54 nodes).
 - [x] 2026-10-14 — **lean_check `card_fields` ignores comments and fences**, matching `blueprint_check` (review 88/100).
-- [x] 2026-10-14 — **Destructive-action guard**: the unparseable-command false positive fixed, and the guard redesigned over three review rounds (every command of a chain, quote-aware heredocs, per-command bypass); 136 tests; audit-log replay 0 new blocks (session log §20).

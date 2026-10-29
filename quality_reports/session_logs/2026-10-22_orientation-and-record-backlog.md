@@ -89,3 +89,58 @@
 - **Merged and pushed (owner's OK):** BDD `claude-sync-2026-10-28` merged into `theory-v2-edits` as `50f61f1`, with a merge commit and no conflicts. The BDD folder now loads 94.2k characters of project instructions.
   - Pushed: BDD `theory-v2-edits` (`a93f41b..50f61f1`) and `bdm_bic` `main` (`2920761..a9f0023`). The pre-push guard passed every commit.
   - The worktree and its local branch were removed on the owner's request (branch was `5dd2de7`, merged). Left: an unreadable `.pytest_cache` in `~/wt/bdd-claude-sync` and in `bdm_bic`, for the owner to delete in Explorer.
+
+## 6. `verify-input` refuses cross-node proof citations (2026-10-28)
+
+- **Owner request:** the backlog item from 2026-10-15. On that date, verifiers judged citations like "Step 2 of lem:x" unevenly: one passed, one failed, two passed after rebuilding the step. Item 11 in `proof-verifier.md` already made such a step a FAIL. This change refuses it in the tool, before any verifier runs.
+- **Design:** the BDD verifier reports set the line between the two cases.
+  - Refused: "Step N of <label>" and "proof of <label>". These point into a proof the verifier never sees.
+  - Allowed: "part 1 of lem:martingale-horizon" and "Part (2) of prop:cogcons-wedge". These cite parts of a statement, which the verifier is shown, and they passed legitimately.
+  - So the check covers step references (`of` or `in`, with an optional "the proof of"), "proof(s) of/for <label>" and "<label>'s proof". It runs on the proof after comments are stripped, and the node's own label is exempt.
+- **Tests first:** 17 refusal cases failed before the change; with it, `test_blueprint_tools` is 97/97. The other bin suites are unchanged (blueprint_check 187, lean_check 208, agent_lint 64, sync_status 22).
+- **Live check:** across BDD's 58 nodes, only `var:band-gamma-zero` is flagged. It is `refuted`, so `verify-input` never runs on it. There are no false positives. The first versions of the three 2026-10-15 variants are each caught: `var:band-tie-continue`, `var:martingale-no-objective` and `var:vol-commit-equiv-int-tie-continue`.
+- **Docs:** the `/theory` SKILL verify refusal list, one clause in the `theorist.md` "stands on its own" bullet, the CHANGELOG [Unreleased] Added, and the TODO backlog item removed.
+- **Review (ADR-0002):** red-team and correctness lenses, on fable, dispatched in parallel.
+- **Review round 1:** red-team 68/100 (10 findings, 3 High); correctness 88/100 (6 WEAK, none High). The reports are `quality_reports/reviews/archive/2026-10-28_verify-input-cross-proof_{red-team,correctness}_review.md`.
+- **Resolutions:**
+  - **Fixed:**
+    - RT1 High, ReDoS. Confirmed: about 4× slower per 4 extra characters. Items and separators now cannot overlap: an item is a number, a roman numeral, one letter, a number word or a bracketed tag, and "to"/"and" need spaces around them. "step " + "to"×4000 now runs in about 0 s; 9 more adversarial inputs and the red team's `redos.py` all run in milliseconds. Pinned by the `xp_linear_on_adversarial_text` check.
+    - RT4 emphasis, RT6 label wrappers and RT8 exotic whitespace: a scanning view drops `*`, `_`, braces, brackets, LaTeX macros, `\,` and zero-width spaces.
+    - RT5 / CO1 unnumbered steps and cases: a qualifier word is accepted ("final", "base", "induction", "each"…), and Case and Subcase are covered.
+    - RT7: "argument/derivation", "given/used/written", "for/in/as", and "Lemma lem:x".
+    - CO3: "AND" matches in any case.
+    - CO4: "proofs of lem:b and lem:c" now reports every listed label.
+    - CO5: the first phrase is chosen in text order.
+    - CO2 / RT9a, the definition-steps false positive: `verify_input` skips definition and assumption labels, which have no proof.
+    - CO6 / RT10: regression tests for each of these.
+  - **Declined: RT2, the comma form.** It is what the corpus uses for a proof's *own* step. `cor-gap-rank.md:51` reads "(def:voluntary-cogcons, Step 1(b))", where the definition has no steps and Step 1(b) is the node's own. Pinned allowed by `xp_ok_comma_own_step`.
+  - **Accepted as a known limit:**
+    - RT3, pronoun references ("its Step 1(ii)"), now documented in the code comment and in SKILL.md. The verifiers' item 11 still applies.
+    - Claim references: "the claim of lem:x" usually means its statement.
+    - RT9b, contrastive remarks ("Unlike the proof of lem:b"): these are refused, and the message now names the HTML-comment escape.
+- **Found while fixing:** my own extension to a bare "step of <label>" flagged a live `checked` node. `var:cogcons-wedge-no-objective` frames its proof as "the $T-1$ step of prop:cogcons-wedge … re-derived", and that proof passed blind verification. A step or case now needs a number or a qualifier word, pinned allowed by `xp_ok_framing_step`.
+  - Live scan: 2 refuted variants flagged, no checked or proved node. The three 2026-10-15 originals are still caught.
+  - Tests: 126/126, with 52 cross-proof checks.
+- **For BDD (not this change):** the red team found a genuine cross-proof pointer in the `checked` node `lem:band`. Line 33 calls the variance identity "its Step 1(ii)", meaning lem:martingale-horizon's proof; it is the pronoun form, which the tool does not catch. Raise with the owner.
+- **The fix changed the design**, so review round 2 runs with fresh lenses.
+- **Review round 2:** red-team 87/100 and correctness 92/100. Neither has a Critical or High finding, and both confirm every round-1 fix and both declines.
+- **Round-2 resolutions:**
+  - **Fixed:**
+    - CO1: a list tail now needs its "and", so a bare comma no longer pulls in a label (pinned by `xp_ok_comma_not_list`).
+    - CO2: a label that is not a node gets its own message ("no node has that label"), not a claim about its statement.
+    - CO3 / RT1–RT5: possessive step, derivation and plural ("lem:b's Step 2", "lem:b's proofs"); the bare plural "the steps of"; ordinals ("fourth", "2nd", "penultimate", "next"); a qualifier with a count ("final two steps"); "through"; `$2$`; `\(lem:b\)`; "the lemma lem:b". 13 new refusal checks.
+    - CO4: `xp_bare_step` is renamed `xp_each_step`, and the timing check now also asserts that a reference after the adversarial text is found.
+    - RT9: the code comment lists every known limit, and the docstring no longer claims more than a floor.
+  - **Declined:**
+    - "Step 2 from lem:b": "from" reads as "derived from", for example "(Step 2 from lem:b)".
+    - Bare plural "the cases of": a statement can have cases.
+  - **Accepted, documented in the code comment:**
+    - RT6: other nouns, words merged by a zero-width space, intra-word emphasis.
+    - RT7: a lone-letter time index ("step t in lem:x").
+    - RT8: statement cases; escape with "case 2 of the statement of lem:x".
+    - A latent false positive with no live instance: "the proof as lem:b states".
+- **Final state:** `test_blueprint_tools` 141/141 (67 cross-proof checks). The other bin suites are unchanged.
+  - Live: 2 refuted variants flagged, no checked or proved node. The three 2026-10-15 originals are caught.
+  - Timing: worst 102 ms on the red team's 100 KB shapes.
+  - The round-1 reports were superseded and archived. The r2 reports are the receipts.
+- **Cost:** 4 lenses on fable, about 565k agent tokens and 54 min of agent wall-clock. Findings: High 3 and Medium 4 in round 1; Medium 3 in round 2; the rest Low.

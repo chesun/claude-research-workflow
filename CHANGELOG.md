@@ -20,6 +20,12 @@ All notable changes to this fork are documented here. The format follows [Keep a
   - `repoint`, with cascade.
 
   The validator now checks cited labels and declared mentions. `bin/agent_lint.py` checks agent frontmatter.
+- **`verify-input` refuses a proof that points into another node's proof (2026-10-28).** The verifier sees only statements (proof-verifier item 11), so such a proof is refused before any verifier runs.
+  - **Refused:** numbered or qualified steps and cases ("Step 2 of lem:x", "Steps 0–4 of the proof of lem:x", "the base case of lem:x"), and "the proof, argument or derivation of, for, in or as lem:x". Also "lem:x's proof".
+  - **Read through:** bold, LaTeX macros, `\cref` and brackets.
+  - **Allowed:** "part 1 of lem:x", a part of a statement. References to the proof's own steps. A definition's or assumption's steps.
+  - **Known limit:** a pronoun ("its Step 2") is not caught.
+  - **Tests and live check:** 67 new checks, including a timing bound on adversarial input; review round 1 found exponential backtracking, now linear. On a live blueprint of 58 nodes it flags only two refuted variants, and it catches the three proofs that verifiers judged unevenly on 2026-10-15.
 - **Mandatory independent review for code (ADR-0002; 2026-09-21, fail-closed amendment 09-22).** The PreToolUse hook `review-receipt-check.py` blocks a `git commit` whose staged hooks, `bin/` scripts or `.githooks/` lack a fresh review receipt in `quality_reports/reviews/`. The `/review-build` skill dispatches the review lenses. Docs changes are advised, not blocked. `REVIEW_WAIVE=1` is the escape.
 - **Model routing (ADR-0003; 2026-09-24).** Critics, referees, `editor`, `verifier` and `tikz-reviewer` run on `fable`, and workers on `opus`. The reviewer is never on a weaker model than the author.
 - **`/tools sync-status` (2026-10-14).** `bin/sync_status.py` reports git, LFS, DVC and backup state, with 22 tests. It catches unpushed LFS objects when the LFS hook is bypassed, plain blobs under LFS rules, and missing upstreams.
