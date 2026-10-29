@@ -83,8 +83,10 @@ Built only from the author's own decks (ADR-0007).
 - **Qualification:**
   - with 3 or more decks, a trait must recur across most of them (`evidence: across-corpus`);
   - with fewer, across most of a deck's parts (title and motivation, model or design, results, conclusion and backup), marked `evidence: within-deck` and provisional.
+- **Versions of one talk count once.** Decks that share most of their text (half or more of one deck's lines appear verbatim in the other) are versions of one deck. Use the fullest version and list the others under its `versions:`, so a talk given five times does not outvote one given once.
+- **More than one paper:** where the decks come from several papers, each trait records whether it recurs in every paper's decks; one that recurs in only one paper's is tagged with that paper.
 - **Subject words** of the decks never qualify.
-- **Front-matter:** the profile schema's fields. `corpus` lists decks, `evidence` is `within-deck` or `across-corpus`, `rhythm` becomes `{median_words_per_slide, median_bullets_per_slide, median_words_per_bullet}`, and `measured_by` says how.
+- **Front-matter:** the profile schema's fields. `corpus` lists decks (with `paper:`, and `versions:` where there are any), `evidence` is `within-deck` or `across-corpus`, `rhythm` becomes `{median_words_per_slide, median_bullets_per_slide, median_words_per_bullet}`, and `measured_by` says how.
 
 ```markdown
 ## Titles          <!-- claim titles or topic titles; length; questions -->

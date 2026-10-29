@@ -43,6 +43,8 @@ A build with only one kind rebuilds only that file.
      - heads each slide with its position in the deck.
 
    If `pdftotext` is missing, the subagents read the PDF directly and `measured_by` is `not measured`.
+
+   **Versions.** For decks, measure with a scratch script the share of each deck's lines found verbatim in each other deck. Where it is half or more, the two are versions of one talk, as are decks linked through a chain of such pairs: keep the fullest for steps 3–5 and list the others under its `versions:` (the reference's slide schema).
 3. **Notes.** Dispatch one fresh general-purpose subagent per document, in parallel. Each gets:
    - the reference's note schema (the paper schema for an own paper, the slide schema for a deck, the three sections for a style model);
    - its one extract;
