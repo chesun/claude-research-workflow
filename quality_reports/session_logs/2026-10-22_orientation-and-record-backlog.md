@@ -149,3 +149,21 @@
   - BDD `theory-v2-edits` `9685b8e`: four files; `test_blueprint_tools` 141 and `test_blueprint_check` 187 pass.
   - `bdm_bic` `93de622`: the theory skill and `theorist.md` only; it has no `bin/` or `theory/`.
   - Next, in BDD, by the owner: rewrite `lem:band`'s "its Step 1(ii)" step.
+
+## 7. Proof-rewrite route documented; voice preservation planned (2026-10-29)
+
+- **From a BDD side agent (owner relayed it):** rewriting `lem:band` (checked) by logging `checked -> proved` made the validator refuse re-verification.
+  - Confirmed in `bin/blueprint_check.py:748-757`: `-> checked` is compared with the hash of the last upward move to `proved`.
+  - Walked both routes in a temporary blueprint (scratchpad `reprove/route.py`): `checked -> proved -> checked` FAILs; `checked -> survived-search -> proved -> checked` PASSes.
+  - Documented the second route in the `/theory` skill (§ `node`), `theorist.md` and the node template; docs only, suites unchanged (187, 141, 64, 208; agent lint PASS).
+  - The validator message change goes with the `COMMENT_RE` backlog fix. Copying the docs downstream is queued in TODO, BDD after the owner's session.
+- **Voice preservation:** owner answers, 2026-10-29:
+  - corpus: the JMP draft plus more of their own papers to come, and other authors' papers as style models;
+  - AI-assisted text exists in later drafts;
+  - one author profile, kept private.
+  - Correction: the "July 2023" draft is dated 24 July 2025 on its title page (misread filename). Corpus confirmation is pending.
+  - Plan v1 `quality_reports/plans/2026-10-29_voice-preservation.md`, out for fit-for-purpose and efficiency reviews.
+- **Plan v1 reviews:** fit-for-purpose 72 (3 High, 5 Medium, 4 Low), efficiency 80 (1 High, 3 Medium, 4 Low). About 247k agent tokens, 6 min.
+  - All adopted in v2 except one. Declined: "no LaTeX here, so `pdftotext` is unavailable", from a stale memory note (TeX Live 2026 installed 2026-10-22; `pdftotext` ran on the corpus PDF). The note is corrected.
+  - Main changes: A4 rebuilt; a standing privacy rule; the Backlog closure made true; the sync list corrected; `bin/voice_features.py` deferred; one schema home.
+  - Plan v2 awaits owner approval and corpus confirmation.

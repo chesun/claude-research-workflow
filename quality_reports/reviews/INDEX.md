@@ -8,6 +8,9 @@ When writing a new review, consult this index first. If an `Active` entry exists
 
 ## 2026-10
 
+- [2026-10-29_voice-preservation-plan_fit-for-purpose_review.md](2026-10-29_voice-preservation-plan_fit-for-purpose_review.md) — voice preservation plan v1, fit-for-purpose, 72, Active (findings resolved in plan v2)
+- [2026-10-29_voice-preservation-plan_efficiency_review.md](2026-10-29_voice-preservation-plan_efficiency_review.md) — voice preservation plan v1, efficiency, 80, Active (findings resolved in plan v2)
+
 - [2026-10-28_verify-input-cross-proof-r2_red-team_review.md](2026-10-28_verify-input-cross-proof-r2_red-team_review.md) — `verify-input` cross-proof refusal r2, red-team, 87, Active (round 1, 68, archived)
 - [2026-10-28_verify-input-cross-proof-r2_correctness_review.md](2026-10-28_verify-input-cross-proof-r2_correctness_review.md) — `verify-input` cross-proof refusal r2, correctness, 92, Active (round 1, 88, archived)
 - [2026-10-22_repo-catch-up-survey.md](2026-10-22_repo-catch-up-survey.md) — repo state brief (supersedes 2026-10-11's); arc since September, open work, record drift, Active

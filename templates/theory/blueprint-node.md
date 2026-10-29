@@ -39,6 +39,8 @@ Rules the validator enforces:
     reports whose headers name this label, Score PASS and that proof hash.
   - While a node is proved or above, its proof must still match the last logged proof hash.
   - A downgrade (e.g. a verifier FAIL) needs an existing evidence file, normally the failing report.
+  - -> checked is compared with the proof hash of the last upward move to proved. To rewrite a proof, move
+    down to survived-search, then -> proved with the new hash; a move down to proved keeps the old one.
   - Locators must be regular files inside the repo. URLs, absolute paths and paths outside the repo
     give UNVERIFIED, never PASS. Windows device names (nul, con, ...) and directories are errors.
   - Only blank lines and HTML comments may sit between the header and ## Statement. A separate comment there whose

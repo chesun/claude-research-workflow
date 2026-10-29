@@ -9,6 +9,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Up Next
 
+- [ ] **Copy the proof-rewrite route docs to `behavioral`, BDD and `bdm_bic`** once committed here (Class A: `.claude/skills/theory/SKILL.md`, `.claude/agents/theorist.md`, `templates/theory/blueprint-node.md`; `bdm_bic` has no template). In BDD, wait until the owner's `lem:band` session is committed.
 - [ ] **BDD `lem:band` (checked) points into another node's proof** (red-team r1, 2026-10-28). Line 33 calls the variance identity "its Step 1(ii)", which is a step of lem:martingale-horizon's proof. This is the pronoun form, which the tool does not catch. Owner: rewrite the step from the statement and re-verify, or accept it.
 - [ ] **card-auditor review point (ADR-0005 item 3):** after five audited nodes, count the auditor's catches and false alarms in the session log; the owner decides whether it stays. Audited so far: 1 (`prop:nstar-interior-ac`, 2026-10-14, FAITHFUL, agreed with the owner).
 - [ ] **Voice preservation** (the committed next build from the 2026-09-22 infra survey): two per-paradigm voice profiles; needs the owner's exemplar papers. Folds in the anti-AI-prose academic carve-outs (Backlog).
@@ -31,7 +32,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 ## Backlog
 
 - [ ] **Destructive guard: Windows shared-storage prefixes** — `_shared_prefixes()` lists macOS mount points only, so on this Windows machine `rm -rf` / `find -delete` inside OneDrive or Dropbox folders is not blocked (red-team, 2026-10-14). Adding `%OneDrive%`, `%OneDriveCommercial%` and `~/Dropbox` would also block routine scratch deletes inside repos that live in OneDrive; decide the scope first. ADR-0002 review.
-- [ ] **Unclosed `<!--` or code fence in a card** (lean_check review M1, 2026-10-14): `blueprint_check.COMMENT_RE` needs the closing `-->`, so fields after an unclosed comment are still read, while a renderer hides them. Both checkers agree; the owner signs in a raw editor, so the impact is limited. The fix (blank an unclosed comment or fence to the end of the file) must not change node hashing, which also uses `COMMENT_RE`. ADR-0002 review.
+- [ ] **Unclosed `<!--` or code fence in a card** (lean_check review M1, 2026-10-14): `blueprint_check.COMMENT_RE` needs the closing `-->`, so fields after an unclosed comment are still read, while a renderer hides them. Both checkers agree; the owner signs in a raw editor, so the impact is limited. The fix (blank an unclosed comment or fence to the end of the file) must not change node hashing, which also uses `COMMENT_RE`. ADR-0002 review. In the same change, make the "proof changed after it was logged" message name the route (down to `survived-search`, not `proved`).
 - [ ] **Review gate: accept directory targets** — `review-receipt-check.py` matches `**Target:**` by exact path or unique basename only, so files inside a reviewed directory (e.g. `bin/fixtures/lean_check/lean-toolchain`) need a waiver (used once, 2026-10-12). Needs an ADR-0002 review.
 
 - [ ] **lean_check trusted harness** (deferred 2026-10-12, owner's middle path): build the Challenge in an owner-controlled project with its own Mathlib, so the formalizer's lakefile/manifest/folders cannot matter; cap `set_option` resource values. Revisit if the pilot or later work shows the need.

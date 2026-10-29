@@ -43,6 +43,13 @@ Turn a research question, or an existing theory section, into nodes.
 
 One prove-or-refute pass on one claim or variant node. Dispatch **theorist** with the label. It decides whether the statement holds and, if not, finds a counterexample and the weakest repair. The order is examples, then counterexample search, then exact sub-claim checks, then a proof attempt. It records each status change it makes (at most up to `proved`), and finishes by running the validator. Report the node's new status and the validator verdict.
 
+**Rewriting the proof of a node at `proved` or `checked`** (a review finding, or a step to make self-contained) takes three log lines, then `verify`:
+1. `<status> -> survived-search | theorist | <the review or note that prompted the rewrite> | stmt:<hash>`.
+2. Rewrite the proof, then `survived-search -> proved | theorist | | stmt:<hash> proof:<new hash>`.
+3. Run `verify`; two PASSes give `proved -> checked` with the new hash.
+
+Do not move `checked -> proved`: a `-> checked` line is compared with the hash of the last *upward* move to `proved`, so the new reports are refused. Until step 3, the validator fails on every `checked` node that uses this one, so finish in one sitting. For a node at `formalized` or above, ask the owner first.
+
 ### `/theory variants <label>`
 
 Dispatch **theorist** to create one `variant` node for each assumption in the node's `uses` (drop, weaken, or swap it), and run each through a prove-or-refute pass. Summarize which assumptions the result needs (it collapses without them) and which are superfluous (it survives without them).
