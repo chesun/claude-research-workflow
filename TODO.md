@@ -1,6 +1,6 @@
 # TODO — claude-research-workflow
 
-Last updated: 2026-10-28
+Last updated: 2026-10-29
 
 Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans and session logs; this file tracks what is left.
 
@@ -9,7 +9,6 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Up Next
 
-- [ ] **Copy the `verify-input` refusal to `behavioral`, BDD and `bdm_bic`** (Class A: `bin/blueprint_tools.py`, `bin/test_blueprint_tools.py`, `.claude/skills/theory/SKILL.md`, `.claude/agents/theorist.md`) once committed here.
 - [ ] **BDD `lem:band` (checked) points into another node's proof** (red-team r1, 2026-10-28). Line 33 calls the variance identity "its Step 1(ii)", which is a step of lem:martingale-horizon's proof. This is the pronoun form, which the tool does not catch. Owner: rewrite the step from the statement and re-verify, or accept it.
 - [ ] **card-auditor review point (ADR-0005 item 3):** after five audited nodes, count the auditor's catches and false alarms in the session log; the owner decides whether it stays. Audited so far: 1 (`prop:nstar-interior-ac`, 2026-10-14, FAITHFUL, agreed with the owner).
 - [ ] **Voice preservation** (the committed next build from the 2026-09-22 infra survey): two per-paradigm voice profiles; needs the owner's exemplar papers. Folds in the anti-AI-prose academic carve-outs (Backlog).
@@ -49,7 +48,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Done (recent)
 
-- [x] 2026-10-28 — **`verify-input` refuses a proof that points into another node's proof** (proof-verifier item 11): steps, cases, "proof/argument of", possessives, read through emphasis and LaTeX; statement parts and own steps allowed; linear time. Reviews r2: red-team 87, correctness 92 (round 1: 68, 88; ReDoS fixed). 141 tests; live blueprint flags only 2 refuted variants. Session log `2026-10-22_orientation-and-record-backlog.md` §6.
+- [x] 2026-10-28 — **`verify-input` refuses a proof that points into another node's proof** (proof-verifier item 11): steps, cases, "proof/argument of", possessives, read through emphasis and LaTeX; statement parts and own steps allowed; linear time. Reviews r2: red-team 87, correctness 92 (round 1: 68, 88; ReDoS fixed). 141 tests; live blueprint flags only 2 refuted variants. Committed `0faab45`; synced and pushed 2026-10-29 to `behavioral` `cacb58d` (review waived: byte-identical copy), BDD `theory-v2-edits` `9685b8e` and `bdm_bic` `93de622` (docs only; no theory tooling). Session log `2026-10-22_orientation-and-record-backlog.md` §6.
 - [x] 2026-10-28 — **BDD and `bdm_bic` synced with the instruction-budget changes** (from `behavioral` `2c816cf`; gates pass). BDD: `5dd2de7`, merged into `theory-v2-edits` as `50f61f1` and pushed; it reaches BDD `main` with that branch. `bdm_bic`: `a9f0023` on `main`, pushed. Always-loaded instructions: BDD 153.2k → 94.2k, `bdm_bic` 148.4k → 89.4k. Session log `2026-10-22_orientation-and-record-backlog.md` §5.
 
 - [x] 2026-10-22 — **Records caught up**: CHANGELOG [Unreleased] and README brought current; stale plan headers closed (modernize, port-mandatory-review, infra survey, context-tightening) and 2026-09 added to the plans index; catch-up survey `quality_reports/reviews/2026-10-22_repo-catch-up-survey.md`; BDD handover plan written. Session log `2026-10-22_orientation-and-record-backlog.md`.

@@ -144,3 +144,8 @@
   - Timing: worst 102 ms on the red team's 100 KB shapes.
   - The round-1 reports were superseded and archived. The r2 reports are the receipts.
 - **Cost:** 4 lenses on fable, about 565k agent tokens and 54 min of agent wall-clock. Findings: High 3 and Medium 4 in round 1; Medium 3 in round 2; the rest Low.
+- **Synced and pushed (2026-10-29):** Class A copies, each byte-identical to `0faab45`, and each target blob matched main's previous version, so there was no local customization to keep.
+  - `behavioral` `cacb58d`: four files; 141 tests pass. `REVIEW_WAIVE=1`, since the code is unchanged from the version reviewed on main.
+  - BDD `theory-v2-edits` `9685b8e`: four files; `test_blueprint_tools` 141 and `test_blueprint_check` 187 pass.
+  - `bdm_bic` `93de622`: the theory skill and `theorist.md` only; it has no `bin/` or `theory/`.
+  - Next, in BDD, by the owner: rewrite `lem:band`'s "its Step 1(ii)" step.
