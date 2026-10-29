@@ -29,7 +29,12 @@ A build with only one kind rebuilds only that file.
 
    Record both; a file without a declaration is not used. `--model` files need only the author and year.
 2. **Text.** Copy each file into `sources/` (PDF, Word and PowerPoint copies are gitignored), and make a text extract beside it:
-   - a `.pdf`: `pdftotext -layout <file> sources/<id>.txt` (TeX Live ships `pdftotext`);
+   - a `.pdf`: `pdftotext -layout <file> sources/<id>.txt` (TeX Live ships `pdftotext`). For a Beamer deck, clean the extract with a short stdlib script in the session scratch directory (never committed). Pages are separated by form feeds. The script:
+     - drops lines repeated on most pages once digits are masked (page numbers, footers);
+     - keeps only the last page of an overlay build (a page whose lines are all on the next page);
+     - writes each page's first line as `# <title>` and its bullet-glyph lines (`•`, `▶`, `–`) as `- <bullet>`.
+
+     Checked on one of the owner's Beamer decks (2026-10-29): titles were the first line on 53 of 54 pages, only page numbers repeated, and 2 pages were overlay builds;
    - a `.tex` or `.md` (including a Beamer deck): a plain copy;
    - a `.pptx`: the text of each slide, from a short stdlib script (`zipfile` plus `xml.etree`) in the session scratch directory, never committed. The script:
      - takes the presentation order from `p:sldIdLst` in `ppt/presentation.xml`, mapped to slide files through `ppt/_rels/presentation.xml.rels` (the file numbers are not the order once slides are moved);
