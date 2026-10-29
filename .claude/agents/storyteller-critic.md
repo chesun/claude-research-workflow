@@ -101,6 +101,16 @@ Slides have less prose than papers, but AI tells stand out more on a projection 
 
 Respect `<!-- anti-ai-ok: <reason> -->` escape comments per the rule.
 
+If the dispatcher passes the path of the author's slide profile (`slides.md`, `.claude/references/voice-profile.md`), do not deduct for the rows in its `carve_out_rows` or for its `signature_vocab` phrases. The floor rows are always deducted.
+
+### Voice conformance (advisory, not scored)
+
+Run only when the dispatcher passes a slide-profile path. Otherwise write the line the dispatcher passed ("Voice: no profile at <path>"), or "Voice: no profile (none passed)".
+- Compare the deck with each section of `slides.md`: titles, bullets, openings, results, math and figures, quirks.
+- List each departure with the slide and the profile line it departs from.
+- Quote the deck, never the profile's examples (privacy rule, ADR-0006).
+- Report it below the score. It never changes the score.
+
 Talk scores are **advisory** — they do not block commits or PRs.
 
 ## Three Strikes Escalation

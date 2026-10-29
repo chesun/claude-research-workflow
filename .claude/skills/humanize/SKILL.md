@@ -1,6 +1,6 @@
 ---
 name: humanize
-description: Strip AI writing patterns from any external-facing document (paper, slides, README, blog post, cover/response letter). Universal entry point that infers the register profile from the file path, respects the author's voice profile if one exists, and dispatches the appropriate agent in humanizer mode. Replaces /write humanize.
+description: Strip AI writing patterns from any external-facing document (paper, slides, README, blog post, cover/response letter). Universal entry point that infers the register profile from the file path, respects the author's voice profile for papers or slides if one exists, and dispatches the appropriate agent in humanizer mode. Replaces /write humanize.
 argument-hint: "[file path] [--profile academic|slide|correspondence|blog|docs] [--audit | --apply]"
 allowed-tools: Read, Grep, Glob, Edit, Task
 ---
@@ -55,7 +55,7 @@ The skill picks the right agent based on file type:
 The agent receives:
 - The target file path
 - The register profile
-- For the `academic` register only: an instruction to read the author's voice profile, which the `writer` resolves itself (`.claude/references/voice-profile.md`). Other registers get no profile.
+- For the `academic` register, an instruction to read the author's paper profile `profile.md`. For `slide`, an instruction to read the slide profile `slides.md`. The `writer` or `storyteller` resolves the path itself (`.claude/references/voice-profile.md`). Other registers get no profile.
 - The mode (audit or apply)
 - A pointer to `.claude/rules/anti-ai-prose.md`
 

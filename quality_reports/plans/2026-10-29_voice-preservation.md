@@ -120,7 +120,7 @@ No corpus text, excerpt, exemplar sentence or owner-written paragraph goes in an
 
 - `bin/voice_features.py`: v2, on the trigger above.
 - Merging `econ-writing-skill` into `anti-ai-prose.md`: it stays on the candidate list (a catalog change, not voice).
-- A voice for slides: the register carve-outs reach slides; the profile does not.
+- ~~A voice for slides~~: brought into scope by the addendum below (ADR-0007).
 - The `writer` model routing revisit (ADR-0003): after this build, as a separate read-out.
 
 ## Risks
@@ -153,3 +153,19 @@ No corpus text, excerpt, exemplar sentence or owner-written paragraph goes in an
   - the CLAUDE.md override field dropped;
   - A2 bounded.
 - **Partly adopted:** the style-models machinery. The `--model` mode and the reduced schema stay, because the owner said papers are coming; there is no separate template file.
+
+## Addendum: slides (2026-10-29, owner; ADR-0007)
+
+The owner asked to include slides, and will supply decks made entirely by them. The paper profile is not applied to slides, since its prose rhythm does not fit a deck. A separate slide profile is added instead:
+- **`slides.md`** in the same private repo. Its schema has Titles, Bullets, Openings, Results, Math and figures, and Quirks, with rhythm per slide and per bullet. It needs 3 or more decks, or is provisional with fewer.
+- **`/voice-profile build --slides`**, which extracts Beamer, PDF and PowerPoint decks; PowerPoint goes through a throwaway stdlib script.
+- **Wiring:**
+  - `storyteller` writes toward the profile;
+  - `storyteller-critic` adds advisory voice conformance and spares the profile's carve-outs;
+  - `/talk` passes the path, since the critic has no shell;
+  - `/humanize` on `talks/**` uses `slides.md`.
+- **Bounds:** the same carve-out list, floor and privacy rule.
+
+**Acceptance:**
+- **A4s:** like A4, three trials per deck: a held-out slide group against a slide group from a deck of the owner's made with AI help (if any), or from another author's deck. It applies once 3 decks are in.
+- **A5s:** like A5, three outlines.

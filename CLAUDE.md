@@ -132,7 +132,7 @@ See `quality.md` for the weighted aggregation formula and `.claude/references/qu
 | `/theory [mode] [label]` | Theory on a blueprint: prove-or-refute nodes, blind two-verifier checks, paper cross-check (ADR-0004) |
 | `/write [section]` | Draft paper sections (anti-hedging, notation protocol) |
 | `/humanize [path]` | Strip AI writing patterns from any external-facing doc (paper, slide, README, blog, cover/response letter) |
-| `/voice-profile [build\|audit\|status]` | The author's private voice profile: build from own papers, audit a draft against it (ADR-0006) |
+| `/voice-profile [build\|audit\|status]` | The author's private voice profiles (papers, slides): build from own work, audit a draft against them (ADR-0006, ADR-0007) |
 | `/review [file/--flag]` | Quality reviews (routes by target) |
 | `/revise [report]` | R&R cycle: classify + route referee comments |
 | `/talk [mode] [format]` | Create, audit, or compile Beamer presentations |

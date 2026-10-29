@@ -1,4 +1,4 @@
-# Voice profile — schema, carve-outs and floor (ADR-0006)
+# Voice profile — schema, carve-outs and floor (ADR-0006, ADR-0007)
 
 The author's voice profile says what *this author* does. `anti-ai-prose.md` stays subtractive: it is what AI prose does. This file is the single home of the profile's schema, its qualification rule, the carve-outs a profile may use and the floor it can never switch off. ADR-0006 records the decision; `/voice-profile` builds and audits the profile.
 
@@ -7,19 +7,25 @@ The author's voice profile says what *this author* does. `anti-ai-prose.md` stay
 - **The path is `<home>/.claude/voice/`,** where `<home>` is the user's home directory (`%USERPROFILE%` on Windows, `$HOME` on macOS).
   - The folder is a clone of the author's **private** git repo (for this template's owner, `chesun/voice-profile`), cloned to that path on each machine. So it is durable, versioned and portable, and no project repo carries it.
   - Never make that repo public, and never copy its contents into another repo.
-- **Resolve it** in a shell: `py -I -c "import pathlib; print(pathlib.Path.home())"` on Windows, or the same with `python3 -I` on macOS. Then join `.claude/voice/profile.md`.
+- **Resolve it** in a shell: `py -I -c "import pathlib; print(pathlib.Path.home())"` on Windows, or the same with `python3 -I` on macOS. Then join `.claude/voice/` and the register's file: `profile.md` for papers, `slides.md` for slides.
 - **The repo tracks:**
-  - `profile.md`: the author's voice;
+  - `profile.md`: the author's voice in papers;
+  - `slides.md`: the author's voice in slide decks (ADR-0007);
   - `style-models.md`: the structure taken from other authors' papers;
   - `notes/`: one note per source document;
   - `sources/*.txt`: text extracts of the sources, enough to rebuild.
 
-  PDFs and Word files are gitignored, and the originals stay where the author keeps them.
+  PDF, Word and PowerPoint files are gitignored, and the originals stay where the author keeps them.
+- **One profile per register:**
+  - papers (`academic`) use `profile.md`;
+  - slides (`slide`) use `slides.md`;
+  - docs, blog and correspondence get none.
+
+  A profile never stands in for the other register's.
 - **Who resolves it:**
-  - an agent with a shell (`writer`) resolves it itself;
-  - `writer-critic` has no shell, so its dispatcher (`/review`) resolves it and passes the absolute path, or "none";
-  - the profile is for the `academic` register only (papers). Slides, docs and correspondence never get it.
-- **A missing profile is reported, not skipped silently.** An agent that finds no `profile.md` writes "Voice: no profile at <path>" in its report, and the dispatcher passes that line to the user. A profile with an empty `corpus` is reported the same way. With no profile, the agent proceeds as before.
+  - an agent with a shell (`writer`, `storyteller`) resolves it itself;
+  - a critic with no shell gets the absolute path, or "none", from its dispatcher: `/review` for `writer-critic`, `/talk` for `storyteller-critic`.
+- **A missing profile is reported, not skipped silently.** An agent that finds no profile for its register writes "Voice: no profile at <path>" in its report, and the dispatcher passes that line to the user. A profile with an empty `corpus` is reported the same way. With no profile, the agent proceeds as before.
 
 ## Privacy rule
 
@@ -71,6 +77,26 @@ rhythm: {median_sentence_words: <n>, iqr: "<a>-<b>", em_dash_per_100_words: <x>}
 
 Each section holds a few lines of narrative, each trait with its frequency and any `sections:` tag, then 3–6 verbatim exemplar sentences. Deliberate quirks are labelled `deliberate`, so `/humanize` does not strip them.
 
+## Slide-profile schema (`slides.md`)
+
+Built only from the author's own decks (ADR-0007).
+- **Qualification:**
+  - with 3 or more decks, a trait must recur across most of them (`evidence: across-corpus`);
+  - with fewer, across most of a deck's parts (title and motivation, model or design, results, conclusion and backup), marked `evidence: within-deck` and provisional.
+- **Subject words** of the decks never qualify.
+- **Front-matter:** the profile schema's fields. `corpus` lists decks, `evidence` is `within-deck` or `across-corpus`, `rhythm` becomes `{median_words_per_slide, median_bullets_per_slide, median_words_per_bullet}`, and `measured_by` says how.
+
+```markdown
+## Titles          <!-- claim titles or topic titles; length; questions -->
+## Bullets         <!-- fragments or sentences; count and length; nesting -->
+## Openings        <!-- how a talk opens and motivates -->
+## Results         <!-- how a finding is shown: one number, a figure with a callout, a table -->
+## Math and figures <!-- how much notation; text on figure slides -->
+## Quirks
+```
+
+Each section holds a few lines with frequencies, then 3–6 verbatim examples (titles or bullets). The privacy rule applies as to `profile.md`.
+
 ## Style-model schema (`style-models.md`)
 
 Other authors' papers inform **structure only**:
@@ -97,7 +123,7 @@ models:
 
 ## Per-document note (`notes/<id>.md`, about 300 words)
 
-One fresh subagent per source document writes it, against the profile schema's six sections, or the style-model schema's three for a style model. Each trait in a note has:
+One fresh subagent per source document writes it. It works against the profile schema's six sections, the slide schema's six for a deck, or the style-model schema's three for a style model. Each trait in a note has:
 - its count;
 - the sections where it recurs, as a `sections:` tag;
 - one or two verbatim examples.
@@ -133,7 +159,8 @@ A profile touches only the `anti-ai-prose` catalog. It never touches an epistemi
 
 - **`writer`** writes toward the profile when drafting: its rhythm, openings, transitions, hedging and exemplars. It takes structure from the style models. It never breaks the floor, and still runs the humanizer pass.
 - **`writer-critic`** adds an advisory "Voice conformance" section. Each finding cites the profile line it departs from. It is reported beside the score and never deducted from it.
-- **`/humanize`** on a paper (`academic` register) spares the profile's `carve_out_rows` and `signature_vocab` phrases, and nothing else. This only removes flags, so a re-run stays a no-op.
+- **`storyteller`** writes slides toward `slides.md` (titles, bullets, openings, results), and never toward `profile.md`. **`storyteller-critic`** adds the same advisory Voice conformance section, against `slides.md`.
+- **`/humanize`** spares the register's profile's `carve_out_rows` and `signature_vocab` phrases, and nothing else: `profile.md` for a paper, `slides.md` for a deck. On slides, S2 (tricolons) stays a hard cap as part of the floor. This only removes flags, so a re-run stays a no-op.
 
 ## Rebuild
 

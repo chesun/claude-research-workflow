@@ -8,6 +8,7 @@ When writing a new review, consult this index first. If an `Active` entry exists
 
 ## 2026-10
 
+- [2026-10-29_voice-profile-slides_correctness_review.md](2026-10-29_voice-profile-slides_correctness_review.md) — slide voice profile (ADR-0007, reference, skills, storyteller agents), correctness, 86, Active (7 fixed, 2 accepted)
 - [2026-10-29_voice-preservation-docs_correctness_review.md](2026-10-29_voice-preservation-docs_correctness_review.md) — voice preservation template docs (reference, skill, ADR-0006, agents, skills), correctness, 74, Active (findings fixed, session log §7)
 - [2026-10-29_anti-ai-prose-register_consistency-bloat_review.md](2026-10-29_anti-ai-prose-register_consistency-bloat_review.md) — `anti-ai-prose.md` register rename and carve-outs, consistency + bloat, 86, Active (findings fixed)
 - [2026-10-29_voice-preservation-plan_fit-for-purpose_review.md](2026-10-29_voice-preservation-plan_fit-for-purpose_review.md) — voice preservation plan v1, fit-for-purpose, 72, Active (findings resolved in plan v2)

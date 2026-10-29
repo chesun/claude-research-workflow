@@ -94,7 +94,8 @@ What this commits us to. What it rules out. Open questions it creates.
 | [0003](0003_model-routing-fable-review-opus-execution.md) | Model routing: reviewers and critics on `fable`, workers on `opus` | 2026-09-24 | Decided | Methodology / enforcement |
 | [0004](0004_theory-workflow-blueprint-verifier-lean.md) | Theory workflow: blueprint, blind verifier, opt-in Lean | 2026-10-11 | Decided (one bullet superseded by #0005) | Methodology / theory |
 | [0005](0005_lean-sign-off-checklist-and-independent-audit.md) | Lean sign-off: the signature is the approval, plus a checklist and an independent audit | 2026-10-14 | Decided | Methodology / theory |
-| [0006](0006_voice-preservation.md) | Voice preservation: one private author profile, advisory, bounded | 2026-10-29 | Decided | Methodology / writing |
+| [0006](0006_voice-preservation.md) | Voice preservation: one private author profile, advisory, bounded | 2026-10-29 | Decided (item 6 scope superseded by #0007) | Methodology / writing |
+| [0007](0007_voice-profile-for-slides.md) | Voice profile for slides: a separate slide profile from the author's own decks | 2026-10-29 | Decided | Methodology / writing |
 
 ---
 

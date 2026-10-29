@@ -1,7 +1,7 @@
 # 0006: Voice preservation: one private author profile, advisory, bounded
 
 - **Date:** 2026-10-29
-- **Status:** Decided
+- **Status:** Decided (item 6's papers-only scope superseded by #0007)
 - **Scope:** Methodology / writing
 - **Data quality:** Full context
 

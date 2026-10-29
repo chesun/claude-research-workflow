@@ -6,7 +6,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Active (doing now)
 
-- [ ] **Voice preservation** (plan `quality_reports/plans/2026-10-29_voice-preservation.md` v2, ADR-0006): template part done (reviewed, committed). The private home `chesun/voice-profile` is cloned to `~/.claude/voice`; on the Mac it needs `git clone`. Next: the owner names the parts of the July 2025 draft that are theirs alone and supplies older unaided writing. Then `/voice-profile build`, owner approval, acceptance checks A2–A7, and the downstream copy (consumers to `behavioral`, BDD, `bdm_bic`).
+- [ ] **Voice preservation** (plan `quality_reports/plans/2026-10-29_voice-preservation.md` v2, ADR-0006): template part done (reviewed, committed). The private home `chesun/voice-profile` is cloned to `~/.claude/voice`; on the Mac it needs `git clone`. A slide profile (`slides.md`, ADR-0007) is wired too. Next: the owner names the parts of the July 2025 draft that are theirs alone, and supplies older unaided writing and their own decks (3 or more). Then `/voice-profile build`, owner approval, acceptance checks A2–A7, and the downstream copy (consumers to `behavioral`, BDD, `bdm_bic`).
 
 
 ## Up Next

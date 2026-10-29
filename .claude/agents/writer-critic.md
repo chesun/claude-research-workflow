@@ -230,7 +230,7 @@ If the dispatcher passes the path of the author's voice profile (`.claude/refere
 
 ## Voice conformance (advisory, not scored)
 
-Run only when the dispatcher passes a voice-profile path. Otherwise write "Voice: no profile at <path>" (or "Voice: no profile path passed").
+Run only when the dispatcher passes a voice-profile path. Otherwise write the line the dispatcher passed ("Voice: no profile at <path>"), or "Voice: no profile (none passed)".
 - Compare the draft with each of the profile's six sections.
 - List each departure with the draft location and the profile line it departs from ("deduction, not taste").
 - Quote the draft, never the profile's exemplar sentences (privacy rule, ADR-0006).

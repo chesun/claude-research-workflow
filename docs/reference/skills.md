@@ -31,7 +31,7 @@ This page is a catalogue. For full skill behaviour, see the corresponding `SKILL
 | `/learn` | Extract reusable knowledge from the current session into a persistent skill. Use when you discover something non-obvious worth keeping. |
 | `/challenge` | Devil's advocate. Modes: `--paper`, `--identification`, `--design`, `--theory`, `--fresh` (cold read with no context). Stress-tests the work. |
 | `/deep-audit` | Deep consistency audit of the entire repository. Launches 4 parallel specialist agents (factual errors, code bugs, count mismatches, cross-document inconsistencies). Loops until clean. |
-| `/voice-profile` | Build, audit or check the author's private voice profile (`~/.claude/voice/`, ADR-0006). `build` reads the author's own papers, and other authors' papers as style models, one fresh subagent per document; `audit <draft>` cites profile lines; `status` reports a stale profile. Explicit invocation only. |
+| `/voice-profile` | Build, audit or check the author's private voice profile (`~/.claude/voice/`, ADR-0006). `build` reads the author's own papers and slide decks, and other authors' papers as style models, one fresh subagent per document (ADR-0007 adds decks); `audit <draft>` cites profile lines; `status` reports a stale profile. Explicit invocation only. |
 | `/tools` | Multi-subcommand router. Subcommands: `compile`, `validate-bib`, `journal`, `context-status`, `deploy`, `learn`, `verify`. |
 
 ---

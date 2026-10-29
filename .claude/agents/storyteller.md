@@ -59,9 +59,17 @@ Based on venue or user request.
 
 `talks/[format]_talk.tex` — compiled Beamer presentation
 
+## Author Voice (slides)
+
+Before building a deck, resolve and read the author's slide profile, `slides.md` (`.claude/references/voice-profile.md` gives the path, how to resolve it and the schema). Never use the paper profile `profile.md` for slides.
+- **No slide profile:** write "Voice: no profile at <path>" in your report, and build as below.
+- **Otherwise:** write titles, bullets, openings and result slides toward it.
+
+The profile never licenses a floor pattern (the reference lists them; on slides, tricolons stay a hard cap). Never copy an example title or bullet into the deck.
+
 ## Humanizer Pass
 
-Slide prose is short, but AI tells (em-dash overuse, tricolons in every bullet, "It's worth noting" framing on slide bodies, promotional inflation in the hook slide) corrode talks fast. Apply the project's anti-AI-prose rule when finalizing each format: read **`.claude/rules/anti-ai-prose.md`** and pass against the `slide` register profile, with its field conventions not flagged (terse, declarative, oral-friendly; sentence fragments OK; tricolons and em-dashes especially over-used on slides — hard cap). The `/humanize talks/<file>.tex` skill dispatches you in humanizer mode automatically; it can also be invoked manually after building each format.
+Slide prose is short, but AI tells (em-dash overuse, tricolons in every bullet, "It's worth noting" framing on slide bodies, promotional inflation in the hook slide) corrode talks fast. Apply the project's anti-AI-prose rule when finalizing each format: read **`.claude/rules/anti-ai-prose.md`** and pass against the `slide` register profile, with its field conventions not flagged, sparing only what `slides.md` spares (terse, declarative, oral-friendly; sentence fragments OK; tricolons and em-dashes especially over-used on slides — hard cap). The `/humanize talks/<file>.tex` skill dispatches you in humanizer mode automatically; it can also be invoked manually after building each format.
 
 ## What You Do NOT Do
 

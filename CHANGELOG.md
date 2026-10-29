@@ -20,6 +20,15 @@ All notable changes to this fork are documented here. The format follows [Keep a
   - `repoint`, with cascade.
 
   The validator now checks cited labels and declared mentions. `bin/agent_lint.py` checks agent frontmatter.
+- **A slide voice profile (2026-10-29, ADR-0007).** A separate `slides.md`, built from the author's own decks (Beamer, PDF or PowerPoint), sits in the same private repo as the paper profile. The paper profile is never applied to slides.
+  - **Schema:** Titles, Bullets, Openings, Results, Math and figures, Quirks; rhythm per slide and per bullet; provisional below 3 decks.
+  - **Wiring:**
+    - `storyteller` writes toward it;
+    - `storyteller-critic` reports advisory conformance;
+    - `/talk` passes the path;
+    - `/humanize` on `talks/**` uses it.
+  - ADR-0007 supersedes only ADR-0006's papers-only scope.
+  - **Review:** correctness 86. Seven findings fixed, two accepted (session log).
 - **Voice preservation, template part (2026-10-29, ADR-0006).** The `writer` drafts toward the author's own voice; `writer-critic` reports how far a draft is from it; `/humanize` stops stripping the author's genuine habits.
   - **Where the profile lives:** one private author profile at `<home>/.claude/voice/`, a clone of the author's private git repo. The template holds no profile content.
   - **New:** `.claude/references/voice-profile.md` (the schema, the qualification rule, the carve-outs a profile may use, the floor it never may, the privacy rule) and `/voice-profile` (`build`, `audit`, `status`).

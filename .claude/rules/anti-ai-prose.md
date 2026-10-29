@@ -62,7 +62,7 @@ If a path doesn't match any profile, the humanizer asks before applying.
 - **L3:** `implement` an experiment, treatment, protocol or policy.
 - **L4:** role assignment, as in "Condition X serves as the control".
 
-**Author voice.** The author's own voice profile is separate and additive. It lives outside the repo, and may spare a few more flags on corpus evidence, never the floor rows. See `.claude/references/voice-profile.md` (ADR-0006).
+**Author voice.** The author's own voice profile is separate and additive. It lives outside the repo, and may spare a few more flags on corpus evidence, never the floor rows. See `.claude/references/voice-profile.md` (ADR-0006, ADR-0007).
 
 ---
 
@@ -179,5 +179,5 @@ The comment scopes to the paragraph it appears in. Auditable: `grep -R "anti-ai-
 - `agents/writer.md` — writer's humanizer pass (now references this rule instead of duplicating the catalog)
 - `agents/storyteller.md` — slide humanizer reference
 - `skills/humanize/SKILL.md` — universal entry point
-- `.claude/references/voice-profile.md` — the author voice profile: what it may spare and the floor it never may (ADR-0006)
+- `.claude/references/voice-profile.md` — the author voice profile: what it may spare and the floor it never may (ADR-0006, ADR-0007)
 - `working-paper-format.md` — earlier hedging deductions are subsumed under this rule's R1/R4 (consolidated)

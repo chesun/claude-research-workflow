@@ -191,3 +191,19 @@
     - Lows: the floor pointer in `writer.md`; the audit report's score header; R4 says stacks are still flagged; `signature_vocab` split into phrase and count; the ADR's reason for advisory-only.
   - No second cycle: the fixes change wiring, not the design.
   - Cost: two agents, about 295k tokens, 8 min.
+- **Slides (owner):** the owner asked why slides were excluded, and will supply decks made by them.
+  - The paper profile is not applied to slides (its prose rhythm does not fit a deck). A separate `slides.md` is added instead, with its own schema, per ADR-0007, which supersedes ADR-0006 item 6's papers-only scope.
+  - Wired into `storyteller`, `storyteller-critic`, `/talk`, `/humanize` and `/voice-profile build --slides`. The private repo now ignores PowerPoint originals (`3859a13`).
+  - **Review, correctness 86 (3 Medium, 6 Low).** Fixed:
+    - the resolve line now names both files;
+    - the gitignore wording agrees;
+    - the PowerPoint recipe keeps titles, bullets and the presentation order (`p:sldIdLst`);
+    - the critics' "none passed" line;
+    - dispatchers pass a missing-file line;
+    - the `within-deck` value;
+    - `audit` infers the register from the path;
+    - the rule cites ADR-0007.
+  - Accepted:
+    - #4: the carve-out sparing has no effect against the slide table today, but is harmless and works if rows are added;
+    - #7: ADR-0006 item 1 stands as the location and privacy decision, and a Decided ADR is not edited.
+  - The PowerPoint recipe is untested until the owner's first deck arrives.
