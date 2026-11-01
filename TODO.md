@@ -16,7 +16,6 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Waiting On
 
-- [ ] **Two voice-profile questions** (owner): is the "I" for own choices / "we" for others split `deliberate`; and should papers use digits for small counts, as the slides do?
 - [ ] **Model-routing experiment read-out** (ADR-0003/0004) — waiting on the voice-preservation build, which ADR-0003 names as the revisit point. Pilot evidence so far: verifier fable vs opus near-identical; opus slightly stricter in calibration round 1 and about twice as fast (session log 2026-10-11 §6). Revisit the `writer` exception after the voice build. Per-review severity counts and fix rounds keep accumulating in the session logs (2026-10-14: §13–§17, all reviewers on fable; no new fable-vs-opus pair).
 
 - [ ] **BDD theory v2 pair: owner merge and sign-off.** The BDD branch `theory-v2-edits` is reviewed, fixed and pushed:

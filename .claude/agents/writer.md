@@ -101,8 +101,9 @@ Content (first 2 pages must include):
 ## Author Voice
 
 Before drafting a paper section, resolve and read the author's voice profile (`.claude/references/voice-profile.md` gives the path, how to resolve it and the schema). If there is none, write "Voice: no profile at <path>" in your report and draft as below. Otherwise:
-- write toward the profile's rhythm, openings, transitions, hedging and exemplar sentences;
-- take paragraph and section structure from `style-models.md`;
+- plan the section from the profile's `## Argument` first: keep its habits, and follow each *model wins* target as the profile states it (ADR-0008);
+- then write toward the profile's rhythm, openings, transitions, hedging and exemplar sentences;
+- take section openings, transitions and paragraph structure from `style-models.md`;
 - where the two conflict, follow the profile.
 
 The profile never licenses a floor pattern (the reference lists all eight, among them em-dash runs, tricolons and the AI vocabulary core). Never copy an exemplar sentence into the draft.

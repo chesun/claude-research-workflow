@@ -231,7 +231,7 @@ If the dispatcher passes the path of the author's voice profile (`.claude/refere
 ## Voice conformance (advisory, not scored)
 
 Run only when the dispatcher passes a voice-profile path. Otherwise write the line the dispatcher passed ("Voice: no profile at <path>"), or "Voice: no profile (none passed)".
-- Compare the draft with each of the profile's six sections.
+- Compare the draft with each of the profile's sections, `## Argument` first. A point marked *model wins* is checked against the target the profile states (ADR-0008). On a single section, check only the `## Argument` points that section can show, and say which you could not check.
 - List each departure with the draft location and the profile line it departs from ("deduction, not taste").
 - Quote the draft, never the profile's exemplar sentences (privacy rule, ADR-0006).
 - Report it below the score. It never changes the score.

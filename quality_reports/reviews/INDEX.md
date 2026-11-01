@@ -6,6 +6,13 @@ When writing a new review, consult this index first. If an `Active` entry exists
 
 ---
 
+## 2026-11
+
+- [2026-11-01_adr-0008-voice-argument_verify_review.md](2026-11-01_adr-0008-voice-argument_verify_review.md) — ADR-0008 and voice argument-level docs, verify round 2, 87, Active (Mediums and Lows fixed, session log §9)
+- [2026-11-01_adr-0008-voice-argument_fit-for-purpose_review.md](2026-11-01_adr-0008-voice-argument_fit-for-purpose_review.md) — ADR-0008, fit-for-purpose, 66, Completed (fixed in round 2)
+- [2026-11-01_adr-0008-voice-argument_efficiency_review.md](2026-11-01_adr-0008-voice-argument_efficiency_review.md) — ADR-0008, efficiency, 76, Completed (fixed in round 2)
+- [2026-11-01_voice-argument-docs_correctness_review.md](2026-11-01_voice-argument-docs_correctness_review.md) — voice argument-level docs, correctness, 78, Completed (fixed in round 2)
+
 ## 2026-10
 
 - [2026-10-29_voice-profile-slides_correctness_review.md](2026-10-29_voice-profile-slides_correctness_review.md) — slide voice profile (ADR-0007, reference, skills, storyteller agents), correctness, 86, Active (7 fixed, 2 accepted)

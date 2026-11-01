@@ -20,6 +20,7 @@ All notable changes to this fork are documented here. The format follows [Keep a
   - `repoint`, with cascade.
 
   The validator now checks cited labels and declared mentions. `bin/agent_lint.py` checks agent frontmatter.
+- **An argument level in the voice profile (2026-11-01, ADR-0008).** Both the paper profile and the style models open with `## Argument`: how a paper tells its story and builds its case. Where the author adopts a style model's structure, the profile marks the point *model wins* and states the target, which `writer` follows and `writer-critic` checks. It supersedes ADR-0006 item 2 for argument structure, with one stated exception to item 3. The never-used word list (`avoid_vocab`) is dropped; the anti-AI-prose floor is unchanged.
 - **A slide voice profile (2026-10-29, ADR-0007).** A separate `slides.md`, built from the author's own decks (Beamer, PDF or PowerPoint), sits in the same private repo as the paper profile. The paper profile is never applied to slides.
   - **Schema:** Titles, Bullets, Openings, Results, Math and figures, Quirks; rhythm per slide and per bullet; provisional below 3 decks.
   - **Wiring:**

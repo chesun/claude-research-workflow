@@ -1,6 +1,6 @@
-# Voice profile — schema, carve-outs and floor (ADR-0006, ADR-0007)
+# Voice profile — schema, carve-outs and floor (ADR-0006, ADR-0007, ADR-0008)
 
-The author's voice profile says what *this author* does. `anti-ai-prose.md` stays subtractive: it is what AI prose does. This file is the single home of the profile's schema, its qualification rule, the carve-outs a profile may use and the floor it can never switch off. ADR-0006 records the decision; `/voice-profile` builds and audits the profile.
+The author's voice profile says what *this author* does. `anti-ai-prose.md` stays subtractive: it is what AI prose does. This file is the single home of the profile's schema, its qualification rule, the carve-outs a profile may use and the floor it can never switch off. ADR-0006 records the decision, ADR-0007 the slide profile and ADR-0008 the argument level; `/voice-profile` builds and audits the profile.
 
 ## Where the profile lives
 
@@ -62,11 +62,11 @@ evidence: within-paper | across-corpus
 measured_by: "<how rhythm was measured, e.g. 'pdftotext + scratch script'> | not measured"
 signature_vocab:             # the whitelist /humanize spares
   - {phrase: "<phrase>", count: "<n>/<N> sections or papers"}
-avoid_vocab: ["<word the author never uses>"]
 carve_out_rows: []           # only rows from the carve-out list below, each with evidence
 rhythm: {median_sentence_words: <n>, iqr: "<a>-<b>", em_dash_per_100_words: <x>}
 ---
 
+## Argument
 ## Lexicon
 ## Rhythm
 ## Openings
@@ -76,6 +76,13 @@ rhythm: {median_sentence_words: <n>, iqr: "<a>-<b>", em_dash_per_100_words: <x>}
 ```
 
 Each section holds a few lines of narrative, each trait with its frequency and any `sections:` tag, then 3–6 verbatim exemplar sentences. Deliberate quirks are labelled `deliberate`, so `/humanize` does not strip them.
+
+**`## Argument`** (ADR-0008) is whole-document, not sentence-level. It covers how a paper tells its story and builds its case: the arc, the central idea, how the design is motivated, the order of evidence, alternatives and limits, scope and stakes, and proportions (words per section). This list is the single definition, used by both schemas and the argument notes. In `profile.md` it holds:
+
+- **habits to keep:** argument habits that qualify under § What qualifies as a trait (above). While the own corpus has no finished paper, they are marked `provisional (no finished paper)`, a different flag from the single-section `provisional` above;
+- **where the model wins:** points the author adopted from a style model at build time, each marked *model wins (<model id>)* and written as the author's habit, then the target. **The target stated here is authoritative** for `writer` and `writer-critic`; the style model's own rules are background. A *model wins* target is never evidence for `carve_out_rows` or the whitelist.
+
+It has no exemplar sentences.
 
 ## Slide-profile schema (`slides.md`)
 
@@ -102,12 +109,14 @@ Each section holds a few lines with frequencies, then 3–6 verbatim examples (t
 ## Style-model schema (`style-models.md`)
 
 Other authors' papers inform **structure only**:
+
+- how the whole paper tells its story and builds its case (`## Argument`, as defined under § Profile schema);
 - how an introduction states the contribution;
 - how a paragraph moves from claim to evidence;
 - how a results or figure discussion is built;
 - how sections open and close.
 
-A style model has only the sections below. It never adds to Lexicon, Hedging or Quirks, and never feeds `carve_out_rows` or the whitelist. Where it conflicts with the profile, the profile wins.
+A style model has only the sections below. It never adds to Lexicon, Hedging or Quirks, and never feeds `carve_out_rows` or the whitelist. Where it conflicts with the profile, the profile wins, with one exception (ADR-0008): a point the profile's `## Argument` marks *model wins* follows the target the profile states. Each model's `## Argument` ends with 5–8 imperative rules and is headed with its `id` (`## Argument: <id>`) once there is more than one model.
 
 ```markdown
 ---
@@ -118,19 +127,25 @@ models:
     author_year: "<author(s), year>"
 ---
 
+## Argument
 ## Openings
 ## Transitions
 ## Paragraph structure
 ```
 
-## Per-document note (`notes/<id>.md`, about 300 words)
+## Per-document note (`notes/<id>.md`, about 300 words; 500–700 for a style model)
 
-One fresh subagent per source document writes it. It works against the profile schema's six sections, the slide schema's six for a deck, or the style-model schema's three for a style model. Each trait in a note has:
+One fresh subagent per source document writes it, against the sections of that document's schema: for an own paper every profile section except `## Argument` (which comes from the corpus argument note below); for a deck the slide schema; for a style model every style-model section, `## Argument` included (500–700 words in all). Each trait in a note has:
+
 - its count;
 - the sections where it recurs, as a `sections:` tag;
 - one or two verbatim examples.
 
 The note records which sections it read, and skips any the provenance excludes. The subagent returns only the filename, so the corpus stays out of the main context.
+
+**The own-corpus argument note** (ADR-0008, `notes/own-argument.md`, about 500–700 words): one fresh subagent reads all the own papers' qualifying parts against the `## Argument` list above. It says whether each point recurs (n of N documents) and ends with strengths to keep and gaps.
+
+**Reuse.** A note whose source extract and schema are unchanged since it was written is reused, not rewritten. The own-corpus argument note is rewritten whenever the own corpus changes.
 
 ## Carve-outs a profile may use
 
@@ -159,11 +174,11 @@ A profile touches only the `anti-ai-prose` catalog. It never touches an epistemi
 
 ## How each consumer uses the profile
 
-- **`writer`** writes toward the profile when drafting: its rhythm, openings, transitions, hedging and exemplars. It takes structure from the style models. It never breaks the floor, and still runs the humanizer pass.
-- **`writer-critic`** adds an advisory "Voice conformance" section. Each finding cites the profile line it departs from. It is reported beside the score and never deducted from it.
+- **`writer`** plans a draft from the profile's `## Argument` first (its habits, and its *model wins* targets as stated there), then writes toward the profile's voice: its rhythm, openings, transitions, hedging and exemplars. It takes section openings, transitions and paragraph structure from the style models where the profile is silent. It never breaks the floor, and still runs the humanizer pass.
+- **`writer-critic`** adds an advisory "Voice conformance" section. Each finding cites the profile line it departs from. It is reported beside the score and never deducted from it. On a single section, it checks only the `## Argument` points that section can show (an introduction: where the finding and the contribution appear; results: the order of evidence; a conclusion: the stakes), and says which it could not check.
 - **`storyteller`** writes slides toward `slides.md` (titles, bullets, openings, results), and never toward `profile.md`. **`storyteller-critic`** adds the same advisory Voice conformance section, against `slides.md`.
 - **`/humanize`** spares the register's profile's `carve_out_rows` and `signature_vocab` phrases, and nothing else: `profile.md` for a paper, `slides.md` for a deck. On slides, S2 (tricolons) stays a hard cap as part of the floor. This only removes flags, so a re-run stays a no-op.
 
 ## Rebuild
 
-Rebuild with `/voice-profile build` when the corpus grows by a paper; the build commits and pushes to the private repo. At 3 own papers, `evidence` becomes `across-corpus` and the qualification rule tightens. `/voice-profile status` reports a profile older than its sources.
+Rebuild with `/voice-profile build` when the corpus grows by a paper; the build commits and pushes to the private repo. A rebuild of the style models alone leaves the profile's *model wins* targets as they were: the build asks the author whether to keep, change or drop each, and `status` reports a target whose model is newer than `profile.md`. At 3 own papers, `evidence` becomes `across-corpus` and the qualification rule tightens. `/voice-profile status` reports a profile older than its sources.
