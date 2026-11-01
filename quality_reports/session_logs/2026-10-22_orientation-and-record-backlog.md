@@ -219,4 +219,12 @@
   - `bdd-vanderbilt-2026-01.pdf`: 95-slide BDD talk, Vanderbilt, 2026-01-05; a version of `bdd-jobtalk-2025-12`.
   - `csac-vanderbilt-2026-01.pptx`: 53-slide CSAC talk, 2026-01-05. Made solely by the owner; coauthors are on the title slide and the file metadata names Hurtt only because the owner sent it to her for review.
 - The paper corpus now has three own-writing sources beyond the July 2025 JMP draft (which needs the owner's own-parts declaration), so `evidence` can move past `within-paper` once all three are confirmed. Text extraction and notes are left to `/voice-profile build`.
-- Open: the owner dated a "BIC draft, 2022 to 2023", but no BIC draft is among the six files.
+- The owner's "BIC draft, 2022 to 2023" is the funding proposal (owner, 2026-11-01).
+- **Build** (`/voice-profile build`, run from its SKILL.md; the skill arrived in this pull and was not loaded in the session):
+  - Extracts: `pdftotext -layout` for the 3 papers; Beamer cleanup and a `.pptx` stdlib script (first live test of the PowerPoint recipe: 53 slides, titles from placeholders) for the decks, all in the session scratch directory.
+  - Versions: `bdd-vanderbilt-2026-01` shares 95% of its lines with `bdd-jobtalk-2025-12` (version; the job talk stays as the fullest); `bic-babeew-2023-05` shares 8% with the 2022 BIC talk (a separate talk).
+  - Notes: 5 fresh subagents, one per new document; the 6 earlier deck notes reused (extracts unchanged).
+  - Rhythm: papers 292 sentences, median 24 words (IQR 16-34), 0.03 em-dashes per 100 words; slides 419 slides, 22 / 2 / 6 (words per slide, bullets per slide, words per bullet). The 6 earlier talks re-measure at 22 words per slide against the 2026-10-29 build's 25: a counting-method difference.
+  - `profile.md`: 3 papers, `across-corpus` (2 of 3 to qualify), 15 qualifying traits, 12 `avoid_vocab` words (0 uses in 3 papers), carve-out R4 only. `slides.md`: 8 talks, 5 of 8 to qualify; "Taking Stock" off the whitelist (4/8); 3 traits down to provisional.
+- **Owner approval with corrections:** the paper profile is approved but sparse; its Hedging section is genre-bound (proposals and early drafts), so `writer` keeps only one-hedge-per-claim. Slides: three owner rules (claim titles wherever they send a clear message, in every part of a talk; figures in the main deck, tables in the appendix; intuition in the main deck, math in the appendix). Committed and pushed to the private repo, `f980a4e`.
+- Open (owner): whether the I/we split is `deliberate`; digits for small counts in papers.

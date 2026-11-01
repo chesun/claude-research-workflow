@@ -6,7 +6,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Active (doing now)
 
-- [ ] **Voice preservation** (plan `quality_reports/plans/2026-10-29_voice-preservation.md` v2, ADR-0006): template part done (reviewed, committed). The private home `chesun/voice-profile` is cloned to `~/.claude/voice` on both machines (Mac clone 2026-11-01). A slide profile (`slides.md`, ADR-0007) is wired too. **Slide profile drafted 2026-10-29** (6 talks from 13 own decks: 5 BDD, 1 BIC; extracts, notes and the draft `slides.md` committed and pushed to the private repo, `e18197e`), awaiting owner approval. Next for papers: the owner names the parts of the July 2025 draft that are theirs alone, and supplies older unaided writing. Then `/voice-profile build`, owner approval, acceptance checks A2–A7 (A4s, A5s for slides), and the downstream copy (consumers to `behavioral`, BDD, `bdm_bic`).
+- [ ] **Voice preservation** (plan `quality_reports/plans/2026-10-29_voice-preservation.md` v2, ADR-0006): template part done (reviewed, committed). The private home `chesun/voice-profile` is cloned to `~/.claude/voice` on both machines (Mac clone 2026-11-01). **Both profiles built and owner-approved 2026-11-01** (private repo `f980a4e`): `profile.md` from 3 own unaided papers (`across-corpus`), `slides.md` from 8 talks across 3 papers, with the owner's corrections (Hedging is genre-bound; three slide rules). The paper profile is sparse (15 qualifying traits from about 7,900 words of proposals and early drafts): grow it with the owner's own-parts declaration for the July 2025 draft, more unaided papers, or style models (`--model`). Next: acceptance checks A2–A7 (A4s, A5s for slides), then the downstream copy (consumers to `behavioral`, BDD, `bdm_bic`).
 
 ## Up Next
 
@@ -16,8 +16,7 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 ## Waiting On
 
-- [ ] **More own decks from other projects** (owner): 8 of 23 slide traits recur only in BDD decks, since BIC is a single talk that stops at the design. Decks from more papers let those traits be confirmed or dropped. Pending owner choice: mark BDD-only traits `provisional` and take "Taking Stock" off the whitelist until a second paper shows them. Rebuild with `/voice-profile build --slides` once they arrive.
-- [ ] **Slide title style** (owner): only the Dec 2025 job talk uses claim titles on results slides (provisional in `slides.md`). Should new decks follow it or the earlier topic titles?
+- [ ] **Two voice-profile questions** (owner): is the "I" for own choices / "we" for others split `deliberate`; and should papers use digits for small counts, as the slides do?
 - [ ] **Model-routing experiment read-out** (ADR-0003/0004) — waiting on the voice-preservation build, which ADR-0003 names as the revisit point. Pilot evidence so far: verifier fable vs opus near-identical; opus slightly stricter in calibration round 1 and about twice as fast (session log 2026-10-11 §6). Revisit the `writer` exception after the voice build. Per-review severity counts and fix rounds keep accumulating in the session logs (2026-10-14: §13–§17, all reviewers on fable; no new fable-vs-opus pair).
 
 - [ ] **BDD theory v2 pair: owner merge and sign-off.** The BDD branch `theory-v2-edits` is reviewed, fixed and pushed:
@@ -48,6 +47,8 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 - [ ] **`/tools data-status`**, and a pre-push block when `dvc push` is pending (revisit only if it bites).
 
 ## Done (recent)
+
+- [x] 2026-11-01 — **Voice profiles rebuilt** with six new sources (3 unaided papers, 3 decks): `profile.md` new, `slides.md` at 8 talks / 3 papers; "Taking Stock" off the whitelist by the 5/8 rule; slide title style settled by owner rule (claim titles wherever they send a clear message; figures in the main deck, tables and math in the appendix). Session log `2026-10-22_orientation-and-record-backlog.md` §8.
 
 - [x] 2026-11-01 — **Mac worktrees checked**: the Mac clone has no `beh` or `wt-behavioral` entries; its two worktrees (`claude-code-my-workflow-applied-micro`, `-behavioral`) are registered and not prunable, so no repair or prune was needed. `behavioral` fast-forwarded to `cacb58d`.
 
