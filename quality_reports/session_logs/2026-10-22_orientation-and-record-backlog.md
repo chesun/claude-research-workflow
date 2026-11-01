@@ -207,3 +207,16 @@
     - #4: the carve-out sparing has no effect against the slide table today, but is harmless and works if rows are added;
     - #7: ADR-0006 item 1 stands as the location and privacy decision, and a Decided ADR is not edited.
   - The PowerPoint recipe is untested until the owner's first deck arrives.
+
+## 8. Voice corpus: six new sources (2026-11-01, Mac)
+
+- Cloned `chesun/voice-profile` to `~/.claude/voice` on the Mac (`e18197e`); fast-forwarded the `behavioral` worktree to `cacb58d`.
+- Copied six files from the owner's Downloads into `~/.claude/voice/sources/` (originals gitignored; nothing committed there). Owner-declared provenance, 2026-11-01:
+  - `bdd-early-draft-2024.pdf`: 27-page early BDD draft, written 2024, no AI help.
+  - `csac-research-summary-2023.pdf`: 7-page CSAC research summary, about early 2023, no AI help.
+  - `bic-funding-proposal-2022.pdf`: 10-page BIC funding proposal, about 2022, no AI help.
+  - `bic-babeew-2023-05.pdf`: 49-slide BIC talk, BABEEW, 2023-05-20.
+  - `bdd-vanderbilt-2026-01.pdf`: 95-slide BDD talk, Vanderbilt, 2026-01-05; a version of `bdd-jobtalk-2025-12`.
+  - `csac-vanderbilt-2026-01.pptx`: 53-slide CSAC talk, 2026-01-05. Made solely by the owner; coauthors are on the title slide and the file metadata names Hurtt only because the owner sent it to her for review.
+- The paper corpus now has three own-writing sources beyond the July 2025 JMP draft (which needs the owner's own-parts declaration), so `evidence` can move past `within-paper` once all three are confirmed. Text extraction and notes are left to `/voice-profile build`.
+- Open: the owner dated a "BIC draft, 2022 to 2023", but no BIC draft is among the six files.
