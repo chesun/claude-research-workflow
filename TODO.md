@@ -1,12 +1,12 @@
 # TODO — claude-research-workflow
 
-Last updated: 2026-10-29
+Last updated: 2026-11-01
 
 Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans and session logs; this file tracks what is left.
 
 ## Active (doing now)
 
-- [ ] **Voice preservation** (plan `quality_reports/plans/2026-10-29_voice-preservation.md` v2, ADR-0006): template part done (reviewed, committed). The private home `chesun/voice-profile` is cloned to `~/.claude/voice`; on the Mac it needs `git clone`. A slide profile (`slides.md`, ADR-0007) is wired too. **Slide profile drafted 2026-10-29** (6 talks from 13 own decks: 5 BDD, 1 BIC; extracts and notes pushed to the private repo, `slides.md` not yet committed), awaiting owner approval. Next for papers: the owner names the parts of the July 2025 draft that are theirs alone, and supplies older unaided writing. Then `/voice-profile build`, owner approval, acceptance checks A2–A7 (A4s, A5s for slides), and the downstream copy (consumers to `behavioral`, BDD, `bdm_bic`).
+- [ ] **Voice preservation** (plan `quality_reports/plans/2026-10-29_voice-preservation.md` v2, ADR-0006): template part done (reviewed, committed). The private home `chesun/voice-profile` is cloned to `~/.claude/voice` on both machines (Mac clone 2026-11-01). A slide profile (`slides.md`, ADR-0007) is wired too. **Slide profile drafted 2026-10-29** (6 talks from 13 own decks: 5 BDD, 1 BIC; extracts, notes and the draft `slides.md` committed and pushed to the private repo, `e18197e`), awaiting owner approval. Next for papers: the owner names the parts of the July 2025 draft that are theirs alone, and supplies older unaided writing. Then `/voice-profile build`, owner approval, acceptance checks A2–A7 (A4s, A5s for slides), and the downstream copy (consumers to `behavioral`, BDD, `bdm_bic`).
 
 ## Up Next
 
@@ -18,7 +18,6 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 
 - [ ] **More own decks from other projects** (owner): 8 of 23 slide traits recur only in BDD decks, since BIC is a single talk that stops at the design. Decks from more papers let those traits be confirmed or dropped. Pending owner choice: mark BDD-only traits `provisional` and take "Taking Stock" off the whitelist until a second paper shows them. Rebuild with `/voice-profile build --slides` once they arrive.
 - [ ] **Slide title style** (owner): only the Dec 2025 job talk uses claim titles on results slides (provisional in `slides.md`). Should new decks follow it or the earlier topic titles?
-- [ ] **Mac worktrees** (owner, on the Mac) — the `beh` and `wt-behavioral` worktree entries were removed from `.git/worktrees/` on 2026-10-19 (stale here; git could not delete the folders itself). If those worktrees still exist on the Mac, run `git worktree repair` inside each, or `git worktree prune` if they are gone.
 - [ ] **Model-routing experiment read-out** (ADR-0003/0004) — waiting on the voice-preservation build, which ADR-0003 names as the revisit point. Pilot evidence so far: verifier fable vs opus near-identical; opus slightly stricter in calibration round 1 and about twice as fast (session log 2026-10-11 §6). Revisit the `writer` exception after the voice build. Per-review severity counts and fix rounds keep accumulating in the session logs (2026-10-14: §13–§17, all reviewers on fable; no new fable-vs-opus pair).
 
 - [ ] **BDD theory v2 pair: owner merge and sign-off.** The BDD branch `theory-v2-edits` is reviewed, fixed and pushed:
@@ -49,6 +48,8 @@ Project-wide tracker per `.claude/rules/todo-tracking.md`. Details live in plans
 - [ ] **`/tools data-status`**, and a pre-push block when `dvc push` is pending (revisit only if it bites).
 
 ## Done (recent)
+
+- [x] 2026-11-01 — **Mac worktrees checked**: the Mac clone has no `beh` or `wt-behavioral` entries; its two worktrees (`claude-code-my-workflow-applied-micro`, `-behavioral`) are registered and not prunable, so no repair or prune was needed. `behavioral` fast-forwarded to `cacb58d`.
 
 - [x] 2026-10-28 — **`verify-input` refuses a proof that points into another node's proof** (proof-verifier item 11): steps, cases, "proof/argument of", possessives, read through emphasis and LaTeX; statement parts and own steps allowed; linear time. Reviews r2: red-team 87, correctness 92 (round 1: 68, 88; ReDoS fixed). 141 tests; live blueprint flags only 2 refuted variants. Committed `0faab45`; synced and pushed 2026-10-29 to `behavioral` `cacb58d` (review waived: byte-identical copy), BDD `theory-v2-edits` `9685b8e` and `bdm_bic` `93de622` (docs only; no theory tooling). Session log `2026-10-22_orientation-and-record-backlog.md` §6.
 - [x] 2026-10-28 — **BDD and `bdm_bic` synced with the instruction-budget changes** (from `behavioral` `2c816cf`; gates pass). BDD: `5dd2de7`, merged into `theory-v2-edits` as `50f61f1` and pushed; it reaches BDD `main` with that branch. `bdm_bic`: `a9f0023` on `main`, pushed. Always-loaded instructions: BDD 153.2k → 94.2k, `bdm_bic` 148.4k → 89.4k. Session log `2026-10-22_orientation-and-record-backlog.md` §5.
